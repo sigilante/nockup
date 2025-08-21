@@ -65,7 +65,8 @@ pub async fn run(project_name: String) -> Result<()> {
 }
 
 fn load_project_config(project_name: &str) -> Result<ProjectConfig> {
-    let config_path = Path::new(&format!("{}.toml", project_name));
+    let config_filename = format!("{}.toml", project_name);
+    let config_path = Path::new(&config_filename);
     
     if !config_path.exists() {
         return Err(anyhow::anyhow!(

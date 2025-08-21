@@ -21,14 +21,27 @@ nockup version 0.0.1
 hoon   version 0.1.0
 hoonc  version 0.2.0
 
-# Initialize a default project.
-$ cp default-manifest.toml arcadia.toml
-$ nockup init arcadia
-New project created in ./et-in-arcadia-ego
-
 # Check for updates to nockup, hoon, and hoonc.
 $ nockup up
 Checking for updates ... no new updates.
+
+# Initialize a default project.
+$ cp default-manifest.toml arcadia.toml
+$ nockup init arcadia 
+Initializing new NockApp project 'et-in-arcadia-ego'...
+  create Cargo.toml
+  create manifest.toml
+  create build.rs
+  create hoon/app/app.hoon
+  create hoon/lib/lib.hoon
+  create README.md
+  create src/lib.rs
+  create src/main.rs
+✓ New project created in ./et-in-arcadia-ego//
+To get started:
+  cd et-in-arcadia-ego
+  nockup build
+  nockup run
 
 # Show project settings.
 $ cd arcadia
@@ -49,10 +62,11 @@ $ nockup build arcadia
 $ nockup run arcadia
 ```
 
+The final product is, of course, a binary which you may run directly or via `nockup run`.
+
 ## Roadmap
 
 * implement version index
 * finish template project
-* add build support
 * add run support
 * add self-updating support
