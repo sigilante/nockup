@@ -24,21 +24,21 @@ struct ProjectInfo {
     keywords: Vec<String>,
 }
 
-pub async fn run(_project_name: String) -> Result<()> {
-    // Load the default manifest configuration first to get the actual project name
-    let default_config = load_default_config()?;
-    let project_name = &default_config.project.project_name;
+pub async fn run(project_name: String) -> Result<()> {
+    // Load the project-specific manifest configuration
+    let default_config = load_project_config(&project_name)?;
+    let actual_project_name = &default_config.project.project_name;
     
-    println!("Initializing new NockApp project '{}'...", project_name.green());
+    println!("Initializing new NockApp project '{}'...", actual_project_name.green());
     
-    let target_dir = Path::new(project_name);
+    let target_dir = Path::new(actual_project_name);
     let template_dir = Path::new("templates/basic");
     
     // Check if target directory already exists
     if target_dir.exists() {
         return Err(anyhow::anyhow!(
             "Directory '{}' already exists. Please choose a different name or remove the existing directory.",
-            project_name
+            actual_project_name
         ));
     }
     
@@ -49,35 +49,36 @@ pub async fn run(_project_name: String) -> Result<()> {
         ));
     }
     
-    // Create template context from the default config
+    // Create template context from the project config
     let context = create_template_context(&default_config)?;
     
     // Copy template directory to new project location
     copy_template_directory(template_dir, target_dir, &context)?;
     
-    println!("{} New project created in {}/", "✓".green(), format!("./{}/", project_name).cyan());
+    println!("{} New project created in {}/", "✓".green(), format!("./{}/", actual_project_name).cyan());
     println!("To get started:");
-    println!("  cd {}", project_name.cyan());
-    println!("  nockup build {}", project_name.cyan());
-    println!("  nockup run {}", project_name.cyan());
+    println!("  cd {}", actual_project_name.cyan());
+    println!("  nockup build {}", actual_project_name.cyan());
+    println!("  nockup run {}", actual_project_name.cyan());
     
     Ok(())
 }
 
-fn load_default_config() -> Result<ProjectConfig> {
-    let default_manifest_path = Path::new("default-manifest.toml");
+fn load_project_config(project_name: &str) -> Result<ProjectConfig> {
+    let config_path = Path::new(&format!("{}.toml", project_name));
     
-    if !default_manifest_path.exists() {
+    if !config_path.exists() {
         return Err(anyhow::anyhow!(
-            "Default manifest file 'default-manifest.toml' not found"
+            "Project configuration file '{}.toml' not found", 
+            project_name
         ));
     }
     
-    let config_content = fs::read_to_string(default_manifest_path)
-        .context("Failed to read default-manifest.toml")?;
+    let config_content = fs::read_to_string(config_path)
+        .with_context(|| format!("Failed to read {}.toml", project_name))?;
     
     toml::from_str(&config_content)
-        .context("Failed to parse default-manifest.toml")
+        .with_context(|| format!("Failed to parse {}.toml", project_name))
 }
 
 fn create_template_context(default_config: &ProjectConfig) -> Result<HashMap<String, String>> {

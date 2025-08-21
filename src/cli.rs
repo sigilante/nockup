@@ -11,11 +11,10 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 pub enum Commands {
-    /// Initialize a new NockApp project (uses project_name from default-manifest.toml)
+    /// Initialize a new NockApp project from a .toml config file
     Init {
-        /// Project name (ignored - uses default-manifest.toml)
-        #[arg(help = "Project name (ignored - uses default-manifest.toml)")]
-        name: Option<String>,
+        /// Name of the project config file (looks for <name>.toml)
+        name: String,
     },
     /// Check for updates to nockup, hoon, and hoonc
     Up,
