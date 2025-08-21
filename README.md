@@ -17,13 +17,14 @@ $ cargo build
 ```
 # Show basic program information.
 $ nockup
-nockup 0.1.0
-hoon 0.1.0
-hoonc 0.2.0
+nockup version 0.0.1
+hoon   version 0.1.0
+hoonc  version 0.2.0
 
 # Initialize a default project.
+$ cp default-manifest.toml arcadia.toml
 $ nockup init arcadia
-New project created in ./arcadia/.
+New project created in ./et-in-arcadia-ego
 
 # Check for updates to nockup, hoon, and hoonc.
 $ nockup up
