@@ -17,7 +17,7 @@ async fn main() {
             version::show_version_info().await
         }
         Some(Commands::Init { name }) => {
-            commands::init::run(name).await
+            commands::init::run(name.unwrap_or_default()).await
         }
         Some(Commands::Up) => {
             commands::up::run().await

@@ -4,15 +4,16 @@ use std::path::Path;
 use std::process::Command;
 
 fn main() {
-    println!("cargo:rerun-if-changed=src/app.hoon");
+    println!("cargo:rerun-if-changed=hoon/app/app.hoon");
+    println!("cargo:rerun-if-changed=hoon/lib/lib.hoon");
     
     let out_dir = env::var("OUT_DIR").unwrap();
-    let hoon_file = "src/app.hoon";
+    let hoon_app_file = "hoon/app/app.hoon";
     
-    if Path::new(hoon_file).exists() {
+    if Path::new(hoon_app_file).exists() {
         // Compile Hoon to Nock (this is a placeholder - adjust based on actual hoonc usage)
         let output = Command::new("hoonc")
-            .args(&[hoon_file, "--output", &format!("{}/app.nock", out_dir)])
+            .args(&[hoon_app_file, "--output", &format!("{}/app.nock", out_dir)])
             .output();
             
         match output {
@@ -27,6 +28,6 @@ fn main() {
             }
         }
     } else {
-        println!("cargo:warning=No Hoon file found at {}. Skipping Hoon compilation.", hoon_file);
+        println!("cargo:warning=No Hoon file found at {}. Skipping Hoon compilation.", hoon_app_file);
     }
 }
