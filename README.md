@@ -4,6 +4,16 @@
 
 NockApp is a general-purpose framework for building apps that run the Nock ISA.  It is particularly well-suited for use with [Nockchain](https://nockchain.org) and the Nock ZKVM.
 
+## Installation
+
+```
+$ git clone https://github.com/sigilante/nockup.git
+$ cd nockup/
+$ cargo build
+```
+
+## Usage
+
 ```
 # Show basic program information.
 $ nockup

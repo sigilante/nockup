@@ -1,0 +1,21 @@
+[project]
+name = "{{project_name}}"
+version = "0.1.0"
+description = "A NockApp project"
+author = "{{author_name}}"
+
+[nockapp]
+# NockApp-specific configuration
+hoon_files = ["src/app.hoon"]
+entry_point = "main"
+target = "nockchain"
+
+[build]
+# Build configuration
+optimize = true
+debug = false
+
+[runtime]
+# Runtime configuration
+max_memory = "1GB"
+timeout = "30s"

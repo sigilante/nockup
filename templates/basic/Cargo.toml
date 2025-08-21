@@ -1,0 +1,26 @@
+[package]
+name = "{{project_name}}"
+version = "0.1.0"
+edition = "2021"
+authors = ["{{author_name}} <{{author_email}}>"]
+description = "A NockApp project"
+
+[[bin]]
+name = "{{project_name}}"
+path = "src/main.rs"
+
+[lib]
+name = "{{project_name}}"
+path = "src/lib.rs"
+
+[dependencies]
+# NockVM dependency
+nockvm = { git = "https://github.com/zorp-corp/nockchain.git", rev = "{{nockvm_commit_hash}}" }
+
+# Common dependencies for NockApps
+serde = { version = "1.0", features = ["derive"] }
+toml = "0.8"
+anyhow = "1.0"
+
+[build-dependencies]
+# Build script dependencies if needed
