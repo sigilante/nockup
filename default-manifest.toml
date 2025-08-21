@@ -1,6 +1,6 @@
 [project]
 name = "Et In Arcadia Ego"
-project_name = "et-in-arcadia-ego"
+project_name = "arcadia"
 version = "1.0.0"
 description = "I too was in Arcadia."
 author_name = "Nicolas Poussin"
