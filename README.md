@@ -48,3 +48,11 @@ $ nockup build arcadia
 # Run the project (wraps hoon).
 $ nockup run arcadia
 ```
+
+## Roadmap
+
+* implement version index
+* finish template project
+* add build support
+* add run support
+* add self-updating support
