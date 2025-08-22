@@ -4,7 +4,7 @@ use handlebars::Handlebars;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 #[derive(Debug, Deserialize, Serialize)]
 struct ProjectConfig {
@@ -22,23 +22,24 @@ struct ProjectInfo {
     github_username: String,
     license: String,
     keywords: Vec<String>,
+    nockapp_commit_hash: String,
 }
 
 pub async fn run(project_name: String) -> Result<()> {
     // Load the project-specific manifest configuration
     let default_config = load_project_config(&project_name)?;
-    let actual_project_name = &default_config.project.project_name;
+    let project_name = &default_config.project.project_name;
     
-    println!("Initializing new NockApp project '{}'...", actual_project_name.green());
+    println!("Initializing new NockApp project '{}'...", project_name.green());
     
-    let target_dir = Path::new(actual_project_name);
+    let target_dir = Path::new(project_name);
     let template_dir = Path::new("templates/basic");
     
     // Check if target directory already exists
     if target_dir.exists() {
         return Err(anyhow::anyhow!(
             "Directory '{}' already exists. Please choose a different name or remove the existing directory.",
-            actual_project_name
+            project_name
         ));
     }
     
@@ -55,11 +56,10 @@ pub async fn run(project_name: String) -> Result<()> {
     // Copy template directory to new project location
     copy_template_directory(template_dir, target_dir, &context)?;
     
-    println!("{} New project created in {}/", "✓".green(), format!("./{}/", actual_project_name).cyan());
+    println!("{} New project created in {}/", "✓".green(), format!("./{}/", project_name).cyan());
     println!("To get started:");
-    println!("  cd {}", actual_project_name.cyan());
-    println!("  nockup build {}", actual_project_name.cyan());
-    println!("  nockup run {}", actual_project_name.cyan());
+    println!("  nockup build {}", project_name.cyan());
+    println!("  nockup run {}", project_name.cyan());
     
     Ok(())
 }
@@ -96,11 +96,8 @@ fn create_template_context(default_config: &ProjectConfig) -> Result<HashMap<Str
     context.insert("github_username".to_string(), default_config.project.github_username.clone());
     context.insert("license".to_string(), default_config.project.license.clone());
     context.insert("keywords".to_string(), default_config.project.keywords.join("\", \""));
-    
-    // Add current nockvm commit if available
-    context.insert("nockvm_commit".to_string(), 
-                  get_current_nockvm_commit().unwrap_or_else(|| "main".to_string()));
-    
+    context.insert("nockapp_commit_hash".to_string(), default_config.project.nockapp_commit_hash.clone());
+
     Ok(context)
 }
 
@@ -158,30 +155,4 @@ fn copy_dir_recursive(
     }
     
     Ok(())
-}
-
-fn sanitize_project_name(name: &str) -> String {
-    // Convert to lowercase and replace spaces/special chars with hyphens
-    name.to_lowercase()
-        .chars()
-        .map(|c| if c.is_alphanumeric() { c } else { '-' })
-        .collect::<String>()
-        .trim_matches('-')
-        .to_string()
-}
-
-fn get_current_nockvm_commit() -> Option<String> {
-    // Try to get the current commit from the nockchain repo
-    std::process::Command::new("git")
-        .args(&["ls-remote", "https://github.com/zorp-corp/nockchain.git", "HEAD"])
-        .output()
-        .ok()
-        .and_then(|output| {
-            if output.status.success() {
-                let output_str = String::from_utf8(output.stdout).ok()?;
-                output_str.split_whitespace().next().map(|s| s[..8].to_string())
-            } else {
-                None
-            }
-        })
 }

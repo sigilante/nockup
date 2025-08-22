@@ -9,18 +9,27 @@ description = "A NockApp project"
 name = "{{project_name}}"
 path = "src/main.rs"
 
-[lib]
-name = "{{project_name}}"
-path = "src/lib.rs"
-
 [dependencies]
 # NockVM dependency
-nockapp = { git = "https://github.com/zorp-corp/nockchain.git", rev = "{{nockvm_commit_hash}}" }
+nockapp = { git = "https://github.com/zorp-corp/nockchain.git", rev = "{{nockapp_commit_hash}}" }
+nockvm = { git = "https://github.com/zorp-corp/nockchain.git", rev = "{{nockapp_commit_hash}}" }
+nockvm_macros = { git = "https://github.com/zorp-corp/nockchain.git", rev = "{{nockapp_commit_hash}}" }
 
 # Common dependencies for NockApps
 serde = { version = "1.0", features = ["derive"] }
 toml = "0.8"
 anyhow = "1.0"
+bytes = "1.5.0"
+tokio = { version = "1.32", features = [
+  "fs",
+  "io-util",
+  "macros",
+  "net",
+  "rt-multi-thread",
+  "rt",
+  "signal",
+] }
+tokio-util = "0.7.11"
 
 [build-dependencies]
 # Build script dependencies if needed
