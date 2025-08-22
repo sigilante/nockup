@@ -15,7 +15,7 @@ path = "src/lib.rs"
 
 [dependencies]
 # NockVM dependency
-nockvm = { git = "https://github.com/zorp-corp/nockchain.git", rev = "{{nockvm_commit_hash}}" }
+nockapp = { git = "https://github.com/zorp-corp/nockchain.git", rev = "{{nockvm_commit_hash}}" }
 
 # Common dependencies for NockApps
 serde = { version = "1.0", features = ["derive"] }
