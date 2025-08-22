@@ -32,10 +32,6 @@ nockup version 0.0.1
 hoon   version 0.1.0
 hoonc  version 0.2.0
 
-# Check for updates to nockup, hoon, and hoonc.
-$ nockup up
-Checking for updates ... no new updates.
-
 # Initialize a default project.
 $ cp default-manifest.toml arcadia.toml
 $ nockup init arcadia 
@@ -93,4 +89,4 @@ The final product is, of course, a binary which you may run either directly or v
 ## Roadmap
 
 * implement version index
-* add self-updating support
+* add self-updating support (`nockup up`)
