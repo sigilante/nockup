@@ -36,25 +36,70 @@ pub async fn run(project: String) -> Result<()> {
     println!("{} Building project '{}'...", "🔨".green(), project.cyan());
     
     // Run cargo build in the project directory
-    let mut command = Command::new("cargo");
-    command
+    let mut cargo_command = Command::new("cargo");
+    cargo_command
         .arg("build")
         .arg("--release")  // Build in release mode by default
         .current_dir(project_dir)
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit());
     
-    let status = command.status().await
+    let status = cargo_command.status().await
         .context("Failed to execute cargo build")?;
     
-    if status.success() {
-        println!("{} Build completed successfully!", "✓".green());
-    } else {
+    if !status.success() {
         return Err(anyhow::anyhow!(
-            "Build failed with exit code: {}", 
+            "Cargo build failed with exit code: {}", 
             status.code().unwrap_or(-1)
         ));
     }
+    
+    println!("{} Cargo build completed successfully!", "✓".green());
+    
+    // Check if hoon app file exists
+    let hoon_app_path = project_dir.join("hoon/app/app.hoon");
+    if !hoon_app_path.exists() {
+        return Err(anyhow::anyhow!(
+            "Hoon app file not found: '{}'", 
+            hoon_app_path.display()
+        ));
+    }
+    
+    println!("{} Compiling Hoon app...", "📦".green());
+    
+    // Run hoonc command from project directory
+    let mut hoonc_command = Command::new("hoonc");
+    hoonc_command
+        .arg("hoon/app/app.hoon")
+        .current_dir(project_dir)  // Run in project directory
+        .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit());
+    
+    let hoonc_status = hoonc_command.status().await
+        .context("Failed to execute hoonc command - make sure hoonc is installed and in PATH")?;
+    
+    if !hoonc_status.success() {
+        return Err(anyhow::anyhow!(
+            "hoonc compilation failed with exit code: {}", 
+            hoonc_status.code().unwrap_or(-1)
+        ));
+    }
+    
+    // Check if out.jam was created in parent directory (hoonc bug/behavior)
+    let parent_out_jam = Path::new("out.jam");
+    if !parent_out_jam.exists() {
+        return Err(anyhow::anyhow!(
+            "Expected output file 'out.jam' was not created by hoonc"
+        ));
+    }
+    
+    // Move out.jam from parent directory to project directory
+    let project_out_jam = project_dir.join("out.jam");
+    tokio::fs::rename("out.jam", &project_out_jam).await
+        .context("Failed to move out.jam to project directory")?;
+    
+    println!("{} Hoon compilation completed successfully!", "✓".green());
+    println!("{} Generated: {}", "📄".green(), "out.jam".cyan());
     
     Ok(())
 }

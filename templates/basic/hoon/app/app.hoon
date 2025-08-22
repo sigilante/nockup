@@ -9,11 +9,11 @@
   ==
 ::
 +$  effect
-  $%  [%log str=@t]
+  $%  [%effect @t]
   ==
 ::
 +$  cause
-  $%  [%command str=@t]
+  $%  [%cause ~]
   ==
 --
 |%
@@ -42,8 +42,9 @@
     ?~  cause
       ~>  %slog.[3 (crip "invalid cause {<cause.input.ovum>}")]
       :_  state
-      [%log 'Invalid cause format']~
-    ~>  %slog.[1 (cat 3 'poked: ' str.u.cause)]
+      ^-  (list effect)
+      ~[[%effect 'Invalid cause format']]
+    ~>  %slog.[1 (cat 3 'poked: ' -.u.cause)]
     ~>  %slog.[0 'Pokes awaiting implementation']
     `state
   --
