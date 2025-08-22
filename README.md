@@ -35,11 +35,11 @@ hoonc  version 0.2.0
 # Start the nockup environment.
 $ nockup start
 🚀 Setting up nockup cache directory...
-📁 Cache location: /Users/neal/.nockup
+📁 Cache location: /Users/myuser/.nockup
 📁 Creating cache directory structure...
 ✓ Created directory structure
 ⬇️ Downloading templates from GitHub...
-Cloning into '/Users/neal/.nockup/temp_repo'...
+Cloning into '/Users/myuser/.nockup/temp_repo'...
 remote: Enumerating objects: 36, done.
 remote: Counting objects: 100% (36/36), done.
 remote: Compressing objects: 100% (30/30), done.
@@ -48,7 +48,7 @@ Receiving objects: 100% (36/36), 45.18 KiB | 1.56 MiB/s, done.
 Resolving deltas: 100% (1/1), done.
 ✓ Templates downloaded successfully
 ✅ Setup complete!
-📂 Templates are now available in: /Users/neal/.nockup/templates
+📂 Templates are now available in: /Users/myuser/.nockup/templates
 
 # Initialize a default project.
 $ cp default-manifest.toml arcadia.toml
@@ -103,6 +103,14 @@ I (11:53:15) Pokes awaiting implementation
 ```
 
 The final product is, of course, a binary which you may run either directly or via `nockup run` (as demonstrated here).
+
+## Uninstallation
+
+To uninstall Nockup delete the binary and remove the installation cache:
+
+```
+$ rm -rf ~/.nockup
+```
 
 ## Roadmap
 
