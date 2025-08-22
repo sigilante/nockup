@@ -84,20 +84,7 @@ pub async fn run(project: String) -> Result<()> {
             hoonc_status.code().unwrap_or(-1)
         ));
     }
-    
-    // Check if out.jam was created in parent directory (hoonc bug/behavior)
-    let parent_out_jam = Path::new("out.jam");
-    if !parent_out_jam.exists() {
-        return Err(anyhow::anyhow!(
-            "Expected output file 'out.jam' was not created by hoonc"
-        ));
-    }
-    
-    // Move out.jam from parent directory to project directory
-    let project_out_jam = project_dir.join("out.jam");
-    tokio::fs::rename("out.jam", &project_out_jam).await
-        .context("Failed to move out.jam to project directory")?;
-    
+
     println!("{} Hoon compilation completed successfully!", "✓".green());
     println!("{} Generated: {}", "📄".green(), "out.jam".cyan());
     
