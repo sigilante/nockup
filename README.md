@@ -32,6 +32,24 @@ nockup version 0.0.1
 hoon   version 0.1.0
 hoonc  version 0.2.0
 
+# Start the nockup environment.
+$ nockup start
+🚀 Setting up nockup cache directory...
+📁 Cache location: /Users/neal/.nockup
+📁 Creating cache directory structure...
+✓ Created directory structure
+⬇️ Downloading templates from GitHub...
+Cloning into '/Users/neal/.nockup/temp_repo'...
+remote: Enumerating objects: 36, done.
+remote: Counting objects: 100% (36/36), done.
+remote: Compressing objects: 100% (30/30), done.
+remote: Total 36 (delta 1), reused 18 (delta 0), pack-reused 0 (from 0)
+Receiving objects: 100% (36/36), 45.18 KiB | 1.56 MiB/s, done.
+Resolving deltas: 100% (1/1), done.
+✓ Templates downloaded successfully
+✅ Setup complete!
+📂 Templates are now available in: /Users/neal/.nockup/templates
+
 # Initialize a default project.
 $ cp default-manifest.toml arcadia.toml
 $ nockup init arcadia 

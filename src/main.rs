@@ -16,6 +16,9 @@ async fn main() {
             // No subcommand provided - show version info
             version::show_version_info().await
         }
+        Some(Commands::Start) => {
+            commands::start::run().await
+        }
         Some(Commands::Init { name }) => {
             commands::init::run(name).await
         }

@@ -33,7 +33,11 @@ pub async fn run(project_name: String) -> Result<()> {
     println!("Initializing new NockApp project '{}'...", project_name.green());
     
     let target_dir = Path::new(project_name);
-    let template_dir = Path::new("templates/basic");
+    // Use cache dir ~/.nockup/templates/basic
+    let template_dir = dirs::home_dir()
+        .ok_or_else(|| anyhow::anyhow!("Could not find home directory"))?
+        .join(".nockup/templates/basic");
+    // let template_dir = Path::new("~/.nockup/templates/basic");
     
     // Check if target directory already exists
     if target_dir.exists() {
@@ -46,7 +50,8 @@ pub async fn run(project_name: String) -> Result<()> {
     // Check if template directory exists
     if !template_dir.exists() {
         return Err(anyhow::anyhow!(
-            "Template directory 'templates/basic' not found. Make sure nockup is run from the correct directory."
+            "Template directory '{}' not found. Make sure nockup is run from the correct directory.",
+            template_dir.display()
         ));
     }
     
@@ -54,7 +59,7 @@ pub async fn run(project_name: String) -> Result<()> {
     let context = create_template_context(&default_config)?;
     
     // Copy template directory to new project location
-    copy_template_directory(template_dir, target_dir, &context)?;
+    copy_template_directory(template_dir.as_path(), target_dir, &context)?;
     
     println!("{} New project created in {}/", "✓".green(), format!("./{}/", project_name).cyan());
     println!("To get started:");

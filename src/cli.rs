@@ -11,6 +11,8 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 pub enum Commands {
+    /// Initialize nockup cache and download templates
+    Start,
     /// Initialize a new NockApp project from a .toml config file
     Init {
         /// Name of the project config file (looks for <name>.toml)
