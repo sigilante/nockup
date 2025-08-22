@@ -6,11 +6,22 @@ NockApp is a general-purpose framework for building apps that run the Nock ISA. 
 
 ## Installation
 
-```
-$ git clone https://github.com/sigilante/nockup.git
-$ cd nockup/
-$ cargo build
-```
+1. Install Nockchain and build `hoon` and `hoonc`.
+
+    ```
+    $ git clone https://github.com/zorp-corp/nockchain.git
+    $ cd nockchain
+    $ make install-hoonc
+    $ cargo install --locked --force --path crates/hoon --bin hoon
+    ```
+
+2. Install Nockup.
+
+    ```
+    $ git clone https://github.com/sigilante/nockup.git
+    $ cd nockup/
+    $ cargo build
+    ```
 
 ## Usage
 
