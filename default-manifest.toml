@@ -8,3 +8,4 @@ author_email = "nicolas@poussin.edu"
 github_username = "arcadia"
 license = "MIT"
 keywords = ["nockapp", "nockchain", "hoon"]
+nockapp_commit_hash = "336f744b6b83448ec2b86473a3dec29b15858999"

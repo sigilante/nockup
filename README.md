@@ -64,7 +64,6 @@ I (11:53:08) "hoonc: build succeeded, sending out write effect"
 I (11:53:08) "hoonc: output written successfully to '/Users/neal/zorp/nockup/arcadia/out.jam'"
 no panic!
 ✓ Hoon compilation completed successfully!
-
 # Run the project (wraps hoon).
 $ nockup run arcadia
 🔨 Running project 'arcadia'...
