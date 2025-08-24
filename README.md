@@ -23,6 +23,8 @@ NockApp is a general-purpose framework for building apps that run the Nock ISA. 
     $ cargo build
     ```
 
+    `nockup` builds by default in `./target/debug`, so further commands to `nockup` refer to it in whatever location you have it.
+
 ## Usage
 
 ```
