@@ -25,7 +25,7 @@ Nockup supports the following `nockup` commands.
 ### Toolchain
 
 - `toolchain list`: List all available toolchains.
-- `toolchain set`: Set the active toolchain, from `stable` and `nightly`.
+- `toolchain set`: Set the active toolchain, from `stable` and `nightly`.  (Most users will prefer `stable`.)
 
 ## Installation
 
