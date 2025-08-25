@@ -31,8 +31,8 @@ async fn main() {
         Some(Commands::Run { project }) => {
             commands::run::run(project).await
         }
-        Some(Commands::Toolchain { action }) => {
-            commands::toolchain::run(action).await
+        Some(Commands::Channel { action }) => {
+            commands::channel::run(action).await
         }
     };
     

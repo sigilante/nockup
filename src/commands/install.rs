@@ -1,6 +1,7 @@
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
+use blake3;
 use colored::Colorize;
-use md5::Context as Md5Context;
+use sha1::{Sha1, Digest};
 use std::fs;
 use std::path::PathBuf;
 use std::process::Stdio;
@@ -21,19 +22,19 @@ pub async fn run() -> Result<()> {
     // Download or update templates
     download_templates(&cache_dir).await?;
 
-    // Set default toolchain to stable and this architecture
+    // Set default channel to stable and this architecture
     let cache_dir = get_cache_dir()?;
     let config_path = cache_dir.join("config.toml");
     let mut config = get_config()?;
     println!("📝 Config installed at: {}", config_path.display());
-    config["toolchain"] = toml::Value::String("stable".into());
+    config["channel"] = toml::Value::String("stable".into());
     // Get architecture of current platform.
     config["architecture"] = toml::Value::String(std::env::consts::ARCH.into());
     // Write architecture to config file
     fs::write(config_path, toml::to_string(&config)?)
         .context("Failed to write config file")?;
 
-    // Download binaries for current toolchain.
+    // Download binaries for current channel.
     download_binaries(&config).await?;
 
     println!("{} Setup complete!", "✅".green());
@@ -185,7 +186,7 @@ fn get_config() -> Result<toml::Value> {
 }
 
 fn write_config(config_path: &PathBuf) -> Result<()> {
-    let default_config = format!(r#"toolchain = "stable"
+    let default_config = format!(r#"channel = "stable"
 architecture = "{}"
 "#, std::env::consts::ARCH);
     std::fs::write(config_path, default_config)
@@ -194,34 +195,38 @@ architecture = "{}"
 }
 
 async fn download_binaries(config: &toml::Value) -> Result<()> {
-    let toolchain = config["toolchain"].as_str()
-        .ok_or_else(|| anyhow::anyhow!("Invalid toolchain in config"))?;
+    let channel = config["channel"].as_str()
+        .ok_or_else(|| anyhow::anyhow!("Invalid channel in config"))?;
     let architecture = config["architecture"].as_str()
         .ok_or_else(|| anyhow::anyhow!("Invalid architecture in config"))?;
     
-    // Load toolchain details from ./manifests/
-    let channel = format!("channel-nockup-{}", toolchain);
+    // Load channel details from ./manifests/
+    let channel = format!("channel-nockup-{}", channel);
     let manifest_path = format!("./manifests/{}.toml", channel);
     let manifest = std::fs::read_to_string(&manifest_path)
-        .context(format!("Failed to read toolchain manifest for '{}'", channel))?;
+        .context(format!("Failed to read channel manifest for '{}'", channel))?;
     let manifest: toml::Value = toml::de::from_str(&manifest)
-        .context(format!("Failed to parse toolchain manifest for '{}'", channel))?;
+        .context(format!("Failed to parse channel manifest for '{}'", channel))?;
 
-    println!("{} Downloading binaries for toolchain '{}' and architecture '{}'...", 
-             "⬇️".green(), toolchain.cyan(), architecture.cyan());
+    println!("{} Downloading binaries for channel '{}' and architecture '{}'...", 
+             "⬇️".green(), channel.cyan(), architecture.cyan());
 
     // Download and verify appropriate binary.
     let binary_url_hoon = manifest["pkg"]["hoon"]["target"][architecture]["url"]
         .as_str()
         .ok_or_else(|| anyhow::anyhow!("Invalid URL for hoon binary"))?;
     let binary_url_hoon = binary_url_hoon.replace("http://", "https://");
-    let binary_md5_hoon = manifest["pkg"]["hoon"]["target"][architecture]["md5"]
+    let binary_blake3_hoon = manifest["pkg"]["hoon"]["target"][architecture]["hash_blake3"]
         .as_str()
-        .ok_or_else(|| anyhow::anyhow!("Invalid MD5 for hoon binary"))?;
+        .ok_or_else(|| anyhow::anyhow!("Invalid Blake3 hash for hoon binary"))?;
     println!("{} Downloading hoon binary from: {}", "⬇️".green(), binary_url_hoon.cyan());
-    println!("{} Expected MD5 checksum: {}", "🔑".green(), binary_md5_hoon.cyan());
+    println!("{} Expected Blake3 checksum: {}", "🔑".green(), binary_blake3_hoon.cyan());
+    let binary_sha1_hoon = manifest["pkg"]["hoon"]["target"][architecture]["hash_sha1"]
+        .as_str()
+        .ok_or_else(|| anyhow::anyhow!("Invalid SHA1 hash for hoon binary"))?;
+    println!("{} Expected SHA1 checksum: {}", "🔑".green(), binary_sha1_hoon.cyan());
     let hoon_binary = download_file(&binary_url_hoon).await?;
-    verify_checksum(&hoon_binary, &binary_md5_hoon).await?;
+    verify_checksums(&hoon_binary, &binary_blake3_hoon, &binary_sha1_hoon).await?;
 
     // Move the downloaded binary to the appropriate location
     let target_dir = get_cache_dir()?;
@@ -251,19 +256,36 @@ async fn download_file(url: &str) -> Result<PathBuf> {
     Ok(temp_file)
 }
 
-async fn verify_checksum(file_path: &PathBuf, expected_md5: &str) -> Result<()> {
+async fn verify_checksums(file_path: &PathBuf, expected_blake3: &str, expected_sha1: &str) -> Result<()> {
     let mut file = std::fs::File::open(file_path)
         .context("Failed to open file for checksum verification")?;
-    let mut context = Md5Context::new();
-    std::io::copy(&mut file, &mut context)
+    let bytes = std::fs::read(file_path)
         .context("Failed to read file for checksum verification")?;
-    let result = context.compute();
-    let computed_md5 = format!("{:x}", result);
-    if computed_md5 != expected_md5 {
+
+    let computed_blake3 = blake3::hash(&bytes);
+    if computed_blake3.to_string() != expected_blake3 {
         return Err(anyhow::anyhow!(
             "Checksum verification failed: expected {}, got {}",
-            expected_md5,
-            computed_md5
+            expected_blake3,
+            computed_blake3
+        ));
+    }
+
+    // Get SHA1 checksum
+    let mut hasher = Sha1::new();
+    hasher.update(&bytes);
+    let computed_sha1 = hasher.finalize();
+    let expected_sha1: [u8; 20] = hex::decode(expected_sha1)
+            .map_err(|e| anyhow::anyhow!("Invalid hex SHA-1: {}", e))?
+            .try_into()
+            .map_err(|_| anyhow!("Failed to convert to fixed array (length mismatch)"))?;  // No need to format e here
+    if computed_sha1.as_slice() != &expected_sha1 {
+        let expected_hex = hex::encode(&expected_sha1);
+        let computed_hex = hex::encode(computed_sha1.as_slice());
+        return Err(anyhow::anyhow!(
+            "Checksum verification failed: expected {}, got {}",
+            expected_hex,
+            computed_hex
         ));
     }
     Ok(())

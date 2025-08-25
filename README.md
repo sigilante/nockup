@@ -1,4 +1,4 @@
-# Nockup: the NockApp toolchain installer
+# Nockup: the NockApp channel installer
 
 *Nockup* installs the Hoon programming language and produces a basic template app for the NockApp framework.
 
@@ -22,10 +22,10 @@ Nockup supports the following `nockup` commands.
 - `build`:  Build a NockApp project.
 - `run`:  Run a NockApp project.
 
-### Toolchain
+### channel
 
-- `toolchain list`: List all available toolchains.
-- `toolchain set`: Set the active toolchain, from `stable` and `nightly`.  (Most users will prefer `stable`.)
+- `channel list`: List all available channels.
+- `channel set`: Set the active channel, from `stable` and `nightly`.  (Most users will prefer `stable`.)
 
 ## Installation
 
@@ -56,6 +56,8 @@ $ nockup
 nockup version 0.0.1
 hoon   version 0.1.0
 hoonc  version 0.2.0
+current channel stable
+current architecture aarch64
 
 # Start the nockup environment.
 $ nockup install
@@ -126,13 +128,13 @@ I (11:53:15) Pokes awaiting implementation
 
 ✓ Run completed successfully!
 
-$ ./target/debug/nockup toolchain list
-Default toolchain: "stable"
+$ ./target/debug/nockup channel list
+Default channel: "stable"
 Architecture: "aarch64"
-$ ./target/debug/nockup toolchain set nightly
-Set default toolchain to 'nightly'.
-$ ./target/debug/nockup toolchain list
-Default toolchain: "nightly"
+$ ./target/debug/nockup channel set nightly
+Set default channel to 'nightly'.
+$ ./target/debug/nockup channel list
+Default channel: "nightly"
 Architecture: "aarch64"
 ```
 
@@ -150,10 +152,9 @@ $ rm -rf ~/.nockup
 
 *Rustup is entirely experimental and many parts are unaudited.  We make no representations or guarantees as to the behavior of this software.*
 
-Nockup uses HTTPS for binary downloads.  The `nockup install` and  `nockup update` commands check the MD5 hashes of the downloaded binaries against the reported index.
+Nockup uses HTTPS for binary downloads (overriding HTTP in the channel manifests).  The commands `nockup install` and  `nockup update` both check the Blake3 and SHA-1 hashes of the downloaded binaries against the reported index.
 
 ## Roadmap
 
-* implement version index
-* add self-updating support (`nockup up`)
-* add code signing support
+* [ ] implement CI with index for channels and versioning
+* [ ] add code signing support

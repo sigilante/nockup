@@ -3,4 +3,4 @@ pub mod start;
 pub mod update;
 pub mod build;
 pub mod run;
-pub mod toolchain;
+pub mod channel;

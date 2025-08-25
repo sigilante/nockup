@@ -30,19 +30,19 @@ pub enum Commands {
         /// Path to the project directory  
         project: String,
     },
-    /// Manage toolchains (e.g., set default)
-    Toolchain {
+    /// Manage channels (e.g., set default)
+    Channel {
         #[command(subcommand)]
-        action: ToolchainAction,
+        action: ChannelAction,
     },
 }
 
 #[derive(Subcommand)]
-pub enum ToolchainAction {
-    /// Set the default toolchain (e.g., stable, nightly)
+pub enum ChannelAction {
+    /// Set the default channel (e.g., stable, nightly)
     Set {
-        toolchain: String,  // e.g., "stable" or "nightly"
+        channel: String,  // e.g., "stable" or "nightly"
     },
-    /// Show the current toolchain
+    /// Show the current channel
     List,
 }

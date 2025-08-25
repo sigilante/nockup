@@ -1,2 +1,2 @@
-toolchain = "stable"
+channel = "stable"
 architecture = "aarch64-apple-darwin"
