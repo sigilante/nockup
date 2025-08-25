@@ -22,6 +22,11 @@ Nockup supports the following `nockup` commands.
 - `build`:  Build a NockApp project.
 - `run`:  Run a NockApp project.
 
+### Toolchain
+
+- `toolchain list`: List all available toolchains.
+- `toolchain set`: Set the active toolchain, from `stable` and `nightly`.
+
 ## Installation
 
 1. Install Nockchain and build `hoon` and `hoonc`.
@@ -120,6 +125,15 @@ W (11:53:15) poked: cause
 I (11:53:15) Pokes awaiting implementation
 
 ✓ Run completed successfully!
+
+$ ./target/debug/nockup toolchain list
+Default toolchain: "stable"
+Architecture: "aarch64"
+$ ./target/debug/nockup toolchain set nightly
+Set default toolchain to 'nightly'.
+$ ./target/debug/nockup toolchain list
+Default toolchain: "nightly"
+Architecture: "aarch64"
 ```
 
 The final product is, of course, a binary which you may run either directly or via `nockup run` (as demonstrated here).
