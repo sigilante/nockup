@@ -200,9 +200,9 @@ async fn download_binaries(config: &toml::Value) -> Result<()> {
     let architecture = config["architecture"].as_str()
         .ok_or_else(|| anyhow::anyhow!("Invalid architecture in config"))?;
     
-    // Load channel details from ./manifests/
+    // Load channel details from ./toolchain/
     let channel = format!("channel-nockup-{}", channel);
-    let manifest_path = format!("./manifests/{}.toml", channel);
+    let manifest_path = format!("./toolchain/{}.toml", channel);
     let manifest = std::fs::read_to_string(&manifest_path)
         .context(format!("Failed to read channel manifest for '{}'", channel))?;
     let manifest: toml::Value = toml::de::from_str(&manifest)
@@ -257,8 +257,6 @@ async fn download_file(url: &str) -> Result<PathBuf> {
 }
 
 async fn verify_checksums(file_path: &PathBuf, expected_blake3: &str, expected_sha1: &str) -> Result<()> {
-    let mut file = std::fs::File::open(file_path)
-        .context("Failed to open file for checksum verification")?;
     let bytes = std::fs::read(file_path)
         .context("Failed to read file for checksum verification")?;
 
