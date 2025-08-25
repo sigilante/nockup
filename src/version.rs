@@ -22,7 +22,7 @@ pub async fn show_version_info() -> Result<()> {
     // Get current channel and architecture
     // The channel is in the TOML file at ~/.nockup/config.toml
     let config = get_config()?;
-    println!("current channel {}", config["channel"].as_str().unwrap_or("stable"));
+    println!("current toolchain {}", config["toolchain"].as_str().unwrap_or("stable"));
     println!("current architecture {}", config["architecture"].as_str().unwrap_or("unknown"));
 
     Ok(())

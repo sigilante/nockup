@@ -174,6 +174,7 @@ async fn download_binaries(config: &toml::Value) -> Result<()> {
     let binary_url_hoon = manifest["pkg"]["hoon"]["target"][architecture]["url"]
         .as_str()
         .ok_or_else(|| anyhow::anyhow!("Invalid URL for hoon binary"))?;
+    let binary_url_hoon = binary_url_hoon.replace("http://", "https://");
     let binary_md5_hoon = manifest["pkg"]["hoon"]["target"][architecture]["md5"]
         .as_str()
         .ok_or_else(|| anyhow::anyhow!("Invalid MD5 for hoon binary"))?;

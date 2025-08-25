@@ -150,7 +150,7 @@ $ rm -rf ~/.nockup
 
 *Rustup is entirely experimental and many parts are unaudited.  We make no representations or guarantees as to the behavior of this software.*
 
-The `nockup install` and  `nockup update` commands check the MD5 hashes of the downloaded binaries against the reported index.
+Nockup uses HTTPS for binary downloads.  The `nockup install` and  `nockup update` commands check the MD5 hashes of the downloaded binaries against the reported index.
 
 ## Roadmap
 
