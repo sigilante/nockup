@@ -1,5 +1,6 @@
 use anyhow::{Context, Result};
 use colored::Colorize;
+use md5::Context as Md5Context;
 use std::fs;
 use std::path::PathBuf;
 use std::process::Stdio;
@@ -24,8 +25,7 @@ pub async fn run() -> Result<()> {
     let cache_dir = get_cache_dir()?;
     let config_path = cache_dir.join("config.toml");
     let mut config = get_config()?;
-    println!("Config path: {}", config_path.display());
-    println!("Initial config: {:?}", config);
+    println!("📝 Config installed at: {}", config_path.display());
     config["toolchain"] = toml::Value::String("stable".into());
     // Get architecture of current platform.
     config["architecture"] = toml::Value::String(std::env::consts::ARCH.into());
@@ -33,11 +33,14 @@ pub async fn run() -> Result<()> {
     fs::write(config_path, toml::to_string(&config)?)
         .context("Failed to write config file")?;
 
+    // Download binaries for current toolchain.
+    download_binaries(&config).await?;
+
     println!("{} Setup complete!", "✅".green());
     println!("{} Templates are now available in: {}", 
              "📂".blue(), 
              cache_dir.join("templates").display().to_string().cyan());
-    
+
     Ok(())
 }
 
@@ -73,7 +76,7 @@ async fn download_templates(cache_dir: &PathBuf) -> Result<()> {
         println!("{} Existing templates found, updating...", "🔄".yellow());
         update_templates(&templates_dir).await?;
     } else {
-        println!("{} Downloading templates from GitHub...", "⬇️".green());
+        println!("{}  Downloading templates from GitHub...", "⬇️".green());
         clone_templates(&templates_dir).await?;
     }
     
@@ -187,5 +190,80 @@ architecture = "{}"
 "#, std::env::consts::ARCH);
     std::fs::write(config_path, default_config)
         .context("Failed to create default config file")?;
+    Ok(())
+}
+
+async fn download_binaries(config: &toml::Value) -> Result<()> {
+    let toolchain = config["toolchain"].as_str()
+        .ok_or_else(|| anyhow::anyhow!("Invalid toolchain in config"))?;
+    let architecture = config["architecture"].as_str()
+        .ok_or_else(|| anyhow::anyhow!("Invalid architecture in config"))?;
+    
+    // Load toolchain details from ./manifests/
+    let channel = format!("channel-nockup-{}", toolchain);
+    let manifest_path = format!("./manifests/{}.toml", channel);
+    let manifest = std::fs::read_to_string(&manifest_path)
+        .context(format!("Failed to read toolchain manifest for '{}'", channel))?;
+    let manifest: toml::Value = toml::de::from_str(&manifest)
+        .context(format!("Failed to parse toolchain manifest for '{}'", channel))?;
+
+    println!("{} Downloading binaries for toolchain '{}' and architecture '{}'...", 
+             "⬇️".green(), toolchain.cyan(), architecture.cyan());
+
+    // Download and verify appropriate binary.
+    let binary_url_hoon = manifest["pkg"]["hoon"]["target"][architecture]["url"]
+        .as_str()
+        .ok_or_else(|| anyhow::anyhow!("Invalid URL for hoon binary"))?;
+    let binary_md5_hoon = manifest["pkg"]["hoon"]["target"][architecture]["md5"]
+        .as_str()
+        .ok_or_else(|| anyhow::anyhow!("Invalid MD5 for hoon binary"))?;
+    println!("{} Downloading hoon binary from: {}", "⬇️".green(), binary_url_hoon.cyan());
+    println!("{} Expected MD5 checksum: {}", "🔑".green(), binary_md5_hoon.cyan());
+    let hoon_binary = download_file(&binary_url_hoon).await?;
+    verify_checksum(&hoon_binary, &binary_md5_hoon).await?;
+
+    // Move the downloaded binary to the appropriate location
+    let target_dir = get_cache_dir()?;
+    let binary_path = target_dir.join("bin");
+    fs::create_dir_all(&binary_path)?;
+    fs::rename(&hoon_binary, binary_path.join("hoon"))?;
+    Ok(())
+}
+
+async fn download_file(url: &str) -> Result<PathBuf> {
+    let response = reqwest::get(url)
+        .await
+        .context(format!("Failed to download file from '{}'", url))?;
+    if !response.status().is_success() {
+        return Err(anyhow::anyhow!(
+            "Failed to download file from '{}': HTTP {}", 
+            url, 
+            response.status()
+        ));
+    }
+    let temp_file = std::env::temp_dir().join("nockup_download");
+    let mut file = std::fs::File::create(&temp_file)
+        .context("Failed to create temporary file")?;
+    let content = response.bytes().await?;
+    std::io::copy(&mut content.as_ref(), &mut file)
+        .context("Failed to write to temporary file")?;
+    Ok(temp_file)
+}
+
+async fn verify_checksum(file_path: &PathBuf, expected_md5: &str) -> Result<()> {
+    let mut file = std::fs::File::open(file_path)
+        .context("Failed to open file for checksum verification")?;
+    let mut context = Md5Context::new();
+    std::io::copy(&mut file, &mut context)
+        .context("Failed to read file for checksum verification")?;
+    let result = context.compute();
+    let computed_md5 = format!("{:x}", result);
+    if computed_md5 != expected_md5 {
+        return Err(anyhow::anyhow!(
+            "Checksum verification failed: expected {}, got {}",
+            expected_md5,
+            computed_md5
+        ));
+    }
     Ok(())
 }
