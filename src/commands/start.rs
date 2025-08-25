@@ -1,173 +1,163 @@
 use anyhow::{Context, Result};
 use colored::Colorize;
-use std::path::PathBuf;
-use tokio::fs;
-use tokio::process::Command;
+use handlebars::Handlebars;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::fs;
+use std::path::Path;
 
-const GITHUB_REPO: &str = "sigilante/nockup";
-const TEMPLATES_BRANCH: &str = "master"; // or whatever branch has your templates
+#[derive(Debug, Deserialize, Serialize)]
+struct ProjectConfig {
+    project: ProjectInfo,
+}
 
-pub async fn run() -> Result<()> {
-    let cache_dir = get_cache_dir()?;
+#[derive(Debug, Deserialize, Serialize)]
+struct ProjectInfo {
+    name: String,
+    project_name: String,
+    version: String,
+    description: String,
+    author_name: String,
+    author_email: String,
+    github_username: String,
+    license: String,
+    keywords: Vec<String>,
+    nockapp_commit_hash: String,
+}
+
+pub async fn run(project_name: String) -> Result<()> {
+    // Load the project-specific manifest configuration
+    let default_config = load_project_config(&project_name)?;
+    let project_name = &default_config.project.project_name;
     
-    println!("{} Setting up nockup cache directory...", "🚀".green());
-    println!("{} Cache location: {}", "📁".blue(), cache_dir.display().to_string().cyan());
+    println!("Initializing new NockApp project '{}'...", project_name.green());
     
-    // Create cache directory structure
-    create_cache_structure(&cache_dir).await?;
+    let target_dir = Path::new(project_name);
+    // Use cache dir ~/.nockup/templates/basic
+    let template_dir = dirs::home_dir()
+        .ok_or_else(|| anyhow::anyhow!("Could not find home directory"))?
+        .join(".nockup/templates/basic");
+    // let template_dir = Path::new("~/.nockup/templates/basic");
     
-    // Download or update templates
-    download_templates(&cache_dir).await?;
+    // Check if target directory already exists
+    if target_dir.exists() {
+        return Err(anyhow::anyhow!(
+            "Directory '{}' already exists. Please choose a different name or remove the existing directory.",
+            project_name
+        ));
+    }
     
-    println!("{} Setup complete!", "✅".green());
-    println!("{} Templates are now available in: {}", 
-             "📂".blue(), 
-             cache_dir.join("templates").display().to_string().cyan());
+    // Check if template directory exists
+    if !template_dir.exists() {
+        return Err(anyhow::anyhow!(
+            "Template directory '{}' not found. Make sure nockup is run from the correct directory.",
+            template_dir.display()
+        ));
+    }
+    
+    // Create template context from the project config
+    let context = create_template_context(&default_config)?;
+    
+    // Copy template directory to new project location
+    copy_template_directory(template_dir.as_path(), target_dir, &context)?;
+    
+    println!("{} New project created in {}/", "✓".green(), format!("./{}/", project_name).cyan());
+    println!("To get started:");
+    println!("  nockup build {}", project_name.cyan());
+    println!("  nockup run {}", project_name.cyan());
     
     Ok(())
 }
 
-fn get_cache_dir() -> Result<PathBuf> {
-    let home = dirs::home_dir()
-        .ok_or_else(|| anyhow::anyhow!("Could not find home directory"))?;
-    Ok(home.join(".nockup"))
+fn load_project_config(project_name: &str) -> Result<ProjectConfig> {
+    let config_filename = format!("{}.toml", project_name);
+    let config_path = Path::new(&config_filename);
+    
+    if !config_path.exists() {
+        return Err(anyhow::anyhow!(
+            "Project configuration file '{}.toml' not found", 
+            project_name
+        ));
+    }
+    
+    let config_content = fs::read_to_string(config_path)
+        .with_context(|| format!("Failed to read {}.toml", project_name))?;
+    
+    toml::from_str(&config_content)
+        .with_context(|| format!("Failed to parse {}.toml", project_name))
 }
 
-async fn create_cache_structure(cache_dir: &PathBuf) -> Result<()> {
-    println!("{} Creating cache directory structure...", "📁".green());
+fn create_template_context(default_config: &ProjectConfig) -> Result<HashMap<String, String>> {
+    let mut context = HashMap::new();
     
-    // Create main cache directory
-    fs::create_dir_all(cache_dir).await
-        .context("Failed to create cache directory")?;
+    // Add all values directly from default-manifest.toml
+    context.insert("name".to_string(), default_config.project.name.clone());
+    context.insert("project_name".to_string(), default_config.project.project_name.clone());
+    context.insert("version".to_string(), default_config.project.version.clone());
+    context.insert("project_description".to_string(), default_config.project.description.clone());
+    context.insert("description".to_string(), default_config.project.description.clone());
+    context.insert("author_name".to_string(), default_config.project.author_name.clone());
+    context.insert("author_email".to_string(), default_config.project.author_email.clone());
+    context.insert("github_username".to_string(), default_config.project.github_username.clone());
+    context.insert("license".to_string(), default_config.project.license.clone());
+    context.insert("keywords".to_string(), default_config.project.keywords.join("\", \""));
+    context.insert("nockapp_commit_hash".to_string(), default_config.project.nockapp_commit_hash.clone());
+
+    Ok(context)
+}
+
+fn copy_template_directory(src_dir: &Path, dest_dir: &Path, context: &HashMap<String, String>) -> Result<()> {
+    let handlebars = Handlebars::new();
     
-    // Create bin subdirectory
-    let bin_dir = cache_dir.join("bin");
-    fs::create_dir_all(&bin_dir).await
-        .context("Failed to create bin directory")?;
+    // Create the destination directory
+    fs::create_dir_all(dest_dir)
+        .with_context(|| format!("Failed to create directory '{}'", dest_dir.display()))?;
     
-    // Create templates subdirectory
-    let templates_dir = cache_dir.join("templates");
-    fs::create_dir_all(&templates_dir).await
-        .context("Failed to create templates directory")?;
+    // Recursively copy and process template directory
+    copy_dir_recursive(src_dir, dest_dir, &handlebars, context, dest_dir)?;
     
-    println!("{} Created directory structure", "✓".green());
     Ok(())
 }
 
-async fn download_templates(cache_dir: &PathBuf) -> Result<()> {
-    let templates_dir = cache_dir.join("templates");
-    
-    // Check if templates directory already has content
-    if has_existing_templates(&templates_dir).await? {
-        println!("{} Existing templates found, updating...", "🔄".yellow());
-        update_templates(&templates_dir).await?;
-    } else {
-        println!("{} Downloading templates from GitHub...", "⬇️".green());
-        clone_templates(&templates_dir).await?;
-    }
-    
-    Ok(())
-}
-
-async fn has_existing_templates(templates_dir: &PathBuf) -> Result<bool> {
-    if !templates_dir.exists() {
-        return Ok(false);
-    }
-    
-    // Check if it's a git repository with our remote
-    let git_dir = templates_dir.join(".git");
-    if !git_dir.exists() {
-        return Ok(false);
-    }
-    
-    // Check if it has any content
-    let mut entries = fs::read_dir(templates_dir).await
-        .context("Failed to read templates directory")?;
-    
-    let mut count = 0;
-    while let Some(_entry) = entries.next_entry().await? {
-        count += 1;
-        if count > 1 { // More than just .git directory
-            return Ok(true);
+fn copy_dir_recursive(
+    src_dir: &Path,
+    dest_dir: &Path,
+    handlebars: &Handlebars,
+    context: &HashMap<String, String>,
+    project_root: &Path,
+) -> Result<()> {
+    for entry in fs::read_dir(src_dir)
+        .with_context(|| format!("Failed to read directory '{}'", src_dir.display()))? 
+    {
+        let entry = entry?;
+        let src_path = entry.path();
+        let file_name = entry.file_name();
+        let dest_path = dest_dir.join(&file_name);
+        
+        if src_path.is_dir() {
+            // Create subdirectory and recurse
+            fs::create_dir_all(&dest_path)
+                .with_context(|| format!("Failed to create directory '{}'", dest_path.display()))?;
+            copy_dir_recursive(&src_path, &dest_path, handlebars, context, project_root)?;
+        } else {
+            // Copy and process file
+            let content = fs::read_to_string(&src_path)
+                .with_context(|| format!("Failed to read file '{}'", src_path.display()))?;
+            
+            // Process template variables in file content
+            let processed_content = handlebars
+                .render_template(&content, context)
+                .with_context(|| format!("Failed to process template for '{}'", src_path.display()))?;
+            
+            fs::write(&dest_path, processed_content)
+                .with_context(|| format!("Failed to write file '{}'", dest_path.display()))?;
+            
+            // Show relative path from project root for cleaner output
+            let relative_path = dest_path.strip_prefix(project_root)
+                .unwrap_or(&dest_path);
+            println!("  {} {}", "create".green(), relative_path.display());
         }
     }
     
-    Ok(false)
-}
-
-async fn clone_templates(templates_dir: &PathBuf) -> Result<()> {
-    // Remove existing directory if it exists but is empty/corrupted
-    if templates_dir.exists() {
-        fs::remove_dir_all(templates_dir).await
-            .context("Failed to remove existing templates directory")?;
-    }
-    
-    // Create a temporary directory for the full clone
-    let temp_dir = templates_dir.parent().unwrap().join("temp_repo");
-    if temp_dir.exists() {
-        fs::remove_dir_all(&temp_dir).await.ok();
-    }
-    
-    let repo_url = format!("https://github.com/{}.git", GITHUB_REPO);
-    
-    // Clone the full repo to temp directory
-    let mut command = Command::new("git");
-    command
-        .arg("clone")
-        .arg("--depth=1") // Shallow clone for faster download
-        .arg("--branch")
-        .arg(TEMPLATES_BRANCH)
-        .arg(&repo_url)
-        .arg(&temp_dir);
-    
-    let status = command.status().await
-        .context("Failed to execute git clone - make sure git is installed")?;
-    
-    if !status.success() {
-        return Err(anyhow::anyhow!(
-            "Failed to clone templates from GitHub. Exit code: {}", 
-            status.code().unwrap_or(-1)
-        ));
-    }
-    
-    // Check if templates directory exists in the repo
-    let repo_templates_dir = temp_dir.join("templates");
-    if !repo_templates_dir.exists() {
-        // Cleanup and return error
-        fs::remove_dir_all(&temp_dir).await.ok();
-        return Err(anyhow::anyhow!(
-            "No 'templates' directory found in the repository"
-        ));
-    }
-    
-    // Move just the templates directory to our cache location
-    fs::rename(&repo_templates_dir, templates_dir).await
-        .context("Failed to move templates directory from repo")?;
-    
-    // Clean up the temporary repo directory
-    fs::remove_dir_all(&temp_dir).await
-        .context("Failed to clean up temporary directory")?;
-    
-    println!("{} Templates downloaded successfully", "✓".green());
     Ok(())
-}
-
-async fn update_templates(templates_dir: &PathBuf) -> Result<()> {
-    // For now, just re-clone to get the latest version
-    // In the future, you might want to implement proper git pull logic
-    clone_templates(templates_dir).await
-}
-
-// Helper function to get the templates directory path
-pub fn get_templates_dir() -> Result<PathBuf> {
-    let cache_dir = get_cache_dir()?;
-    Ok(cache_dir.join("templates"))
-}
-
-// Helper function to check if cache is set up
-pub fn is_cache_initialized() -> Result<bool> {
-    let cache_dir = get_cache_dir()?;
-    let templates_dir = cache_dir.join("templates");
-    
-    Ok(cache_dir.exists() && templates_dir.exists())
 }

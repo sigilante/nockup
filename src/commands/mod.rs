@@ -1,5 +1,6 @@
-pub mod init;
-pub mod up;
+pub mod install;
+pub mod start;
+pub mod update;
 pub mod build;
 pub mod run;
-pub mod start;
+pub mod toolchain;

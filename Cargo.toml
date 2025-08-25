@@ -32,7 +32,7 @@ toml = "0.8"
 tokio = { version = "1.0", features = ["rt-multi-thread", "macros", "fs", "process"] }
 
 # HTTP client for update checks
-reqwest = { version = "0.11", features = ["json"] }
+reqwest = { version = "0.11", features = ["json", "blocking"] }
 
 # File system operations
 fs_extra = "1.3"
@@ -59,6 +59,8 @@ dirs = "5.0"
 serde_json = "1.0"
 
 walkdir = "2.4"
+
+md5 = "0.7"
 
 [build-dependencies]
 # For generating version info at build time

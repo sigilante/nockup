@@ -16,20 +16,23 @@ async fn main() {
             // No subcommand provided - show version info
             version::show_version_info().await
         }
-        Some(Commands::Start) => {
-            commands::start::run().await
+        Some(Commands::Install) => {
+            commands::install::run().await
         }
-        Some(Commands::Init { name }) => {
-            commands::init::run(name).await
+        Some(Commands::Start { name }) => {
+            commands::start::run(name).await
         }
-        Some(Commands::Up) => {
-            commands::up::run().await
+        Some(Commands::Update) => {
+            commands::update::run().await
         }
         Some(Commands::Build { project }) => {
             commands::build::run(project).await
         }
         Some(Commands::Run { project }) => {
             commands::run::run(project).await
+        }
+        Some(Commands::Toolchain { action }) => {
+            commands::toolchain::run(action).await
         }
     };
     

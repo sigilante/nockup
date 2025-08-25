@@ -4,6 +4,24 @@
 
 NockApp is a general-purpose framework for building apps that run the Nock ISA.  It is particularly well-suited for use with [Nockchain](https://nockchain.org) and the Nock ZKVM.
 
+![](https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/RCA_Indian_Head_Test_Pattern.svg/2560px-RCA_Indian_Head_Test_Pattern.svg.png)
+
+## Usage
+
+Nockup supports the following `nockup` commands.
+
+### Management
+
+- `install`:  Initialize Nockup cache and download templates.
+- `update`:  Check for updates to `nockup`, `hoon`, and `hoonc`.
+- `help`:  Print this message or the help of the given subcommand(s).
+
+### Project
+
+- `start`:  Initialize a new NockApp project from a .toml config file.
+- `build`:  Build a NockApp project.
+- `run`:  Run a NockApp project.
+
 ## Installation
 
 1. Install Nockchain and build `hoon` and `hoonc`.
@@ -35,7 +53,7 @@ hoon   version 0.1.0
 hoonc  version 0.2.0
 
 # Start the nockup environment.
-$ nockup start
+$ nockup install
 🚀 Setting up nockup cache directory...
 📁 Cache location: /Users/myuser/.nockup
 📁 Creating cache directory structure...
@@ -54,7 +72,7 @@ Resolving deltas: 100% (1/1), done.
 
 # Initialize a default project.
 $ cp default-manifest.toml arcadia.toml
-$ nockup init arcadia 
+$ nockup start arcadia 
 Initializing new NockApp project 'arcadia'...
   create Cargo.toml
   create manifest.toml
@@ -114,7 +132,14 @@ To uninstall Nockup delete the binary and remove the installation cache:
 $ rm -rf ~/.nockup
 ```
 
+## Disclaimer
+
+*Rustup is entirely experimental and many parts are unaudited.  We make no representations or guarantees as to the behavior of this software.*
+
+The `nockup install` and  `nockup update` commands check the MD5 hashes of the downloaded binaries against the reported index.
+
 ## Roadmap
 
 * implement version index
 * add self-updating support (`nockup up`)
+* add code signing support

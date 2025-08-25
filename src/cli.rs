@@ -12,14 +12,14 @@ pub struct Cli {
 #[derive(Subcommand)]
 pub enum Commands {
     /// Initialize nockup cache and download templates
-    Start,
+    Install,
     /// Initialize a new NockApp project from a .toml config file
-    Init {
+    Start {
         /// Name of the project config file (looks for <name>.toml)
         name: String,
     },
     /// Check for updates to nockup, hoon, and hoonc
-    Up,
+    Update,
     /// Build a NockApp project
     Build {
         /// Path to the project directory
@@ -30,4 +30,19 @@ pub enum Commands {
         /// Path to the project directory  
         project: String,
     },
+    /// Manage toolchains (e.g., set default)
+    Toolchain {
+        #[command(subcommand)]
+        action: ToolchainAction,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum ToolchainAction {
+    /// Set the default toolchain (e.g., stable, nightly)
+    Set {
+        toolchain: String,  // e.g., "stable" or "nightly"
+    },
+    /// Show the current toolchain
+    List,
 }

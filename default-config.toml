@@ -1,0 +1,2 @@
+toolchain = "stable"
+architecture = "aarch64-apple-darwin"

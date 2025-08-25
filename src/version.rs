@@ -1,5 +1,6 @@
 use anyhow::Result;
 use colored::Colorize;
+use std::path::PathBuf;
 use tokio::process::Command as TokioCommand;
 
 pub async fn show_version_info() -> Result<()> {
@@ -17,7 +18,13 @@ pub async fn show_version_info() -> Result<()> {
         Ok(version) => println!("hoonc  version {}", version),
         Err(_) => println!("hoonc  {}", "not found".red()),
     }
-    
+
+    // Get current channel and architecture
+    // The channel is in the TOML file at ~/.nockup/config.toml
+    let config = get_config()?;
+    println!("current channel {}", config["channel"].as_str().unwrap_or("stable"));
+    println!("current architecture {}", config["architecture"].as_str().unwrap_or("unknown"));
+
     Ok(())
 }
 
@@ -70,4 +77,18 @@ fn extract_version_string(version_line: &str) -> String {
     
     // Fallback: return the whole line.
     version_line.to_string()
+}
+
+fn get_cache_dir() -> Result<PathBuf> {
+    let home = dirs::home_dir()
+        .ok_or_else(|| anyhow::anyhow!("Could not find home directory"))?;
+    Ok(home.join(".nockup"))
+}
+
+fn get_config() -> Result<toml::Value> {
+    let cache_dir = get_cache_dir()?;
+    let config_path = cache_dir.join("config.toml");
+    let config_str = std::fs::read_to_string(&config_path)?;
+    let mut config: toml::Value = toml::de::from_str(&config_str)?;
+    Ok(config)
 }
