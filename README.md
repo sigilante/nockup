@@ -154,6 +154,8 @@ $ rm -rf ~/.nockup
 
 Nockup uses HTTPS for binary downloads (overriding HTTP in the channel manifests).  The commands `nockup install` and  `nockup update` both check the Blake3 and SHA-1 hashes of the downloaded binaries against the reported index.
 
+Code building is a general-purpose computing process, like `eval`.  You should not do it on the same machine on which you store your wallet private keys.
+
 ## Roadmap
 
 * [ ] implement CI with index for channels and versioning
