@@ -2,6 +2,7 @@ use anyhow::{Context, Result};
 use colored::Colorize;
 use std::fs;
 use std::path::PathBuf;
+use std::process::Stdio;
 use tokio::process::Command;
 
 const GITHUB_REPO: &str = "sigilante/nockup";
@@ -121,7 +122,7 @@ async fn clone_templates(templates_dir: &PathBuf) -> Result<()> {
     
     let repo_url = format!("https://github.com/{}.git", GITHUB_REPO);
     
-    // Clone the full repo to temp directory
+    // Clone the full repo to temp directory; suppress output
     let mut command = Command::new("git");
     command
         .arg("clone")
@@ -131,6 +132,8 @@ async fn clone_templates(templates_dir: &PathBuf) -> Result<()> {
         .arg(&repo_url)
         .arg(&temp_dir);
 
+    command.stdout(Stdio::null());
+    command.stderr(Stdio::null());
     let status = command.status().await?;
 
     if !status.success() {
@@ -165,29 +168,15 @@ async fn update_templates(templates_dir: &PathBuf) -> Result<()> {
     clone_templates(templates_dir).await
 }
 
-// Helper function to get the templates directory path
-pub fn get_templates_dir() -> Result<PathBuf> {
-    let cache_dir = get_cache_dir()?;
-    Ok(cache_dir.join("templates"))
-}
-
-// Helper function to check if cache is set up
-pub fn is_cache_initialized() -> Result<bool> {
-    let cache_dir = get_cache_dir()?;
-    let templates_dir = cache_dir.join("templates");
-    
-    Ok(cache_dir.exists() && templates_dir.exists())
-}
-
 fn get_config() -> Result<toml::Value> {
     let cache_dir = get_cache_dir()?;
-    let mut config_path = cache_dir.join("config.toml");
+    let config_path = cache_dir.join("config.toml");
     if !config_path.exists() {
         write_config(&config_path)?;
     }
     let config_str = std::fs::read_to_string(&config_path)
         .context("Failed to read config file")?;
-    let mut config: toml::Value = toml::de::from_str(&config_str)
+    let config: toml::Value = toml::de::from_str(&config_str)
         .context("Failed to parse config file")?;
     Ok(config)
 }

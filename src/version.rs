@@ -89,6 +89,6 @@ fn get_config() -> Result<toml::Value> {
     let cache_dir = get_cache_dir()?;
     let config_path = cache_dir.join("config.toml");
     let config_str = std::fs::read_to_string(&config_path)?;
-    let mut config: toml::Value = toml::de::from_str(&config_str)?;
+    let config: toml::Value = toml::de::from_str(&config_str)?;
     Ok(config)
 }

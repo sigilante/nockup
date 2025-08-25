@@ -1,8 +1,5 @@
 use anyhow::{Context, Result};
-use colored::Colorize;
-use std::path::{Path,PathBuf};
-use std::process::Stdio;
-use tokio::process::Command;
+use std::path::{PathBuf};
 use crate::cli::ToolchainAction;
 
 fn set_toolchain(toolchain: &str) -> Result<()> {
@@ -34,7 +31,7 @@ fn get_config() -> Result<toml::Value> {
     let config_path = cache_dir.join("config.toml");
     let config_str = std::fs::read_to_string(&config_path)
         .context("Failed to read config file")?;
-    let mut config: toml::Value = toml::de::from_str(&config_str)
+    let config: toml::Value = toml::de::from_str(&config_str)
         .context("Failed to parse config file")?;
     Ok(config)
 }
