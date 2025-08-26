@@ -41,7 +41,7 @@ pub enum Commands {
 pub enum ChannelAction {
     /// Set the default channel (e.g., stable, nightly)
     Set {
-        channel: String,  // e.g., "stable" or "nightly"
+        channel: String, // e.g., "stable" or "nightly"
     },
     /// Show the current channel
     List,

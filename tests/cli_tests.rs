@@ -59,21 +59,20 @@ mod cli_input_validation_tests {
     fn test_start_with_empty_project_name() {
         let mut cmd = Command::cargo_bin("nockup").unwrap();
         cmd.args(&["start", ""]);
-        cmd.assert()
-            .failure()
-            .stderr(predicate::str::contains("Error: Project configuration file '.toml' not found"));
+        cmd.assert().failure().stderr(predicate::str::contains(
+            "Error: Project configuration file '.toml' not found",
+        ));
     }
 
     #[test]
     fn test_start_with_valid_project_names() {
         let valid_names = vec!["myproject", "my-project", "my_project", "project123"];
-        
+
         for name in valid_names {
             let temp_dir = TempDir::new().unwrap();
             let mut cmd = Command::cargo_bin("nockup").unwrap();
-            cmd.current_dir(temp_dir.path())
-               .args(&["start", name]);
-            
+            cmd.current_dir(temp_dir.path()).args(&["start", name]);
+
             // This might fail due to missing cache, but shouldn't fail on name validation
             let output = cmd.output().unwrap();
             let stderr = String::from_utf8_lossy(&output.stderr);
@@ -96,11 +95,11 @@ mod cli_input_validation_tests {
         let temp_dir = TempDir::new().unwrap();
         let mut cmd = Command::cargo_bin("nockup").unwrap();
         cmd.current_dir(temp_dir.path())
-           .args(&["build", "nonexistent-project"]);
-        cmd.assert()
-            .failure()
-            .stderr(predicate::str::contains("Project directory")
-                   .and(predicate::str::contains("not found")));
+            .args(&["build", "nonexistent-project"]);
+        cmd.assert().failure().stderr(
+            predicate::str::contains("Project directory")
+                .and(predicate::str::contains("not found")),
+        );
     }
 
     // Test run command validation
@@ -153,11 +152,11 @@ mod cli_input_validation_tests {
     #[test]
     fn test_channel_set_valid_channels() {
         let channels = vec!["stable", "nightly"];
-        
+
         for channel in channels {
             let mut cmd = Command::cargo_bin("nockup").unwrap();
             cmd.args(&["channel", "set", channel]);
-            
+
             // This might fail due to missing cache, but shouldn't fail on channel validation
             let output = cmd.output().unwrap();
             let stderr = String::from_utf8_lossy(&output.stderr);
@@ -199,11 +198,10 @@ mod cli_input_validation_tests {
         std::fs::create_dir_all(&project_dir).unwrap();
 
         let mut cmd = Command::cargo_bin("nockup").unwrap();
-        cmd.current_dir(&project_dir)
-           .args(&["build", "."]);
-        cmd.assert()
-            .failure()
-            .stderr(predicate::str::contains("Error: Not a NockApp project: '.' missing manifest.toml"));
+        cmd.current_dir(&project_dir).args(&["build", "."]);
+        cmd.assert().failure().stderr(predicate::str::contains(
+            "Error: Not a NockApp project: '.' missing manifest.toml",
+        ));
     }
 }
 
@@ -211,10 +209,10 @@ mod cli_input_validation_tests {
 #[cfg(test)]
 mod unit_input_validation_tests {
     // use super::*;
-    
+
     // These would test your argument parsing functions directly
     // Example assuming you have a validate_project_name function:
-    
+
     /*
     #[test]
     fn test_validate_project_name_valid() {
@@ -245,7 +243,7 @@ mod unit_input_validation_tests {
 // #[cfg(feature = "proptest")]
 // mod property_tests {
 //     use proptest::prelude::*;
-    
+
 //     proptest! {
 //         #[test]
 //         fn test_project_name_chars(s in "[a-zA-Z0-9_-]{1,50}") {
