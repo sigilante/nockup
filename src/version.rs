@@ -58,8 +58,7 @@ async fn get_binary_version(binary_name: &str) -> Result<String> {
     }
 
     Err(anyhow::anyhow!(
-        "Could not determine {} version",
-        binary_name
+        "Could not determine {} version", binary_name
     ))
 }
 

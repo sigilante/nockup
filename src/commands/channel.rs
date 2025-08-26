@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use anyhow::{Context, Result};
+
 use crate::cli::ChannelAction;
 
 fn set_channel(channel: &str) -> Result<()> {
