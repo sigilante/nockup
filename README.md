@@ -43,10 +43,16 @@ Nockup supports the following `nockup` commands.
     ```
     $ git clone https://github.com/sigilante/nockup.git
     $ cd nockup/
-    $ cargo build
+    $ cargo build --release
     ```
 
-    `nockup` builds by default in `./target/debug`, so further commands to `nockup` refer to it in whatever location you have it.
+    `nockup` builds by default in `./target/release`, so further commands to `nockup` refer to it in whatever location you have it.
+
+    Alternatively, you may install it globally using Cargo:
+
+    ```
+    $ cargo install --path .
+    ```
 
 ## Usage
 
@@ -159,4 +165,10 @@ Code building is a general-purpose computing process, like `eval`.  You should n
 ## Roadmap
 
 * [ ] implement CI with index for channels and versioning
+  1. Build CI pipeline for matrix of Linux/macOS, stable/nightly, and aarch64/x86_64.
+  2. Post binaries.
 * [ ] add code signing support
+
+## Contributors
+
+Some CLI testing has been implemented and is accessible via `cargo test`.

@@ -66,6 +66,8 @@ sha1 = "0.10.6"
 
 hex = "0.4"
 
+proptest = "1.0"
+
 [build-dependencies]
 # For generating version info at build time
 chrono = { version = "0.4", features = ["serde"] }
