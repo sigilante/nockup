@@ -1,10 +1,11 @@
+use std::fs;
+use std::path::PathBuf;
+use std::process::Stdio;
+
 use anyhow::{anyhow, Context, Result};
 use blake3;
 use colored::Colorize;
 use sha1::{Digest, Sha1};
-use std::fs;
-use std::path::PathBuf;
-use std::process::Stdio;
 use tokio::process::Command;
 
 const GITHUB_REPO: &str = "sigilante/nockup";
