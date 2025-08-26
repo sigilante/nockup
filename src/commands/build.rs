@@ -1,7 +1,8 @@
-use anyhow::{Context, Result};
-use colored::Colorize;
 use std::path::Path;
 use std::process::Stdio;
+
+use anyhow::{Context, Result};
+use colored::Colorize;
 use tokio::process::Command;
 
 pub async fn run(project: String) -> Result<()> {
@@ -16,8 +17,7 @@ pub async fn run(project: String) -> Result<()> {
     let manifest_path = project_dir.join("manifest.toml");
     if !manifest_path.exists() {
         return Err(anyhow::anyhow!(
-            "Not a NockApp project: '{}' missing manifest.toml",
-            project
+            "Not a NockApp project: '{}' missing manifest.toml", project
         ));
     }
 

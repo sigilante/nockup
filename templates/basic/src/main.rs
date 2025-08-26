@@ -1,13 +1,13 @@
-use nockapp::kernel::boot;
-use nockapp::NockApp;
-use nockapp::noun::slab::NounSlab;
-use nockapp::wire::{SystemWire, Wire};
-use nockapp::{AtomExt};
-use nockvm::noun::{Atom, D, T};
-use nockvm_macros::tas;
 use std::error::Error;
 use std::io::{self, Write};
 use std::fs;
+
+use nockapp::{AtomExt,NockApp};
+use nockapp::kernel::boot;
+use nockapp::noun::slab::NounSlab;
+use nockapp::wire::{SystemWire, Wire};
+use nockvm::noun::{Atom, D, T};
+use nockvm_macros::tas;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {

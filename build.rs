@@ -1,6 +1,7 @@
-use chrono::{DateTime, Utc};
 use std::env;
 use std::process::Command;
+
+use chrono::{DateTime, Utc};
 
 fn main() {
     // Get build timestamp

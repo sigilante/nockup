@@ -1,10 +1,11 @@
+use std::collections::HashMap;
+use std::fs;
+use std::path::Path;
+
 use anyhow::{Context, Result};
 use colored::Colorize;
 use handlebars::Handlebars;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::fs;
-use std::path::Path;
 
 #[derive(Debug, Deserialize, Serialize)]
 struct ProjectConfig {
@@ -45,8 +46,7 @@ pub async fn run(project_name: String) -> Result<()> {
     // Check if target directory already exists
     if target_dir.exists() {
         return Err(anyhow::anyhow!(
-            "Directory '{}' already exists. Please choose a different name or remove the existing directory.",
-            project_name
+            "Directory '{}' already exists. Please choose a different name or remove the existing directory.", project_name
         ));
     }
 
@@ -82,8 +82,7 @@ fn load_project_config(project_name: &str) -> Result<ProjectConfig> {
 
     if !config_path.exists() {
         return Err(anyhow::anyhow!(
-            "Project configuration file '{}.toml' not found",
-            project_name
+            "Project configuration file '{}.toml' not found", project_name
         ));
     }
 

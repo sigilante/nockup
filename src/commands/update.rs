@@ -249,9 +249,7 @@ async fn verify_checksums(
     let computed_blake3 = blake3::hash(&bytes);
     if computed_blake3.to_string() != expected_blake3 {
         return Err(anyhow::anyhow!(
-            "Checksum verification failed: expected {}, got {}",
-            expected_blake3,
-            computed_blake3
+            "Checksum verification failed: expected {}, got {}", expected_blake3, computed_blake3
         ));
     }
 
@@ -267,9 +265,7 @@ async fn verify_checksums(
         let expected_hex = hex::encode(&expected_sha1);
         let computed_hex = hex::encode(computed_sha1.as_slice());
         return Err(anyhow::anyhow!(
-            "Checksum verification failed: expected {}, got {}",
-            expected_hex,
-            computed_hex
+            "Checksum verification failed: expected {}, got {}", expected_hex, computed_hex
         ));
     }
     Ok(())

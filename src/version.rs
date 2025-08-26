@@ -1,6 +1,7 @@
+use std::path::PathBuf;
+
 use anyhow::Result;
 use colored::Colorize;
-use std::path::PathBuf;
 use tokio::process::Command as TokioCommand;
 
 pub async fn show_version_info() -> Result<()> {

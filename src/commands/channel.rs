@@ -1,6 +1,7 @@
+use std::path::PathBuf;
+
 use anyhow::{Context, Result};
 use crate::cli::ChannelAction;
-use std::path::PathBuf;
 
 fn set_channel(channel: &str) -> Result<()> {
     // validate that is 'nightly' or 'stable'
