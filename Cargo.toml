@@ -68,6 +68,10 @@ hex = "0.4"
 
 proptest = "1.0"
 
+flate2 = "1.0"
+
+tar = "0.4"
+
 [build-dependencies]
 # For generating version info at build time
 chrono = { version = "0.4", features = ["serde"] }

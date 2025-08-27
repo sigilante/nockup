@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use colored::Colorize;
 use tokio::process::Command as TokioCommand;
 
@@ -37,15 +37,37 @@ pub async fn show_version_info() -> Result<()> {
 
 async fn get_binary_version(binary_name: &str) -> Result<String> {
     // First check if binary exists in PATH
-    if which::which(binary_name).is_err() {
-        return Err(anyhow::anyhow!("{} not found in PATH", binary_name));
+    let binary_path = which::which(binary_name)
+        .context(format!("{} not found in PATH", binary_name))?;
+
+    // Verify the binary is the correct architecture
+    let file_output = TokioCommand::new("file")
+        .arg(&binary_path)
+        .output()
+        .await
+        .context("Failed to check binary architecture")?;
+    
+    let file_info = String::from_utf8_lossy(&file_output.stdout);
+    let current_arch = std::env::consts::ARCH;
+    let expected_arch = match current_arch {
+        "x86_64" => "x86_64",
+        "aarch64" => "arm64", // macOS uses "arm64" in file output
+        _ => current_arch,
+    };
+    
+    if !file_info.contains(expected_arch) {
+        return Err(anyhow::anyhow!(
+            "Binary architecture mismatch for {}: expected {}, found different architecture", 
+            binary_name, 
+            expected_arch
+        ));
     }
 
     // Try common version flags
     let version_flags = ["--version", "-V", "-v", "version"];
 
     for flag in &version_flags {
-        if let Ok(output) = TokioCommand::new(binary_name).arg(flag).output().await {
+        if let Ok(output) = TokioCommand::new(&binary_path).arg(flag).output().await {
             if output.status.success() {
                 let version_output = String::from_utf8_lossy(&output.stdout);
                 let version_line = version_output.lines().next().unwrap_or("").trim();
@@ -58,7 +80,8 @@ async fn get_binary_version(binary_name: &str) -> Result<String> {
     }
 
     Err(anyhow::anyhow!(
-        "Could not determine {} version", binary_name
+        "Could not determine {} version - none of the common version flags worked", 
+        binary_name
     ))
 }
 
