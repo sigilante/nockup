@@ -6,14 +6,13 @@ use anyhow::{anyhow, Context, Result};
 use blake3;
 use colored::Colorize;
 use sha1::{Digest, Sha1};
+use tokio::fs as tokio_fs;
 use tokio::process::Command;
 
 const GITHUB_REPO: &str = "sigilante/nockup";
 const TEMPLATES_BRANCH: &str = "master";
 
 pub async fn run() -> Result<()> {
-    println!("TODO: Check for updates");
-    println!("Should:  check binaries, sync templates");
     let cache_dir = get_cache_dir()?;
 
     println!("{} Setting up nockup cache directory...", "🚀".green());
@@ -25,6 +24,9 @@ pub async fn run() -> Result<()> {
 
     // Download or update templates
     download_templates(&cache_dir).await?;
+
+    // Write commit details to status file.
+    write_commit_details(&cache_dir).await?;
 
     // Set default channel to stable and this architecture
     let config = get_config()?;
@@ -87,6 +89,31 @@ async fn has_existing_templates(templates_dir: &PathBuf) -> Result<bool> {
 }
 
 async fn clone_templates(templates_dir: &PathBuf) -> Result<()> {
+    // Check Git commit HEAD of branch and compare to reported local version.
+    let commit_id = get_git_commit_id().await?;
+    println!("{} Remote commit ID: {}", "🔍".yellow(), commit_id.cyan());
+    let commit_file = templates_dir.join("commit.toml");
+    println!("{} Commit file path: {}", "🔍".yellow(), commit_file.display().to_string().cyan());
+
+    // Try to read the file directly
+    match tokio_fs::read_to_string(&commit_file).await {
+        Ok(commit_content) => {
+            let commit: toml::Value = toml::de::from_str(&commit_content).context("Failed to parse commit file")?;
+            println!("{} Local commit ID: {}", "🔍".yellow(), commit["commit"]["id"].to_string().cyan());
+            let local_commit_id = commit["commit"]["id"].to_string().replace("\"", "");
+            if local_commit_id == commit_id {
+                println!("{} Templates are up to date", "✅".green());
+                return Ok(());
+            }
+        }
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+            println!("{} No local commit ID found", "🔍".yellow());
+        }
+        Err(e) => {
+            return Err(anyhow::anyhow!("Failed to read commit file: {}", e));
+        }
+    }
+
     // Remove existing directory if it exists but is empty/corrupted
     if templates_dir.exists() {
         fs::remove_dir_all(templates_dir)?;
@@ -134,6 +161,11 @@ async fn clone_templates(templates_dir: &PathBuf) -> Result<()> {
     // Move just the templates directory to our cache location
     fs::rename(&repo_templates_dir, templates_dir)?;
 
+    // Update the commit.toml file.
+    let commit_file = templates_dir.join("commit.toml");
+    let commit_data = format!("[commit]\nid = \"{}\"\n", commit_id);
+    fs::write(&commit_file, commit_data)?;
+
     // Clean up the temporary repo directory
     fs::remove_dir_all(&temp_dir)?;
     println!("{} Templates downloaded successfully", "✓".green());
@@ -149,9 +181,6 @@ async fn update_templates(templates_dir: &PathBuf) -> Result<()> {
 fn get_config() -> Result<toml::Value> {
     let cache_dir = get_cache_dir()?;
     let config_path = cache_dir.join("config.toml");
-    // if !config_path.exists() {
-    //     write_config(&config_path)?;
-    // }
     let config_str = std::fs::read_to_string(&config_path).context("Failed to read config file")?;
     let config: toml::Value =
         toml::de::from_str(&config_str).context("Failed to parse config file")?;
@@ -269,4 +298,47 @@ async fn verify_checksums(
         ));
     }
     Ok(())
+}
+
+async fn write_commit_details(cache_dir: &PathBuf) -> Result<()> {
+    let status_file = cache_dir.join("status.toml");
+    let mut config = toml::map::Map::new();
+    config.insert(
+        "commit".into(),
+        toml::Value::Table(toml::map::Map::new()),
+    );
+    let commit_id = get_git_commit_id().await?;
+    // error[E0277]: the `?` operator can only be used on `Result`s, not `Option`s, in an async function that returns `Result`
+    let commit_table = config
+        .get_mut("commit")
+        .and_then(|commit| commit.as_table_mut())
+        .ok_or_else(|| anyhow::anyhow!("Failed to insert commit ID into config"))?;
+    commit_table.insert("id".into(), toml::Value::String(commit_id));
+    fs::write(status_file, toml::to_string(&config)?).context("Failed to write config file")?;
+    Ok(())
+}
+
+// load Git commit ID from HEAD of github.com/sigilante/nockchain
+async fn get_git_commit_id() -> Result<String> {
+    let repo_url = format!("https://api.github.com/repos/sigilante/nockchain/commits/master");
+    let client = reqwest::Client::new();
+    let response = client
+        .get(&repo_url)
+        .header("User-Agent", "nockup")
+        .send()
+        .await
+        .context("Failed to fetch commit ID from GitHub")?;
+
+    if !response.status().is_success() {
+        return Err(anyhow::anyhow!(
+            "Failed to fetch commit ID: HTTP {}",
+            response.status()
+        ));
+    }
+
+    let json: serde_json::Value = response.json().await.context("Invalid JSON response")?;
+    let commit_id = json["sha"]
+        .as_str()
+        .ok_or_else(|| anyhow::anyhow!("Missing commit ID in response"))?;
+    Ok(commit_id.to_string())
 }

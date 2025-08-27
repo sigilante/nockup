@@ -38,6 +38,6 @@ hash_sha1 = "1234567890abcdef1234567890abcdef12345678"
 # [pkg.hoon.target.x86_64-unknown-linux-gnu]
 [pkg.hoon.target.aarch64]
 available = true
-url = "https://your-domain.com/dist/hoon-v1.0.0-aarch64-apple-darwin"
+url = "https://github.com/sigilante/nockchain/releases/download/stable-build-862c3adb0e1403ddd1a80ed9cc9dbde50aa6ea51/hoon-stable-0.1.0-x86_64-unknown-linux-gnu.tar.gz"
 hash_blake3 = "dcb763e0e8ec683b821af7978b174212"
 hash_sha1 = "1234567890abcdef1234567890abcdef12345678"
