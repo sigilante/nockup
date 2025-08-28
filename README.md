@@ -46,7 +46,7 @@ Nockup supports the following `nockup` commands.
     $ cargo build --release
     ```
 
-    `nockup` builds by default in `./target/release`, so further commands to `nockup` refer to it in whatever location you have it.
+    `nockup` builds by default in `./target/release`, so further commands to `nockup` refer to it in whatever location you have it.  `nockup install` will provide it in your `$PATH`.
 
     Alternatively, you may install it globally using Cargo:
 
@@ -60,13 +60,19 @@ Nockup supports the following `nockup` commands.
     $ gpg --keyserver keyserver.ubuntu.com --recv-keys A6FFD2DB7D4C9710
     ```
 
-4. Check for updates.
+4. Install `nockup` and dependencies.
+
+    ```
+    nockup install
+    ```
+
+5. Check for updates.
 
     ```
     $ nockup update
     ```
 
-5. Before building, switch your `rustup` to `nightly` to satisfy `nockapp`/`nockvm` dependencies.
+6. Before building, switch your `rustup` to `nightly` to satisfy `nockapp`/`nockvm` dependencies.
 
     ```
     rustup install nightly
