@@ -24,6 +24,7 @@ struct ProjectInfo {
     license: String,
     keywords: Vec<String>,
     nockapp_commit_hash: String,
+    template: String,
 }
 
 pub async fn run(project_name: String) -> Result<()> {
@@ -37,11 +38,10 @@ pub async fn run(project_name: String) -> Result<()> {
     );
 
     let target_dir = Path::new(project_name);
-    // Use cache dir ~/.nockup/templates/basic
+    // Use cache dir ~/.nockup/templates/{{manifest.template}}
     let template_dir = dirs::home_dir()
         .ok_or_else(|| anyhow::anyhow!("Could not find home directory"))?
-        .join(".nockup/templates/basic");
-    // let template_dir = Path::new("~/.nockup/templates/basic");
+        .join(format!(".nockup/templates/{}", default_config.project.template));
 
     // Check if target directory already exists
     if target_dir.exists() {
@@ -137,6 +137,10 @@ fn create_template_context(default_config: &ProjectConfig) -> Result<HashMap<Str
     context.insert(
         "nockapp_commit_hash".to_string(),
         default_config.project.nockapp_commit_hash.clone(),
+    );
+    context.insert(
+        "template".to_string(),
+        default_config.project.template.clone(),
     );
 
     Ok(context)
