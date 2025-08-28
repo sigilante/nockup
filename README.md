@@ -158,15 +158,6 @@ W (11:53:15) poked: cause
 I (11:53:15) Pokes awaiting implementation
 
 ✓ Run completed successfully!
-
-$ ./target/debug/nockup channel list
-Default channel: "stable"
-Architecture: "aarch64"
-$ ./target/debug/nockup channel set nightly
-Set default channel to 'nightly'.
-$ ./target/debug/nockup channel list
-Default channel: "nightly"
-Architecture: "aarch64"
 ```
 
 The final product is, of course, a binary which you may run either directly or via `nockup run` (as demonstrated here).
@@ -177,6 +168,23 @@ A project is specified by its manifest file, which includes details like the pro
 
 Most projects will prefer the `basic` template, but a (stateless) `http-server` template is also available.
 
+### Channels
+
+Nockup can use `stable` build of `hoon` and `hoonc`.  As of this release, there is not yet a `nightly` build, but we demonstrate its support here:
+
+```
+$ ./target/debug/nockup channel list
+Default channel: "stable"
+Architecture: "aarch64"
+
+$ ./target/debug/nockup channel set nightly
+Set default channel to 'nightly'.
+
+$ ./target/debug/nockup channel list
+Default channel: "nightly"
+Architecture: "aarch64"
+```
+
 ## Uninstallation
 
 To uninstall Nockup delete the binary and remove the installation cache:
@@ -185,16 +193,36 @@ To uninstall Nockup delete the binary and remove the installation cache:
 $ rm -rf ~/.nockup
 ```
 
-## Disclaimer
+## Security
 
 *Rustup is entirely experimental and many parts are unaudited.  We make no representations or guarantees as to the behavior of this software.*
 
 Nockup uses HTTPS for binary downloads (overriding HTTP in the channel manifests).  The commands `nockup install` and  `nockup update` have the following security measures in place:
 
-1. Check the Blake3 and SHA-1 checksums of the downloaded binaries against the reported index.
+1. Check the Blake3 and SHA-1 checksums of the downloaded binaries against the expected index.
+
+    You can do this manually by running:
+
+    ```
+    b3sum nockup
+    sha1sum --check <file>
+    ```
+
+    and compare the answers to the expected values from the appropriate toolchain file in `~/.nockup/toolchain`.
+
 2. Check that the binaries are appropriately signed.  Binaries are signed using the [`zorp-gpg-key`](./zorp-gpg-key.pub) for Linux and a digital certificate for Apple.
 
-Code building is a general-purpose computing process, like `eval`.  You should not do it on the same machine on which you store your wallet private keys.
+    You can do this manually by running:
+
+    ```
+    gpg --verify nockup.asc nockup
+    ```
+
+    using the `asc` signature listed in the appropriate toolchain file in `~/.nockup/toolchain`.
+
+Code building is a general-purpose computing process, like `eval`.  You should not do it on the same machine on which you store your wallet private keys [0].
+
+- [0]: https://semgrep.dev/blog/2025/security-alert-nx-compromised-to-steal-wallets-and-credentials/
 
 ## Roadmap
 

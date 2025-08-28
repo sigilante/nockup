@@ -28,6 +28,9 @@ pub async fn run() -> Result<()> {
     // Download or update templates
     download_templates(&cache_dir).await?;
 
+    // Download new toolchain files.
+    download_toolchain_files(&cache_dir).await?;
+
     // Write commit details to status file.
     write_commit_details(&cache_dir).await?;
 
@@ -177,6 +180,95 @@ async fn update_templates(templates_dir: &PathBuf) -> Result<()> {
     clone_templates(templates_dir).await
 }
 
+
+async fn download_toolchain_files(cache_dir: &PathBuf) -> Result<()> {
+    let toolchain_dir = cache_dir.join("toolchain");
+
+    // Check if toolchain directory already has content
+    if has_existing_toolchain_files(&toolchain_dir).await? {
+        println!("{} Existing toolchain files found, updating...", "🔄".yellow());
+        update_toolchain_files(&toolchain_dir).await?;
+    } else {
+        println!("{}  Downloading toolchain files from GitHub...", "⬇️".green());
+        clone_toolchain_files(&toolchain_dir).await?;
+    }
+
+    Ok(())
+}
+
+async fn has_existing_toolchain_files(toolchain_dir: &PathBuf) -> Result<bool> {
+    if !toolchain_dir.exists() {
+        return Ok(false);
+    }
+    let entries = fs::read_dir(toolchain_dir)?;
+    for entry in entries {
+        let entry = entry?;
+        if entry.file_type()?.is_file() {
+            return Ok(true);
+        }
+    }
+    Ok(false)
+}
+
+async fn update_toolchain_files(toolchain_dir: &PathBuf) -> Result<()> {
+    // For now, just re-clone to get the latest version
+    clone_toolchain_files(toolchain_dir).await
+}
+
+async fn clone_toolchain_files(toolchain_dir: &PathBuf) -> Result<()> {
+    // Remove existing directory if it exists but is empty/corrupted
+    if toolchain_dir.exists() {
+        fs::remove_dir_all(toolchain_dir)?;
+    }
+
+    // Create a temporary directory for the full clone
+    let temp_dir = toolchain_dir.parent().unwrap().join("temp_repo");
+    if temp_dir.exists() {
+        fs::remove_dir_all(&temp_dir)?;
+    }
+
+    let repo_url = format!("https://github.com/{}.git", GITHUB_REPO);
+
+    // Clone the full repo to temp directory; suppress output
+    let mut command = Command::new("git");
+    command
+        .arg("clone")
+        .arg("--depth=1") // Shallow clone for faster download
+        .arg("--branch")
+        .arg("master")
+        .arg(&repo_url)
+        .arg(&temp_dir);
+
+    command.stdout(Stdio::null());
+    command.stderr(Stdio::null());
+    let status = command.status().await?;
+
+    if !status.success() {
+        return Err(anyhow::anyhow!(
+            "Failed to clone toolchain files from GitHub. Exit code: {}",
+            status.code().unwrap_or(-1)
+        ));
+    }
+
+    // Check if toolchain directory exists in the repo
+    let repo_toolchain_dir = temp_dir.join("toolchain");
+    if !repo_toolchain_dir.exists() {
+        // Cleanup and return error
+        fs::remove_dir_all(&temp_dir).ok();
+        return Err(anyhow::anyhow!(
+            "No 'toolchain' directory found in the repository"
+        ));
+    }
+
+    // Move just the toolchain directory to our cache location
+    fs::rename(&repo_toolchain_dir, toolchain_dir)?;
+
+    // Clean up the temporary repo directory
+    fs::remove_dir_all(&temp_dir)?;
+    println!("{} Toolchain files downloaded successfully", "✓".green());
+    Ok(())
+}
+
 fn get_config() -> Result<toml::Value> {
     let cache_dir = get_cache_dir()?;
     let config_path = cache_dir.join("config.toml");
@@ -194,9 +286,9 @@ async fn download_binaries(config: &toml::Value) -> Result<()> {
         .as_str()
         .ok_or_else(|| anyhow::anyhow!("Invalid architecture in config"))?;
 
-    // Load channel details from ./toolchain/
+    // Load channel details from cache dir /toolchain
     let channel = format!("channel-nockup-{}", channel);
-    let manifest_path = format!("./toolchain/{}.toml", channel);
+    let manifest_path = get_cache_dir()?.join("toolchain").join(format!("{}.toml", channel));
     let manifest = std::fs::read_to_string(&manifest_path)
         .context(format!("Failed to read channel manifest for '{}'", channel))?;
     let manifest: toml::Value = toml::de::from_str(&manifest).context(format!(
