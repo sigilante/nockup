@@ -171,6 +171,12 @@ Architecture: "aarch64"
 
 The final product is, of course, a binary which you may run either directly or via `nockup run` (as demonstrated here).
 
+### Project Manifests and Templates
+
+A project is specified by its manifest file, which includes details like the project name and the template to use.
+
+Most projects will prefer the `basic` template, but a (stateless) `http-server` template is also available.
+
 ## Uninstallation
 
 To uninstall Nockup delete the binary and remove the installation cache:
@@ -183,7 +189,10 @@ $ rm -rf ~/.nockup
 
 *Rustup is entirely experimental and many parts are unaudited.  We make no representations or guarantees as to the behavior of this software.*
 
-Nockup uses HTTPS for binary downloads (overriding HTTP in the channel manifests).  The commands `nockup install` and  `nockup update` both check the Blake3 and SHA-1 hashes of the downloaded binaries against the reported index.
+Nockup uses HTTPS for binary downloads (overriding HTTP in the channel manifests).  The commands `nockup install` and  `nockup update` have the following security measures in place:
+
+1. Check the Blake3 and SHA-1 checksums of the downloaded binaries against the reported index.
+2. Check that the binaries are appropriately signed.  Binaries are signed using the [`zorp-gpg-key`](./zorp-gpg-key.pub) for Linux and a digital certificate for Apple.
 
 Code building is a general-purpose computing process, like `eval`.  You should not do it on the same machine on which you store your wallet private keys.
 
@@ -192,7 +201,6 @@ Code building is a general-purpose computing process, like `eval`.  You should n
 Checklist for release:
 
 * add Apple code signing support
-* test Linux code signing on Linux
 * update manifest files (and install/update strings) to zorp-corp/nockchain
 
 ## Contributor's Guide

@@ -1,17 +1,17 @@
-# http-server
+# {{project_name}}
 
 A NockApp project created with `nockup`.
 
 ## Description
 
-A simple HTTP server with API.
+{{project_description}}
 
 ## Building
 
 To build this project:
 
 ```bash
-nockup build http-server
+nockup build {{project_name}}
 ```
 
 Or using cargo directly:
@@ -25,7 +25,7 @@ cargo build --release
 To run this project:
 
 ```bash
-nockup run http-server
+nockup run {{project_name}}
 ```
 
 Or using cargo directly:
