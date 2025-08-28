@@ -66,6 +66,13 @@ Nockup supports the following `nockup` commands.
     $ nockup update
     ```
 
+5. Before building, switch your `rustup` to `nightly` to satisfy `nockapp`/`nockvm` dependencies.
+
+    ```
+    rustup install nightly
+    rustup override set nightly
+    ```
+
 ## Usage
 
 ```
