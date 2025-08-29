@@ -1,44 +1,31 @@
+/+  html,
+    *http
 /=  *  /common/wrapper
 =>
 |%
-+$  server-state  %stateless
-+$  header  [k=@t v=@t]
-+$  octs  [p=@ q=@]
-+$  method
-  $?  %'GET'
-      %'HEAD'
-      %'POST'
-      %'PUT'
-      %'DELETE'
-      %'CONNECT'
-      %'OPTIONS'
-      %'TRACE'
-      %'PATCH'
-  ==
-::
-+$  cause
-  $:  %req
-      id=@
-      uri=@t
-      =method
-      headers=(list header)
-      body=(unit octs)
-  ==
-::
-+$  effect
-  $:  %res
-      id=@
-      status=@ud
-      headers=(list header)
-      body=(unit octs)
-  ==
-::
-++  to-octs
-  |=  bod=@
-  ^-  (unit octs)
-  =/  len  (met 3 bod)
-  ?:  =(len 0)  ~
-  `[len bod]
++$  server-state  [%0 value=@]
+++  page
+  ^-  tape
+  %-  trip
+  '''
+  <!doctype html>
+  <html>
+    <body>
+      <h1>Hello NockApp!</h1>
+      <div class="counter-display">
+        Count: {{count}}
+      </div>
+      
+      <form method="POST" action="/increment" style="display: inline;">
+        <button type="submit" class="increment-button">Increment Counter</button>
+      </form>
+      
+      <form method="POST" action="/reset" style="display: inline;">
+        <button type="submit" class="reset-button">Reset Counter</button>
+      </form>
+    </body>
+  </html>
+  '''
 --
 ::
 =>
@@ -46,13 +33,13 @@
 ++  moat  (keep server-state)
 ::
 ++  inner
-  |_  k=server-state
+  |_  state=server-state
   ::
   ::  +load: upgrade from previous state
-  ::    (but the server is stateless)
   ::
   ++  load
     |=  arg=server-state
+    ^-  server-state
     arg
   ::
   ::  +peek: external inspect
@@ -73,30 +60,58 @@
       ~&  "cause incorrectly formatted!"
       ~&  now.input.ovum
       !!
+    ::  Parse request into components.
     =/  [id=@ uri=@t =method headers=(list header) body=(unit octs)]  +.u.sof-cau
-    ~>  %slog.[0 [id+id uri+uri method+method headers+headers]]
-    :_  k
-    :_  ~
-    ^-  effect
-    =-  ~&  effect+-
-        -
-    ?+    method  [%res ~ %400 ~ ~]
-        %'GET'
-      :*  %res  id=id  %200
-        ['content-type' 'text/html']~
-      %-  to-octs
-      '''
-      <!doctype html>
-      <html>
-        <body>
-          <h1>Hello NockApp!</h1>
-        </body>
-      </html>
-      '''
-    ==
     ::
+    ?+    method  [~[[%res ~ %400 ~ ~]] state]
+        %'GET'
+      :_  state
+      :_  ~
+      ^-  effect
+      :*  %res  id=id  %200
+          ['content-type' 'text/html']~
+          %-  to-octs
+          %-  crip
+          ^-  tape
+          =/  index  (find "\{\{count}}" page)
+          ;:  weld
+            (scag (need index) page)
+            (scow %ud value.state)
+            (slag (add (need index) (lent "\{\{count}}")) page)
+      ==  ==
+      ::
         %'POST'
-      !!
+      ?:  =('/increment' uri)
+        :_  state(value +(value.state))
+        :_  ~
+        ^-  effect
+        :*  %res  id=id  %200
+            ['content-type' 'text/html']~
+            %-  to-octs
+            %-  crip
+            ^-  tape
+            =/  index  (find "\{\{count}}" page)
+            ;:  weld
+              (scag (need index) page)
+              (scow %ud +(value.state))
+              (slag (add (need index) (lent "\{\{count}}")) page)
+        ==  ==
+      ::
+      ?>  =('/reset' uri)
+      :_  state(value 0)
+      :_  ~
+      ^-  effect
+      :*  %res  id=id  %200
+          ['content-type' 'text/html']~
+          %-  to-octs
+          %-  crip
+          ^-  tape
+          =/  index  (find "\{\{count}}" page)
+          ;:  weld
+            (scag (need index) page)
+            (scow %ud 0)
+            (slag (add (need index) (lent "\{\{count}}")) page)
+      ==  ==
     ==
   --
 --

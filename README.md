@@ -164,9 +164,9 @@ The final product is, of course, a binary which you may run either directly or v
 
 ### Project Manifests and Templates
 
-A project is specified by its manifest file, which includes details like the project name and the template to use.
+One of the design goals of Nockup is to avoid the need to write much, if any, Rust code to successfully deploy a NockApp.  To that end, we provide templates which by and large only expect the developer to write in Hoon or another language which targets the Nock ISA.
 
-Most projects will prefer the `basic` template, but a (stateless) `http-server` template is also available.
+A project is specified by its manifest file, which includes details like the project name and the template to use.  Most projects will prefer the `basic` template, but a (stateless) `http-static` and a (stateful) `http-server` template are also available, among other options in `/templates`.
 
 ### Channels
 
@@ -230,6 +230,10 @@ Checklist for release:
 
 * add Apple code signing support
 * update manifest files (and install/update strings) to zorp-corp/nockchain
+* expand repertoire of templates
+  * REPL
+  * appropriate Hoon libraries
+* unify batch/continuous kernels via `exit` event:  `[%exit code=@]`
 
 ## Contributor's Guide
 
