@@ -77,7 +77,7 @@
           ;:  weld
             (scag (need index) page)
             (scow %ud value.state)
-            (slag (add (need index) (lent "\{\{count}}")) page)
+            (slag (add (need index) ^~((lent "\{\{count}}"))) page)
       ==  ==
       ::
         %'POST'
@@ -94,7 +94,7 @@
             ;:  weld
               (scag (need index) page)
               (scow %ud +(value.state))
-              (slag (add (need index) (lent "\{\{count}}")) page)
+              (slag (add (need index) ^~((lent "\{\{count}}"))) page)
         ==  ==
       ::
       ?>  =('/reset' uri)
@@ -110,7 +110,7 @@
           ;:  weld
             (scag (need index) page)
             (scow %ud 0)
-            (slag (add (need index) (lent "\{\{count}}")) page)
+            (slag (add (need index) ^~((lent "\{\{count}}"))) page)
       ==  ==
     ==
   --
