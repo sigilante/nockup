@@ -41,7 +41,10 @@ pub async fn run(project_name: String) -> Result<()> {
     // Use cache dir ~/.nockup/templates/{{manifest.template}}
     let template_dir = dirs::home_dir()
         .ok_or_else(|| anyhow::anyhow!("Could not find home directory"))?
-        .join(format!(".nockup/templates/{}", default_config.project.template));
+        .join(format!(
+            ".nockup/templates/{}",
+            default_config.project.template
+        ));
 
     // Check if target directory already exists
     if target_dir.exists() {
@@ -82,7 +85,8 @@ fn load_project_config(project_name: &str) -> Result<ProjectConfig> {
 
     if !config_path.exists() {
         return Err(anyhow::anyhow!(
-            "Project configuration file '{}.toml' not found", project_name
+            "Project configuration file '{}.toml' not found",
+            project_name
         ));
     }
 

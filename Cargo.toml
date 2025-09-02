@@ -1,6 +1,6 @@
 [package]
 name = "nockup"
-version = "0.0.1"
+version = "0.1.0"
 edition = "2021"
 authors = [""]
 description = "A developer support framework for NockApp development"
@@ -19,7 +19,6 @@ path = "src/main.rs"
 [dependencies]
 # NockVM
 nockapp = { git = "https://github.com/zorp-corp/nockchain.git", branch = "master" }
-#nockvm = { git = "https://github.com/zorp-corp/nockchain.git", branch = "master" }
 
 # CLI parsing and structure
 clap = { version = "4.4", features = ["derive", "cargo"] }

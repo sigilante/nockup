@@ -6,8 +6,12 @@ authors = ["N. E. Davis <neal@zorp.io>"]
 description = "A NockApp project"
 
 [[bin]]
-name = "codetalker"
-path = "src/main.rs"
+name = "listen"
+path = "src/bin/listen.rs"
+
+[[bin]]
+name = "talk"
+path = "src/bin/talk.rs"
 
 [dependencies]
 # NockVM dependency

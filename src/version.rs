@@ -37,8 +37,8 @@ pub async fn show_version_info() -> Result<()> {
 
 async fn get_binary_version(binary_name: &str) -> Result<String> {
     // First check if binary exists in PATH
-    let binary_path = which::which(binary_name)
-        .context(format!("{} not found in PATH", binary_name))?;
+    let binary_path =
+        which::which(binary_name).context(format!("{} not found in PATH", binary_name))?;
 
     // Verify the binary is the correct architecture
     let file_output = TokioCommand::new("file")
@@ -46,7 +46,7 @@ async fn get_binary_version(binary_name: &str) -> Result<String> {
         .output()
         .await
         .context("Failed to check binary architecture")?;
-    
+
     let file_info = String::from_utf8_lossy(&file_output.stdout);
     let current_arch = std::env::consts::ARCH;
     let expected_arch = match current_arch {
@@ -54,11 +54,11 @@ async fn get_binary_version(binary_name: &str) -> Result<String> {
         "aarch64" => "arm64", // macOS uses "arm64" in file output
         _ => current_arch,
     };
-    
+
     if !file_info.contains(expected_arch) {
         return Err(anyhow::anyhow!(
-            "Binary architecture mismatch for {}: expected {}, found different architecture", 
-            binary_name, 
+            "Binary architecture mismatch for {}: expected {}, found different architecture",
+            binary_name,
             expected_arch
         ));
     }
@@ -80,7 +80,7 @@ async fn get_binary_version(binary_name: &str) -> Result<String> {
     }
 
     Err(anyhow::anyhow!(
-        "Could not determine {} version - none of the common version flags worked", 
+        "Could not determine {} version - none of the common version flags worked",
         binary_name
     ))
 }
