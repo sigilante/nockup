@@ -33,7 +33,7 @@
   ++  peek
     |=  =path
     ^-  (unit (unit *))
-    ~>  %slog.[0 'Peeks awaiting implementation']
+    ~>  %slog.[0 'Received peek']
     ~
   ::
   ++  poke
@@ -46,7 +46,7 @@
       ^-  (list effect)
       ~[[%effect 'Invalid cause format']]
     ~>  %slog.[1 :((cury cat 3) 'poked: ' -.u.cause ' "' +.u.cause '"')]
-    ~>  %slog.[0 'Pokes awaiting implementation']
+    ~>  %slog.[0 'Received poke']
     `state
   --
 --

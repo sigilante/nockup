@@ -1,4 +1,4 @@
-/+  lib
+/+  *lib
 /=  *  /common/wrapper
 ::
 =>
@@ -8,13 +8,15 @@
       ~
   ==
 ::
-+$  effect
-  $%  [%effect @t]
-  ==
-::
 +$  cause
   $%  [%cause ~]
       [%command val=@t]
+      ^cause
+  ==
+::
++$  effect
+  $%  [%effect msg=@]
+      ^effect
   ==
 --
 |%
@@ -45,9 +47,13 @@
       :_  state
       ^-  (list effect)
       ~[[%effect 'Invalid cause format']]
-    ~>  %slog.[1 :((cury cat 3) 'poked: ' -.u.cause ' "' +.u.cause '"')]
-    ~>  %slog.[0 'Pokes awaiting implementation']
-    `state
+    :_  state
+    ^-  (list effect)
+    =/  pid  0  :: implementation-specific meaning
+    =/  val  -.u.cause
+    :~  [%grpc %poke pid val]
+        [%exit ~]
+    ==
   --
 --
 ((moat |) inner)
