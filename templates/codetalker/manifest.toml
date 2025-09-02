@@ -1,0 +1,11 @@
+[project]
+name = "codetalker"
+version = "0.1.0"
+description = "Demonstration app for NockApps to communicate with each other via peeks and pokes."
+authors = ["N. E. Davis <neal@zorp.io>"]
+license = "MIT"
+repository = "https://github.com/sigilante/codetalker"
+homepage = "https://github.com/sigilante/codetalker"
+keywords = ["nockapp", "nockchain", "hoon"]
+edition = "2021"
+template = "basic"
