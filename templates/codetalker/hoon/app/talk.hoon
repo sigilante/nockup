@@ -49,9 +49,10 @@
       ~[[%effect 'Invalid cause format']]
     :_  state
     ^-  (list effect)
-    =/  pid  0  :: implementation-specific meaning
+    =/  pid  42  :: implementation-specific meaning
     =/  val  -.u.cause
-    :~  [%grpc %poke pid val]
+    :~  [%grpc %peek pid %codetalker /path]
+        [%grpc %poke pid val]
         [%exit ~]
     ==
   --

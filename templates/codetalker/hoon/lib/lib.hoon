@@ -12,6 +12,7 @@
 +$  cause
   $%  other-cause
       grpc-bind-cause
+      poke-command
   ==
 ::
 +$  other-cause
@@ -29,5 +30,6 @@
 ::
 +$  grpc-effect
   $%  [%peek pid=@ typ=@tas =path]
+      [%poke pid=@ val=@]
   ==
 --

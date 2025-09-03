@@ -39,13 +39,17 @@
   ++  poke
     |=  =ovum:moat
     ^-  [(list effect) _state]
+    ~>  %slog.[0 'Received poke']
+    ~&  cause.input.ovum
     =/  cause  ((soft cause) cause.input.ovum)
     ?~  cause
       ~>  %slog.[3 (crip "invalid cause {<cause.input.ovum>}")]
       :_  state
       ^-  (list effect)
       ~[[%effect 'Invalid cause format']]
-    ~>  %slog.[1 :((cury cat 3) 'poked: ' -.u.cause ' "' +.u.cause '"')]
+    ~&  "hey"
+    :: ?>  ?=(%command -.u.cause)
+    :: ~>  %slog.[1 :((cury cat 3) 'poked: ' -.u.cause ' "' +.u.cause '"')]
     ~>  %slog.[0 'Received poke']
     `state
   --

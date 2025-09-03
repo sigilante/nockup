@@ -166,7 +166,12 @@ The final product is, of course, a binary which you may run either directly or v
 
 One of the design goals of Nockup is to avoid the need to write much, if any, Rust code to successfully deploy a NockApp.  To that end, we provide templates which by and large only expect the developer to write in Hoon or another language which targets the Nock ISA.
 
-A project is specified by its manifest file, which includes details like the project name and the template to use.  Most projects will prefer the `basic` template, but a (stateless) `http-static` and a (stateful) `http-server` template are also available, among other options in `/templates`.
+A project is specified by its manifest file, which includes details like the project name and the template to use.  Many projects will prefer the `basic` template, but other options are available in `/templates`.
+
+- `basic`:  simplest NockApp template.
+- `codetalker`:  gRPC listener and broadcaster.
+- `http-static`:  static HTTP file server.
+- `http-server`:  stateful HTTP server.
 
 #### Multiple Targets
 

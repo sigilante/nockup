@@ -12,7 +12,7 @@ use nockapp::{AtomExt, Bytes, NockApp, NockAppError, Noun};
 use nockapp::{exit_driver, file_driver, markdown_driver};
 use nockapp_grpc::NockAppGrpcServer;
 use nockapp_grpc::client::NockAppGrpcClient;
-use nockapp_grpc::driver::grpc_listener_driver;
+use nockapp_grpc::driver::{grpc_listener_driver, grpc_server_driver};
 use nockapp_grpc::wire_conversion::create_grpc_wire;
 use nockvm::noun::{Atom, D, T};
 use nockvm_macros::tas;
@@ -48,36 +48,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     //  Set up drivers.
     nockapp
-        .add_io_driver(grpc_listener_driver(codetalker::GRPC_PORT.to_string()))
+        .add_io_driver(grpc_server_driver())
         .await;
     nockapp
         .add_io_driver(exit_driver())
         .await;
-
-    //  Load demo poke.
-    let mut poke_slab = NounSlab::new();
-    let str_atom = string_to_atom(&mut poke_slab, "hello world")?;
-    let command_noun = T(&mut poke_slab, &[D(tas!(b"command")), str_atom.as_noun()]);
-    poke_slab.set_root(command_noun);
-
-    //  Handle response from kernel to demo poke.
-    match nockapp.poke(SystemWire.to_wire(), poke_slab).await {
-        Ok(effects) => {
-            let mut results = Vec::new();
-            for (_i, effect) in effects.iter().enumerate() {
-                let effect_noun = unsafe { effect.root() };
-                if let Ok(cell) = effect_noun.as_cell() {
-                    let Ok(tail_atom) = cell.tail().as_atom() else { todo!() };
-                    let Ok(tail_string) = std::str::from_utf8(tail_atom.as_ne_bytes()) else {todo!() };
-                    results.push(tail_string.trim_end_matches('\0').to_string());
-                }
-            }
-            println!("{}", results.last().unwrap_or(&String::new()));
-        }
-        Err(e) => {
-            error!("Poke failed: {}", e);
-        }
-    }
 
     //  Run app kernel.
     println!("Starting main kernel loop...");
