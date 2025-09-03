@@ -172,6 +172,7 @@ A project is specified by its manifest file, which includes details like the pro
 - `codetalker`:  gRPC listener and broadcaster.
 - `http-static`:  static HTTP file server.
 - `http-server`:  stateful HTTP server.
+- `repl`:  read-eval-print loop.
 
 #### Multiple Targets
 

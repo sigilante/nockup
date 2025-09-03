@@ -92,7 +92,13 @@ pub async fn run(project: String) -> Result<()> {
     //  If there is only one binary, then check in the normal spot.
     //  If there are multiple binaries, then check at each location by name.
     for bin_path in &binaries {
-        let hoon_app_path = project_dir.join(format!("hoon/app/{}.hoon", bin_path.file_stem().unwrap().to_string_lossy()));
+        // if this is main.rs, then load app.hoon
+        let name = if bin_path.file_name().unwrap() == "main.rs" {
+            "app".to_string()
+        } else {
+            bin_path.file_stem().unwrap().to_string_lossy().to_string()
+        };
+        let hoon_app_path = project_dir.join(format!("hoon/app/{}.hoon", name));
         println!("Compiling Hoon app file at: {}", hoon_app_path.display());
 
         if !hoon_app_path.exists() {
