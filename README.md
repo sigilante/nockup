@@ -169,7 +169,7 @@ One of the design goals of Nockup is to avoid the need to write much, if any, Ru
 A project is specified by its manifest file, which includes details like the project name and the template to use.  Many projects will prefer the `basic` template, but other options are available in `/templates`.
 
 - `basic`:  simplest NockApp template.
-- `codetalker`:  gRPC listener and broadcaster.
+- `grpc`:  gRPC listener and broadcaster.
 - `http-static`:  static HTTP file server.
 - `http-server`:  stateful HTTP server.
 - `repl`:  read-eval-print loop.
@@ -273,9 +273,10 @@ Checklist for release:
 * add Apple code signing support
 * update manifest files (and install/update strings) to zorp-corp/nockchain
 * expand repertoire of templates
-  * REPL
   * appropriate Hoon libraries
 * unify batch/continuous kernels via `exit` event:  `[%exit code=@]`
+* `nockup test`
+* `nockup publish`/`nockup clone`
 
 ## Contributor's Guide
 
