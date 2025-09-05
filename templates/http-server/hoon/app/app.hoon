@@ -13,7 +13,7 @@
     <body>
       <h1>Hello NockApp!</h1>
       <div class="counter-display">
-        Count: {{count}}
+        Count: COUNT
       </div>
       
       <form method="POST" action="/increment" style="display: inline;">
@@ -73,11 +73,11 @@
           %-  to-octs
           %-  crip
           ^-  tape
-          =/  index  (find "\{\{count}}" page)
+          =/  index  (find "COUNT" page)
           ;:  weld
             (scag (need index) page)
             (scow %ud value.state)
-            (slag (add (need index) ^~((lent "\{\{count}}"))) page)
+            (slag (add (need index) ^~((lent "COUNT"))) page)
       ==  ==
       ::
         %'POST'
@@ -90,11 +90,11 @@
             %-  to-octs
             %-  crip
             ^-  tape
-            =/  index  (find "\{\{count}}" page)
+            =/  index  (find "COUNT" page)
             ;:  weld
               (scag (need index) page)
               (scow %ud +(value.state))
-              (slag (add (need index) ^~((lent "\{\{count}}"))) page)
+              (slag (add (need index) ^~((lent "COUNT"))) page)
         ==  ==
       ::
       ?>  =('/reset' uri)
@@ -106,11 +106,11 @@
           %-  to-octs
           %-  crip
           ^-  tape
-          =/  index  (find "\{\{count}}" page)
+          =/  index  (find "COUNT" page)
           ;:  weld
             (scag (need index) page)
             (scow %ud 0)
-            (slag (add (need index) ^~((lent "\{\{count}}"))) page)
+            (slag (add (need index) ^~((lent "COUNT"))) page)
       ==  ==
     ==
   --

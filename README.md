@@ -346,19 +346,19 @@ Code building is a general-purpose computing process, like `eval`.  You should n
 
 ## Roadmap
 
-Checklist for release:
+### Release Checklist
 
 * add Apple code signing support
-* update manifest files (and install/update strings) to zorp-corp/nockchain
-* expand repertoire of templates
-  * appropriate Hoon libraries
+* update manifest files (and install/update strings) to `zorp-corp/nockchain`
 * unify batch/continuous kernels via `exit` event:  `[%exit code=@]`
-* `nockup test`
 * replit instance with release?
 
-* `nockup publish`/`nockup clone` (awaiting PKI)
+### Later
 
-* `/src/bin` should be `/src`
+* `nockup test`
+* expand repertoire of templates
+  * appropriate Hoon libraries
+* `nockup publish`/`nockup clone` (awaiting PKI)
 
 ## Contributor's Guide
 

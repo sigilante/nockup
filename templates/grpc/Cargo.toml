@@ -7,11 +7,11 @@ description = "A NockApp project"
 
 [[bin]]
 name = "listen"
-path = "src/bin/listen.rs"
+path = "src/listen.rs"
 
 [[bin]]
 name = "talk"
-path = "src/bin/talk.rs"
+path = "src/talk.rs"
 
 [dependencies]
 # NockVM dependency
