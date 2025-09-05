@@ -1,11 +1,11 @@
 [project]
-name = "codetalker"
+name = "{{project_name}}"
 version = "0.1.0"
-description = "Demonstration app for NockApps to communicate with each other via peeks and pokes."
-authors = ["N. E. Davis <neal@zorp.io>"]
+description = "{{project_description}}"
+authors = ["{{author_name}} <{{author_email}}>"]
 license = "MIT"
-repository = "https://github.com/sigilante/codetalker"
-homepage = "https://github.com/sigilante/codetalker"
+repository = "https://github.com/{{github_username}}/{{project_name}}"
+homepage = "https://github.com/{{github_username}}/{{project_name}}"
 keywords = ["nockapp", "nockchain", "hoon"]
 edition = "2021"
 template = "basic"

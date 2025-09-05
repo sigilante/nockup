@@ -58,7 +58,7 @@ pub async fn run(project: String) -> Result<()> {
         } else {
             let mut binaries = Vec::new();
             for bin_name in &expected_binaries {
-                let bin_path = project_dir.join("src").join("bin").join(format!("{}.rs", bin_name));
+                let bin_path = project_dir.join("src").join(format!("{}.rs", bin_name));
                 binaries.push(bin_path);
             }
             binaries

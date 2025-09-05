@@ -18,7 +18,7 @@ Nockup supports the following `nockup` commands.
 
 ### Project
 
-- `start`:  Initialize a new NockApp project from a .toml config file.
+- `init`:  Initialize a new NockApp project from a .toml config file.
 - `build`:  Build a NockApp project.
 - `run`:  Run a NockApp project.
 
@@ -110,7 +110,7 @@ Resolving deltas: 100% (1/1), done.
 
 # Initialize a default project.
 $ cp default-manifest.toml arcadia.toml
-$ nockup start arcadia 
+$ nockup init arcadia 
 Initializing new NockApp project 'arcadia'...
   create Cargo.toml
   create manifest.toml
@@ -147,6 +147,7 @@ I (11:53:08) "hoonc: build succeeded, sending out write effect"
 I (11:53:08) "hoonc: output written successfully to '/Users/neal/zorp/nockup/arcadia/out.jam'"
 no panic!
 ✓ Hoon compilation completed successfully!
+
 # Run the project (wraps hoon).
 $ nockup run arcadia
 🔨 Running project 'arcadia'...
@@ -164,6 +165,23 @@ The final product is, of course, a binary which you may run either directly or v
 
 ### Project Manifests and Templates
 
+A project manifest is a TOML file containing sufficient information to produce a basic NockApp from a template with specified imports.
+
+```toml
+[project]
+name = "Et In Arcadia Ego"
+project_name = "arcadia"
+version = "1.0.0"
+description = "I too was in Arcadia."
+author_name = "Nicolas Poussin"
+author_email = "nicolas@poussin.edu"
+github_username = "arcadia"
+license = "MIT"
+keywords = ["nockapp", "nockchain", "hoon"]
+nockapp_commit_hash = "336f744b6b83448ec2b86473a3dec29b15858999"
+template = "basic"
+```
+
 One of the design goals of Nockup is to avoid the need to write much, if any, Rust code to successfully deploy a NockApp.  To that end, we provide templates which by and large only expect the developer to write in Hoon or another language which targets the Nock ISA.
 
 A project is specified by its manifest file, which includes details like the project name and the template to use.  Many projects will prefer the `basic` template, but other options are available in `/templates`.
@@ -173,18 +191,66 @@ A project is specified by its manifest file, which includes details like the pro
 - `http-static`:  static HTTP file server.
 - `http-server`:  stateful HTTP server.
 - `repl`:  read-eval-print loop.
+- `chain`:  Nockchain listener.
+- `rollup`:  rollup bundler for NockApps to Nockchain.
+
+### Libraries
+
+A project manifest may optionally include a `[libraries]` section.  Conventionally, Hoon libraries are manually supplied within a desk or repository by manually copying them in.  While this solves the linked library problem by using shared nouns ([~rovnys-ricfer & ~wicdev-wisryt 2024](https://urbitsystems.tech/article/v01-i01/a-solution-to-static-vs-dynamic-linking)), no universal versioning system exists and cross-repository dependencies are difficult to automate.
+
+A Hoon library repo should supply a `/desk` or `/hoon` directory at the top level (unless more complexity is necessary, in which case Nockup will attempt to match the proper directory).
+
+Sequent is a good example of the simplest possible structure:
+
+- [`jackfoxy/sequent`](https://github.com/jackfoxy/sequent) list functions
+
+This is imported via the `configuration.toml` manifest:
+
+```toml
+[libraries]
+sequent = {
+    url = "https://github.com/jackfoxy/sequent",
+    commit = "0f6e6777482447d4464948896b763c080dc9e559"
+}
+```
+
+which supplies `/desk/lib/sequent.hoon` at `/hoon/lib/sequent.hoon` and ignores `/mar` and `/tests` (which are both Urbit-specific affordances).
+
+A more complex structure features top-level nesting before `/desk`, such as with the Urbit numerical computing suite.
+
+- [`urbit/numerics`](https://github.com/urbit/numerics)
+
+```toml
+[libraries]
+math = {
+    url = "https://github.com/urbit/numerics",
+    branch = "main",
+    directory = "libmath"
+    commit = "7c11c48ab3f21135caa5a4e8744a9c3f828f2607"
+}
+lagoon = {
+    url = "https://github.com/urbit/numerics",
+    branch = "main",
+    directory = "lagoon"
+    commit = "7c11c48ab3f21135caa5a4e8744a9c3f828f2607"
+}
+```
+
+which supplies `/libmath/desk/lib/math.hoon` at `/hoon/lib/libmath/lib/math.hoon` and other files along the same pattern.  (`/sur` files are also included.)
 
 #### Multiple Targets
 
-A Rust project (and _a fortiori_ a NockApp project) can produce more than one binary target.  The default expectation for a single-binary project is to supply the following two files:
+A Rust project (and _a fortiori_ a NockApp project) can produce more than one binary target.  This is scenario is demonstrated by the `grpc` template.
+
+The default expectation for a single-binary project is to supply the following two files:
 
 1. `src/main.rs` - the main Rust driver.
 2. `hoon/app/app.hoon` - the Hoon kernel.
 
 However, if you want to produce multiple binaries and kernels, you should supply the programs in this pattern:
 
-1. `src/bin/main1.rs` - the first Rust driver.  (This may have any name.)
-2. `src/bin/main2.rs` - the second Rust driver.  (This may have any name.)
+1. `src/main1.rs` - the first Rust driver.  (This may have any name.)
+2. `src/main2.rs` - the second Rust driver.  (This may have any name.)
 3. `hoon/app/main1.hoon` - the first Hoon kernel.  (This should have the same name as the Rust driver `main1.rs`.)
 4. `hoon/app/main2.hoon` - the second Hoon kernel.  (This should have the same name as the Rust driver `main2.rs`.)
 
@@ -208,7 +274,19 @@ nockup build myproject
 
 will produce both `target/release/main1` and `target/release/main2`.
 
-Projects which produce more than one binary cannot be used directly with `nockup run` since more than one process must be started.  This should be kept in mind when using templates which produce more than one binary (like `codetalker`).
+Projects which produce more than one binary cannot be used directly with `nockup run` since more than one process must be started.  This should be kept in mind when using templates which produce more than one binary (like `grpc`).
+
+#### Nockchain Interactions
+
+A Nockchain must be running locally in order to obtain chain state data.
+
+For instance, with a NockApp based on the template `chain`, you need to connect to a running NockApp instance at port 5555:
+
+```
+nockup run chain -- --nockchain-socket=5555 get-heaviest-block
+# - or -
+./chain/target/release/chain --nockchain-socket=5555 get-heaviest-block
+```
 
 ### Channels
 
@@ -276,7 +354,11 @@ Checklist for release:
   * appropriate Hoon libraries
 * unify batch/continuous kernels via `exit` event:  `[%exit code=@]`
 * `nockup test`
-* `nockup publish`/`nockup clone`
+* replit instance with release?
+
+* `nockup publish`/`nockup clone` (awaiting PKI)
+
+* `/src/bin` should be `/src`
 
 ## Contributor's Guide
 

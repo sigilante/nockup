@@ -10,17 +10,16 @@ use nockapp::noun::slab::NounSlab;
 use nockapp::wire::{SystemWire, Wire, WireRepr, WireTag as AppWireTag};
 use nockapp::{AtomExt, Bytes, NockApp, NockAppError, Noun};
 use nockapp::{exit_driver, file_driver, markdown_driver};
-use nockapp::utils::make_tas;
 use nockapp_grpc::NockAppGrpcServer;
 use nockapp_grpc::client::NockAppGrpcClient;
-use nockapp_grpc::driver::{GrpcEffect, grpc_listener_driver, grpc_server_driver};
-use nockapp_grpc::wire_conversion::{create_grpc_wire, grpc_wire_to_nockapp};
+use nockapp_grpc::driver::{grpc_listener_driver, grpc_server_driver};
+use nockapp_grpc::wire_conversion::create_grpc_wire;
 use nockvm::noun::{Atom, D, T};
 use nockvm_macros::tas;
 use noun_serde::{NounDecode, NounDecodeError, NounEncode};
 use tracing::{error, info};
 
-use codetalker::string_to_atom;
+use grpc::string_to_atom;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -47,25 +46,20 @@ async fn main() -> Result<(), Box<dyn Error>> {
     .await
     .map_err(|e| format!("Kernel setup failed: {}", e))?;
 
-    //  Load demo poke.
-    let mut poke_slab = NounSlab::new();
-    let str_atom = string_to_atom(&mut poke_slab, "hello world")?;
-    let head = make_tas(&mut poke_slab, "poke-value").as_noun();
-    let command_noun = T(&mut poke_slab, &[head, str_atom.as_noun()]);
-    poke_slab.set_root(command_noun);
-
-    //  The demo poke generates a %grpc effect which we want to emit.
+    //  Set up drivers.
     nockapp
-        .add_io_driver(nockapp::one_punch_driver(poke_slab, Operation::Poke))
-        .await;
-    nockapp
-        .add_io_driver(grpc_listener_driver(format!("http://127.0.0.1:{}", codetalker::GRPC_PORT.to_string())))
+        .add_io_driver(grpc_server_driver())
         .await;
     nockapp
         .add_io_driver(exit_driver())
         .await;
 
-    nockapp.run().await;
+    //  Run app kernel.
+    println!("Starting main kernel loop...");
+    nockapp
+        .run()
+        .await
+        .expect("Failed to run app");
 
     Ok(())
 }

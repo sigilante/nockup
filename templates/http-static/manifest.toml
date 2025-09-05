@@ -1,11 +1,11 @@
 [project]
-name = "http-server"
+name = "{{project_name}}"
 version = "0.1.0"
-description = "A simple HTTP server with API."
-authors = ["N. E. Davis <neal@zorp.io>"]
+description = "{{project_description}}"
+authors = ["{{author_name}} <{{author_email}}>"]
 license = "MIT"
-repository = "https://github.com/zorp-corp/nockchain"
-homepage = "https://github.com/zorp-corp/nockchain"
+repository = "https://github.com/{{github_username}}/{{project_name}}"
+homepage = "https://github.com/{{github_username}}/{{project_name}}"
 keywords = ["nockapp", "nockchain", "hoon"]
 edition = "2021"
-template = "http-server"
+template = "basic"

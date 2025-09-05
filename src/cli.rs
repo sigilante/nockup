@@ -14,7 +14,7 @@ pub enum Commands {
     /// Initialize nockup cache and download templates
     Install,
     /// Initialize a new NockApp project from a .toml config file
-    Start {
+    Init {
         /// Name of the project config file (looks for <name>.toml)
         name: String,
     },
@@ -29,6 +29,9 @@ pub enum Commands {
     Run {
         /// Path to the project directory  
         project: String,
+        /// Additional arguments to pass to the running application
+        #[arg(last = true)]
+        args: Vec<String>,
     },
     /// Manage channels (e.g., set default)
     Channel {

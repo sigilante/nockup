@@ -5,7 +5,7 @@ use anyhow::{Context, Result};
 use colored::Colorize;
 use tokio::process::Command;
 
-pub async fn run(project: String) -> Result<()> {
+pub async fn run(project: String, args: Vec<String>) -> Result<()> {
     let project_dir = Path::new(&project);
 
     // Check if project directory exists
@@ -38,6 +38,11 @@ pub async fn run(project: String) -> Result<()> {
         .current_dir(project_dir)
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit());
+
+    // Add separator and pass through additional arguments to the program
+    if !args.is_empty() {
+        command.arg("--").args(&args);
+    }
 
     let status = command
         .status()
