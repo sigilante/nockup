@@ -134,8 +134,7 @@ To get started:
 # Show project settings.
 $ cd arcadia
 $ ls
-build.rs      Cargo.toml    manifest.toml README.md     target
-Cargo.lock    hoon          out.jam       src
+Cargo.lock    Cargo.toml    hoon          manifest.toml README.md     src
 
 $ cd ..
 
@@ -167,11 +166,11 @@ I (11:53:15) Pokes awaiting implementation
 ✓ Run completed successfully!
 ```
 
-The final product is, of course, a binary which you may run either directly or via `nockup run` (as demonstrated here).
+The final product is, of course, a binary which you may run either directly (from `./target/release`) or via `nockup run` (as demonstrated here).
 
 ### Project Manifests and Templates
 
-A project manifest is a TOML file containing sufficient information to produce a basic NockApp from a template with specified imports.
+A project manifest is a file containing sufficient information to produce a basic NockApp from a template with specified imports.
 
 ```toml
 [project]
@@ -401,9 +400,10 @@ Nockup uses HTTPS for binary downloads (overriding HTTP in the channel manifests
 
     using the `asc` signature listed in the appropriate toolchain file in `~/.nockup/toolchain`.
 
-Code building is a general-purpose computing process, like `eval`.  You should not do it on the same machine on which you store your wallet private keys [0].
+Code building is a general-purpose computing process, like `eval`.  You should not do it on the same machine on which you store your wallet private keys [0] [1].
 
 - [0]: https://semgrep.dev/blog/2025/security-alert-nx-compromised-to-steal-wallets-and-credentials/
+- [1]: https://jdstaerk.substack.com/p/we-just-found-malicious-code-in-the
 
 ## Roadmap
 
