@@ -194,9 +194,65 @@ A project is specified by its manifest file, which includes details like the pro
 - `chain`:  Nockchain listener.
 - `rollup`:  rollup bundler for NockApps to Nockchain.
 
+#### Multiple Targets
+
+A Rust project (and _a fortiori_ a NockApp project) can produce more than one binary target.  This is scenario is demonstrated by the `grpc` template.
+
+The default expectation for a single-binary project is to supply the following two files:
+
+1. `src/main.rs` - the main Rust driver.
+2. `hoon/app/app.hoon` - the Hoon kernel.
+
+However, if you want to produce multiple binaries and kernels, you should supply the programs in this pattern:
+
+1. `src/main1.rs` - the first Rust driver.  (This may have any name.)
+2. `src/main2.rs` - the second Rust driver.  (This may have any name.)
+3. `hoon/app/main1.hoon` - the first Hoon kernel.  (This should have the same name as the Rust driver `main1.rs`.)
+4. `hoon/app/main2.hoon` - the second Hoon kernel.  (This should have the same name as the Rust driver `main2.rs`.)
+
+In the `Cargo.toml` file, include both targets explicitly:
+
+```
+[[bin]]
+name = "main1"
+path = "src/bin/main1.rs"
+
+[[bin]]
+name = "main2"
+path = "src/bin/main2.rs"
+```
+
+Nockup is opinionated here, and will match `hoon/app/main1.hoon`, etc., as kernels; that is,
+
+```
+nockup build myproject
+```
+
+will produce both `target/release/main1` and `target/release/main2`.
+
+Projects which produce more than one binary cannot be used directly with `nockup run` since more than one process must be started.  This should be kept in mind when using templates which produce more than one binary (like `grpc`).
+
+#### Nockchain Interactions
+
+A Nockchain must be running locally in order to obtain chain state data.
+
+For instance, with a NockApp based on the template `chain`, you need to connect to a running NockApp instance at port 5555:
+
+```
+nockup run chain -- --nockchain-socket=5555 get-heaviest-block
+# - or -
+./chain/target/release/chain --nockchain-socket=5555 get-heaviest-block
+```
+
 ### Libraries
 
-A project manifest may optionally include a `[libraries]` section.  Conventionally, Hoon libraries are manually supplied within a desk or repository by manually copying them in.  While this solves the linked library problem by using shared nouns ([~rovnys-ricfer & ~wicdev-wisryt 2024](https://urbitsystems.tech/article/v01-i01/a-solution-to-static-vs-dynamic-linking)), no universal versioning system exists and cross-repository dependencies are difficult to automate.
+A project manifest may optionally include a `[libraries]` section.  Conventionally, Hoon libraries have been manually supplied within a desk or repository by manually copying them in.  While this solves the linked library problem by using shared nouns ([~rovnys-ricfer & ~wicdev-wisryt 2024](https://urbitsystems.tech/article/v01-i01/a-solution-to-static-vs-dynamic-linking)), no universal versioning system exists and cross-repository dependencies are difficult to automate.
+
+To that end, Nockup supports three patterns for importing libraries:
+
+1. Single file imports.
+2. Repository imports, simple structure.
+3. Nested repository imports.
 
 #### Single Libraries
 
@@ -249,63 +305,13 @@ directory = "lagoon"
 commit = "7c11c48ab3f21135caa5a4e8744a9c3f828f2607"
 ```
 
-which supplies (among others) files in the following pattern:
+which supplies these files (among others) in the following pattern:
 
 * `/libmath/desk/lib/math.hoon` at `/hoon/lib/math.hoon`.
 * `/lagoon/desk/lib/lagoon.hoon` at `/hoon/lib/lagoon.hoon`.
 * `/lagoon/desk/sur/lagoon.hoon` at `/hoon/sur/lagoon.hoon`.
 
-and other files along the same pattern.  These are simply copied over from the source directory in the repository, so care should be taken to ensure that files with the same name do not conflict.
-
-#### Multiple Targets
-
-A Rust project (and _a fortiori_ a NockApp project) can produce more than one binary target.  This is scenario is demonstrated by the `grpc` template.
-
-The default expectation for a single-binary project is to supply the following two files:
-
-1. `src/main.rs` - the main Rust driver.
-2. `hoon/app/app.hoon` - the Hoon kernel.
-
-However, if you want to produce multiple binaries and kernels, you should supply the programs in this pattern:
-
-1. `src/main1.rs` - the first Rust driver.  (This may have any name.)
-2. `src/main2.rs` - the second Rust driver.  (This may have any name.)
-3. `hoon/app/main1.hoon` - the first Hoon kernel.  (This should have the same name as the Rust driver `main1.rs`.)
-4. `hoon/app/main2.hoon` - the second Hoon kernel.  (This should have the same name as the Rust driver `main2.rs`.)
-
-In the `Cargo.toml` file, include both targets explicitly:
-
-```
-[[bin]]
-name = "main1"
-path = "src/bin/main1.rs"
-
-[[bin]]
-name = "main2"
-path = "src/bin/main2.rs"
-```
-
-Nockup is opinionated here, and will match `hoon/app/main1.hoon`, etc., as kernels; that is,
-
-```
-nockup build myproject
-```
-
-will produce both `target/release/main1` and `target/release/main2`.
-
-Projects which produce more than one binary cannot be used directly with `nockup run` since more than one process must be started.  This should be kept in mind when using templates which produce more than one binary (like `grpc`).
-
-#### Nockchain Interactions
-
-A Nockchain must be running locally in order to obtain chain state data.
-
-For instance, with a NockApp based on the template `chain`, you need to connect to a running NockApp instance at port 5555:
-
-```
-nockup run chain -- --nockchain-socket=5555 get-heaviest-block
-# - or -
-./chain/target/release/chain --nockchain-socket=5555 get-heaviest-block
-```
+These are simply copied over from the source directory in the repository, so care should be taken to ensure that files with the same name do not conflict (such as `types.hoon`).
 
 ### Channels
 
