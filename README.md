@@ -1,45 +1,32 @@
 # Nockup: the NockApp channel installer
 
-*Nockup* installs the Hoon programming language and produces a basic template app for the NockApp framework.
+*Nockup* is a command-line tool to produce [NockApps](https://github.com/zorp-corp/nockchain) and manage project builds and dependencies.
 
-NockApp is a general-purpose framework for building apps that run the Nock ISA.  It is particularly well-suited for use with [Nockchain](https://nockchain.org) and the Nock ZKVM.
+[NockApp](https://github.com/zorp-corp/nockchain) is a general-purpose framework for building apps that run the Nock ISA.  It is particularly well-suited for use with [Nockchain](https://nockchain.org) and the Nock ZKVM.
 
 ![](./img/hero.jpg)
-
-## Usage
-
-Nockup supports the following `nockup` commands.
-
-### Operations
-
-- `nockup install`:  Initialize Nockup cache and download binaries and templates.
-- `nockup update`:  Check for updates to binaries and templates.
-- `nockup help`:  Print this message or the help of the given subcommand(s).
-
-### Project
-
-- `nockup init`:  Initialize a new NockApp project from a `.toml` config file.
-- `nockup build`:  Build a NockApp project using Cargo.
-- `nockup run`:  Run a NockApp project.
-
-### channel
-
-- `nockup channel list`: List all available channels.
-- `nockup channel set`: Set the active channel, from `stable` and `nightly`.  (Most users will prefer `stable`.)
 
 ## Installation
 
 ### From Script
 
+> 🚨 **Important**:  During pre-release development, this will fail due to hash mismatches on the binaries.  Use the "From Source" instructions instead.
+
+Prerequisites: Rust toolchain, Git
+
 ```sh
 curl -fsSL https://raw.githubusercontent.com/sigilante/nockup/master/install.sh | bash
 ```
 
+This checks for dependencies and then installs the Nockup binary and its requirements, including the GPG key used to verify binaries on Linux.
+
 ### From Source
+
+Prerequisites: Rust toolchain, Git
 
 1. Install Nockchain and build `hoon` and `hoonc`.
 
-    ```
+    ```sh
     $ git clone https://github.com/zorp-corp/nockchain.git
     $ cd nockchain
     $ make install-hoonc
@@ -48,7 +35,7 @@ curl -fsSL https://raw.githubusercontent.com/sigilante/nockup/master/install.sh 
 
 2. Install Nockup.
 
-    ```
+    ```sh
     $ git clone https://github.com/sigilante/nockup.git
     $ cd nockup/
     $ cargo build --release
@@ -58,38 +45,40 @@ curl -fsSL https://raw.githubusercontent.com/sigilante/nockup/master/install.sh 
 
     Alternatively, you may install it globally using Cargo:
 
-    ```
+    ```sh
     $ cargo install --path .
     ```
 
 3. Install the GPG public key (on Linux).  Nockup **will not work** if you do not provide the public key.
 
-    ```
+    ```sh
     $ gpg --keyserver keyserver.ubuntu.com --recv-keys A6FFD2DB7D4C9710
     ```
 
 4. Install `nockup` and dependencies.
 
-    ```
+    ```sh
     nockup install
     ```
 
 5. Check for updates.
 
-    ```
+    ```sh
     $ nockup update
     ```
 
 6. Before building, switch your `rustup` to `nightly` to satisfy `nockapp`/`nockvm` dependencies.
 
-    ```
+    ```sh
     rustup install nightly
     rustup override set nightly
     ```
 
-## Usage
+## Tutorial
 
-```
+Nockup provides a command-line interface for managing NockApp projects.  It uses binaries to process manifest files to create NockApp projects from templates then build and run them.
+
+```sh
 # Show basic program information.
 $ nockup
 nockup version 0.0.1
@@ -117,8 +106,8 @@ Resolving deltas: 100% (1/1), done.
 📂 Templates are now available in: /Users/myuser/.nockup/templates
 
 # Initialize a default project.
-$ cp default-manifest.toml arcadia.toml
-$ nockup init arcadia 
+$ cp ~/.nockup/templates/basic/manifest.toml arcadia.toml
+$ nockup init arcadia
 Initializing new NockApp project 'arcadia'...
   create Cargo.toml
   create manifest.toml
@@ -353,9 +342,30 @@ To uninstall Nockup delete the binary and remove the installation cache:
 $ rm -rf ~/.nockup
 ```
 
+## Command Reference
+
+Nockup supports the following `nockup` commands.
+
+### Operations
+
+- `nockup install`:  Initialize Nockup cache and download binaries and templates.
+- `nockup update`:  Check for updates to binaries and templates.
+- `nockup help`:  Print this message or the help of the given subcommand(s).
+
+### Project
+
+- `nockup init`:  Initialize a new NockApp project from a `.toml` config file.
+- `nockup build`:  Build a NockApp project using Cargo.
+- `nockup run`:  Run a NockApp project.
+
+### channel
+
+- `nockup channel list`: List all available channels.
+- `nockup channel set`: Set the active channel, from `stable` and `nightly`.  (Most users will prefer `stable`.)
+
 ## Security
 
-*Rustup is entirely experimental and many parts are unaudited.  We make no representations or guarantees as to the behavior of this software.*
+*Nockup is entirely experimental and many parts are unaudited.  We make no representations or guarantees as to the behavior of this software.*
 
 Nockup uses HTTPS for binary downloads (overriding HTTP in the channel manifests).  The commands `nockup install` and  `nockup update` have the following security measures in place:
 
@@ -363,7 +373,7 @@ Nockup uses HTTPS for binary downloads (overriding HTTP in the channel manifests
 
     You can do this manually by running:
 
-    ```
+    ```sh
     b3sum nockup
     sha1sum --check <file>
     ```
@@ -374,7 +384,7 @@ Nockup uses HTTPS for binary downloads (overriding HTTP in the channel manifests
 
     You can do this manually by running:
 
-    ```
+    ```sh
     gpg --verify nockup.asc nockup
     ```
 
