@@ -16,6 +16,8 @@ pub struct LibrarySpec {
     pub branch: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub directory: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub file: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -49,7 +51,7 @@ pub async fn process_libraries(project_dir: &Path, manifest: &ProjectManifest) -
         println!("{} Processing library dependencies...", "📚".cyan());
         
         let cache_dir = get_library_cache_dir()?;
-        let project_lib_dir = project_dir.join("hoon"); //.join("lib");
+        let project_lib_dir = project_dir.join("hoon").join("lib");
         
         // Ensure library directory exists
         fs::create_dir_all(&project_lib_dir)
@@ -73,22 +75,28 @@ pub async fn process_libraries(project_dir: &Path, manifest: &ProjectManifest) -
                 }
             };
             
-            // Find the appropriate source directory (desk or hoon)
-            let source_dir = match find_library_source_dir(&repo_dir, lib_spec) {
-                Ok(dir) => dir,
-                Err(e) => {
-                    println!("    ❌ Failed to find source directory for '{}': {}", lib_name, e);
+            // Handle single file vs directory/full library
+            if let Some(file_path) = &lib_spec.file {
+                // Single file import
+                copy_single_file(&repo_dir, &project_lib_dir, file_path)?;
+            } else {
+                // Full library import - find the appropriate source directory (desk or hoon)
+                let source_dir = match find_library_source_dir(&repo_dir, lib_spec) {
+                    Ok(dir) => dir,
+                    Err(e) => {
+                        println!("    ❌ Failed to find source directory for '{}': {}", lib_name, e);
+                        return Err(e);
+                    }
+                };
+                
+                // Copy library files to project
+                if let Err(e) = copy_library_files(&source_dir, &project_lib_dir, lib_name, lib_spec) {
+                    println!("    ❌ Failed to copy files for '{}': {}", lib_name, e);
                     return Err(e);
                 }
-            };
-            
-            // Copy library files to project
-            if let Err(e) = copy_library_files(&source_dir, &project_lib_dir, lib_name, lib_spec) {
-                println!("    ❌ Failed to copy files for '{}': {}", lib_name, e);
-                return Err(e);
             }
             
-            println!("    {} Installed library '{}'", "✓".green(), lib_name);
+            println!("    ✓ Installed library '{}'", lib_name);
         }
         
         println!("{} All libraries processed successfully!", "✓".green());
@@ -111,6 +119,16 @@ fn validate_library_spec(spec: &LibrarySpec) -> Result<()> {
             ));
         }
         _ => {} // Valid: exactly one of branch or commit is specified
+    }
+    
+    // Ensure mutually exclusive directory/file
+    match (&spec.directory, &spec.file) {
+        (Some(_), Some(_)) => {
+            return Err(anyhow::anyhow!(
+                "Library spec cannot have both 'directory' and 'file' specified. Please use only one."
+            ));
+        }
+        _ => {} // Valid: can have neither, or exactly one
     }
     
     // Validate URL is GitHub (for now)
@@ -152,7 +170,7 @@ async fn fetch_library_repo(cache_dir: &Path, lib_name: &str, spec: &LibrarySpec
     }
     
     // Clone the repository
-    println!("    {} Cloning repository...", "⬇️".yellow());
+    println!("    ⬇️ Cloning repository...");
     
     let mut git_cmd = Command::new("git");
     git_cmd.args(&["clone", &spec.url]);
@@ -231,8 +249,10 @@ fn find_library_source_dir(repo_dir: &Path, spec: &LibrarySpec) -> Result<PathBu
 }
 
 fn copy_library_files(source_dir: &Path, dest_lib_dir: &Path, lib_name: &str, spec: &LibrarySpec) -> Result<()> {
-    ensure_directory_exists(dest_lib_dir)?;
-    copy_top_level_library(source_dir, dest_lib_dir, source_dir)?;
+    // Always use flattened approach - copy contents directly to appropriate directories
+    let project_hoon_dir = dest_lib_dir.parent().unwrap(); // Get /hoon from /hoon/lib
+    
+    copy_top_level_library(source_dir, project_hoon_dir, source_dir)?;
     
     Ok(())
 }
@@ -240,6 +260,51 @@ fn copy_library_files(source_dir: &Path, dest_lib_dir: &Path, lib_name: &str, sp
 fn ensure_directory_exists(dir: &Path) -> Result<()> {
     fs::create_dir_all(dir)
         .with_context(|| format!("Failed to create directory '{}'", dir.display()))
+}
+
+fn copy_single_file(repo_dir: &Path, project_lib_dir: &Path, file_path: &str) -> Result<()> {
+    let source_file = repo_dir.join(file_path);
+    
+    // Check if the source file exists
+    if !source_file.exists() {
+        return Err(anyhow::anyhow!(
+            "File '{}' not found in repository",
+            file_path
+        ));
+    }
+    
+    // Determine destination based on file path structure
+    let file_name = source_file
+        .file_name()
+        .ok_or_else(|| anyhow::anyhow!("Invalid file path: {}", file_path))?;
+    
+    // Get the project's /hoon directory (parent of /hoon/lib)
+    let project_hoon_dir = project_lib_dir.parent().unwrap();
+    
+    // Determine destination directory based on file path
+    let dest_dir = if file_path.contains("/lib/") {
+        project_hoon_dir.join("lib")
+    } else if file_path.contains("/sur/") {
+        project_hoon_dir.join("sur")
+    } else if file_path.contains("/app/") {
+        project_hoon_dir.join("app")
+    } else {
+        // Default to lib if no specific directory is found
+        project_hoon_dir.join("lib")
+    };
+    
+    // Ensure destination directory exists
+    fs::create_dir_all(&dest_dir)
+        .with_context(|| format!("Failed to create directory '{}'", dest_dir.display()))?;
+    
+    // Copy the file
+    let dest_file = dest_dir.join(file_name);
+    fs::copy(&source_file, &dest_file)
+        .with_context(|| format!("Failed to copy file '{}' to '{}'", source_file.display(), dest_file.display()))?;
+    
+    println!("      copy {}", file_path);
+    
+    Ok(())
 }
 
 fn copy_top_level_library(src_dir: &Path, dest_dir: &Path, root_src: &Path) -> Result<()> {

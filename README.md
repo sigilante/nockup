@@ -198,6 +198,19 @@ A project is specified by its manifest file, which includes details like the pro
 
 A project manifest may optionally include a `[libraries]` section.  Conventionally, Hoon libraries are manually supplied within a desk or repository by manually copying them in.  While this solves the linked library problem by using shared nouns ([~rovnys-ricfer & ~wicdev-wisryt 2024](https://urbitsystems.tech/article/v01-i01/a-solution-to-static-vs-dynamic-linking)), no universal versioning system exists and cross-repository dependencies are difficult to automate.
 
+#### Single Libraries
+
+A single file may be plucked out of context from a public repo for inclusion.
+
+```toml
+[libraries.bits]
+url = "https://github.com/urbit/urbit"
+branch = "develop"
+file = "pkg/arvo/lib/bits.hoon"
+```
+
+This supplies `bits.hoon` at `/hoon/lib/bits.hoon`.  (The developer is responsible for managing dependencies such as `/sur` structure files.)
+
 #### Top-Level Libraries
 
 A simple Hoon library repo should supply a `/desk` or `/hoon` directory at the top level.  The `/app`, `/lib` and `/sur` contents are copied directly into `/hoon`.
@@ -242,7 +255,7 @@ which supplies (among others) files in the following pattern:
 * `/lagoon/desk/lib/lagoon.hoon` at `/hoon/lib/lagoon.hoon`.
 * `/lagoon/desk/sur/lagoon.hoon` at `/hoon/sur/lagoon.hoon`.
 
-and other files along the same pattern.  (`/sur` files are also included.)
+and other files along the same pattern.  These are simply copied over from the source directory in the repository, so care should be taken to ensure that files with the same name do not conflict.
 
 #### Multiple Targets
 
