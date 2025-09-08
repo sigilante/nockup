@@ -14,26 +14,44 @@ components = ["core"]
 components = ["core"]
 
 # Platform-specific entries
-[pkg.nockup.target.x86_64]
+[pkg.nockup.target.x86_64-unknown-linux-gnu]
 available = true
-url = "https://your-domain.com/dist/nockup-v1.0.0-x86_64-unknown-linux-gnu.tar.gz"
-md5 = "a1b2c3d4e5f67890abcdef1234567890"
+url = "https://github.com/sigilante/nockchain/releases/download/nightly-build-862c3adb0e1403ddd1a80ed9cc9dbde50aa6ea51/nockup-nightly-0.0.2-x86_64-unknown-linux-gnu.tar.gz"
+hash_blake3 = "20d927c5d6d2797a244008010db7445a26f90e6f431b0984da5e3f9970fdecd9"
+hash_sha1 = "0911b1ca65e15f0b1c1c6a897282b1714228109a"
 
-[pkg.nockup.target.aarch64]
+[pkg.nockup.target.aarch64-apple-darwin]
 available = true
-url = "https://your-domain.com/dist/nockup-v1.0.0-aarch64-apple-darwin.tar.gz"
-md5 = "fedcba0987654321fedcba0987654321"
+url = "https://github.com/sigilante/nockchain/releases/download/nightly-build-862c3adb0e1403ddd1a80ed9cc9dbde50aa6ea51/nockup-nightly-0.0.2-x86_64-unknown-linux-gnu.tar.gz"
+# url = "https://github.com/sigilante/nockchain/releases/download/nightly-build-862c3adb0e1403ddd1a80ed9cc9dbde50aa6ea51/nockup-nightly-0.0.2-aarch64-apple-darwin.tar.gz"
+hash_blake3 = "20d927c5d6d2797a244008010db7445a26f90e6f431b0984da5e3f9970fdecd9"
+hash_sha1 = "0911b1ca65e15f0b1c1c6a897282b1714228109a"
 
 # Hoonc binaries
-# [pkg.hoonc.target.x86_64-unknown-linux-gnu]
-[pkg.hoonc.target.aarch64]
+[pkg.hoonc.target.x86_64-unknown-linux-gnu]
 available = true
-url = "https://your-domain.com/dist/hoonc-v1.0.0-aarch64-apple-darwin"
-md5 = "58a60d97ba35665cdb36e04c9e9d9a10"
+url = "https://github.com/sigilante/nockchain/releases/download/nightly-build-862c3adb0e1403ddd1a80ed9cc9dbde50aa6ea51/hoonc-nightly-0.2.0-x86_64-unknown-linux-gnu.tar.gz"
+hash_blake3 = "cad2740bc93cbab74112d0189c1d7ccb789dec328a84f7228f47d08c4b0f9337"
+hash_sha1 = "d61c695ab30087da709ac7832a3928a158bcca67"
+
+[pkg.hoonc.target.aarch64-apple-darwin]
+available = true
+url = "https://github.com/sigilante/nockchain/releases/download/nightly-build-862c3adb0e1403ddd1a80ed9cc9dbde50aa6ea51/hoonc-nightly-0.2.0-x86_64-unknown-linux-gnu.tar.gz"
+# url = "https://github.com/sigilante/nockchain/releases/download/nightly-build-862c3adb0e1403ddd1a80ed9cc9dbde50aa6ea51/hoonc-nightly-0.2.0-aarch64-apple-darwin.tar.gz"
+hash_blake3 = "cad2740bc93cbab74112d0189c1d7ccb789dec328a84f7228f47d08c4b0f9337"
+hash_sha1 = "d61c695ab30087da709ac7832a3928a158bcca67"
 
 # Hoon binaries
-# [pkg.hoon.target.x86_64-unknown-linux-gnu]
-[pkg.hoon.target.aarch64]
+[pkg.hoon.target.x86_64-unknown-linux-gnu]
 available = true
-url = "https://your-domain.com/dist/hoon-v1.0.0-aarch64-apple-darwin"
-md5 = "dcb763e0e8ec683b821af7978b174212"
+url = "https://github.com/sigilante/nockchain/releases/download/nightly-build-862c3adb0e1403ddd1a80ed9cc9dbde50aa6ea51/hoon-nightly-0.1.0-x86_64-unknown-linux-gnu.tar.gz"
+hash_blake3 = "f4189c4fe3c14112bea4836dfa7adde5ec0151e36e6f83c1614f8ccec9dc1a8b"
+hash_sha1 = "0d5d919971b947e49add4bcf74a4ea1833c55245"
+
+[pkg.hoon.target.aarch64-apple-darwin]
+available = true
+url = "https://github.com/sigilante/nockchain/releases/download/nightly-build-862c3adb0e1403ddd1a80ed9cc9dbde50aa6ea51/hoon-nightly-0.1.0-x86_64-unknown-linux-gnu.tar.gz"
+# url = "https://github.com/sigilante/nockchain/releases/download/nightly-build-862c3adb0e1403ddd1a80ed9cc9dbde50aa6ea51/hoon-nightly-0.1.0-aarch64-apple-darwin.tar.gz"
+hash_blake3 = "f4189c4fe3c14112bea4836dfa7adde5ec0151e36e6f83c1614f8ccec9dc1a8b"
+hash_sha1 = "0d5d919971b947e49add4bcf74a4ea1833c55245"
+ 
