@@ -4,6 +4,7 @@ use clap::Parser;
 
 mod cli;
 mod commands;
+mod lib_manager;
 mod version;
 
 use cli::*;

@@ -198,7 +198,9 @@ A project is specified by its manifest file, which includes details like the pro
 
 A project manifest may optionally include a `[libraries]` section.  Conventionally, Hoon libraries are manually supplied within a desk or repository by manually copying them in.  While this solves the linked library problem by using shared nouns ([~rovnys-ricfer & ~wicdev-wisryt 2024](https://urbitsystems.tech/article/v01-i01/a-solution-to-static-vs-dynamic-linking)), no universal versioning system exists and cross-repository dependencies are difficult to automate.
 
-A Hoon library repo should supply a `/desk` or `/hoon` directory at the top level (unless more complexity is necessary, in which case Nockup will attempt to match the proper directory).
+#### Top-Level Libraries
+
+A simple Hoon library repo should supply a `/desk` or `/hoon` directory at the top level.  The `/app`, `/lib` and `/sur` contents are copied directly into `/hoon`.
 
 Sequent is a good example of the simplest possible structure:
 
@@ -207,36 +209,40 @@ Sequent is a good example of the simplest possible structure:
 This is imported via the `configuration.toml` manifest:
 
 ```toml
-[libraries]
-sequent = {
-    url = "https://github.com/jackfoxy/sequent",
-    commit = "0f6e6777482447d4464948896b763c080dc9e559"
-}
+[libraries.sequent]
+url = "https://github.com/jackfoxy/sequent"
+commit = "0f6e6777482447d4464948896b763c080dc9e559"
 ```
 
-which supplies `/desk/lib/sequent.hoon` at `/hoon/lib/sequent.hoon` and ignores `/mar` and `/tests` (which are both Urbit-specific affordances).
+which supplies `/desk/lib/seq.hoon` at `/hoon/lib/seq.hoon` and ignores `/mar` and `/tests` (which are both Urbit-specific affordances).
+
+#### Nested Libraries
 
 A more complex structure features top-level nesting before `/desk`, such as with the Urbit numerical computing suite.
 
 - [`urbit/numerics`](https://github.com/urbit/numerics)
 
 ```toml
-[libraries]
-math = {
-    url = "https://github.com/urbit/numerics",
-    branch = "main",
-    directory = "libmath"
-    commit = "7c11c48ab3f21135caa5a4e8744a9c3f828f2607"
-}
-lagoon = {
-    url = "https://github.com/urbit/numerics",
-    branch = "main",
-    directory = "lagoon"
-    commit = "7c11c48ab3f21135caa5a4e8744a9c3f828f2607"
-}
+[libraries.math]
+url = "https://github.com/urbit/numerics"
+branch = "main"
+directory = "libmath"
+commit = "7c11c48ab3f21135caa5a4e8744a9c3f828f2607"
+
+[libraries.lagoon]
+url = "https://github.com/urbit/numerics"
+branch = "main"
+directory = "lagoon"
+commit = "7c11c48ab3f21135caa5a4e8744a9c3f828f2607"
 ```
 
-which supplies `/libmath/desk/lib/math.hoon` at `/hoon/lib/libmath/lib/math.hoon` and other files along the same pattern.  (`/sur` files are also included.)
+which supplies (among others) files in the following pattern:
+
+* `/libmath/desk/lib/math.hoon` at `/hoon/lib/math.hoon`.
+* `/lagoon/desk/lib/lagoon.hoon` at `/hoon/lib/lagoon.hoon`.
+* `/lagoon/desk/sur/lagoon.hoon` at `/hoon/sur/lagoon.hoon`.
+
+and other files along the same pattern.  (`/sur` files are also included.)
 
 #### Multiple Targets
 

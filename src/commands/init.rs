@@ -5,32 +5,13 @@ use std::path::Path;
 use anyhow::{Context, Result};
 use colored::Colorize;
 use handlebars::Handlebars;
-use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize, Serialize)]
-struct ProjectConfig {
-    project: ProjectInfo,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-struct ProjectInfo {
-    name: String,
-    project_name: String,
-    version: String,
-    description: String,
-    author_name: String,
-    author_email: String,
-    github_username: String,
-    license: String,
-    keywords: Vec<String>,
-    nockapp_commit_hash: String,
-    template: String,
-}
+use crate::lib_manager::{process_libraries, ProjectManifest};
 
 pub async fn run(project_name: String) -> Result<()> {
     // Load the project-specific manifest configuration
-    let default_config = load_project_config(&project_name)?;
-    let project_name = &default_config.project.project_name;
+    let manifest = load_project_config(&project_name)?;
+    let project_name = &manifest.project.project_name;
 
     println!(
         "Initializing new NockApp project '{}'...",
@@ -43,7 +24,7 @@ pub async fn run(project_name: String) -> Result<()> {
         .ok_or_else(|| anyhow::anyhow!("Could not find home directory"))?
         .join(format!(
             ".nockup/templates/{}",
-            default_config.project.template
+            manifest.project.template
         ));
 
     // Check if target directory already exists
@@ -62,10 +43,14 @@ pub async fn run(project_name: String) -> Result<()> {
     }
 
     // Create template context from the project config
-    let context = create_template_context(&default_config)?;
+    let context = create_template_context(&manifest)?;
 
     // Copy template directory to new project location
     copy_template_directory(template_dir.as_path(), target_dir, &context)?;
+
+    // Process library dependencies from manifest
+    process_libraries(target_dir, &manifest).await
+        .context("Failed to process library dependencies")?;
 
     println!(
         "{} New project created in {}/",
@@ -79,7 +64,7 @@ pub async fn run(project_name: String) -> Result<()> {
     Ok(())
 }
 
-fn load_project_config(project_name: &str) -> Result<ProjectConfig> {
+fn load_project_config(project_name: &str) -> Result<ProjectManifest> {
     let config_filename = format!("{}.toml", project_name);
     let config_path = Path::new(&config_filename);
 
@@ -97,54 +82,54 @@ fn load_project_config(project_name: &str) -> Result<ProjectConfig> {
         .with_context(|| format!("Failed to parse {}.toml", project_name))
 }
 
-fn create_template_context(default_config: &ProjectConfig) -> Result<HashMap<String, String>> {
+fn create_template_context(manifest: &ProjectManifest) -> Result<HashMap<String, String>> {
     let mut context = HashMap::new();
 
-    // Add all values directly from default-manifest.toml
-    context.insert("name".to_string(), default_config.project.name.clone());
+    // Add all values directly from manifest
+    context.insert("name".to_string(), manifest.project.name.clone());
     context.insert(
         "project_name".to_string(),
-        default_config.project.project_name.clone(),
+        manifest.project.project_name.clone(),
     );
     context.insert(
         "version".to_string(),
-        default_config.project.version.clone(),
+        manifest.project.version.clone(),
     );
     context.insert(
         "project_description".to_string(),
-        default_config.project.description.clone(),
+        manifest.project.description.clone(),
     );
     context.insert(
         "description".to_string(),
-        default_config.project.description.clone(),
+        manifest.project.description.clone(),
     );
     context.insert(
         "author_name".to_string(),
-        default_config.project.author_name.clone(),
+        manifest.project.author_name.clone(),
     );
     context.insert(
         "author_email".to_string(),
-        default_config.project.author_email.clone(),
+        manifest.project.author_email.clone(),
     );
     context.insert(
         "github_username".to_string(),
-        default_config.project.github_username.clone(),
+        manifest.project.github_username.clone(),
     );
     context.insert(
         "license".to_string(),
-        default_config.project.license.clone(),
+        manifest.project.license.clone(),
     );
     context.insert(
         "keywords".to_string(),
-        default_config.project.keywords.join("\", \""),
+        manifest.project.keywords.join("\", \""),
     );
     context.insert(
         "nockapp_commit_hash".to_string(),
-        default_config.project.nockapp_commit_hash.clone(),
+        manifest.project.nockapp_commit_hash.clone(),
     );
     context.insert(
         "template".to_string(),
-        default_config.project.template.clone(),
+        manifest.project.template.clone(),
     );
 
     Ok(context)
