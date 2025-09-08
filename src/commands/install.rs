@@ -259,7 +259,8 @@ async fn clone_templates(templates_dir: &PathBuf) -> Result<()> {
     }
 
     // Move just the manifests directory to our cache location
-    fs::rename(&repo_manifests_dir, templates_dir)?;
+    let manifests_dir = templates_dir.parent().unwrap().join("manifests");
+    fs::rename(&repo_manifests_dir, manifests_dir)?;
 
     // Update the commit.toml file.
     let commit_file = templates_dir.join("commit.toml");

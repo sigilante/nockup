@@ -111,12 +111,21 @@ $ nockup init arcadia
 Initializing new NockApp project 'arcadia'...
   create Cargo.toml
   create manifest.toml
-  create build.rs
+  create Cargo.lock
   create hoon/app/app.hoon
   create hoon/common/wrapper.hoon
   create hoon/lib/lib.hoon
+  create hoon/lib/http.hoon
   create README.md
   create src/main.rs
+📚 Processing library dependencies...
+  ⬇️ Fetching library 'sequent'...
+    ⬇️ Cloning repository...
+      copy sys.kelvin
+      copy lib/seq.hoon
+      copy lib/test.hoon
+    ✓ Installed library 'sequent'
+✓ All libraries processed successfully!
 ✓ New project created in ./arcadia//
 To get started:
   nockup build arcadia
