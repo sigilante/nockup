@@ -1,6 +1,8 @@
-# Nockup: the NockApp channel installer
+# *Nockup*: the NockApp channel installer
 
 *Nockup* is a command-line tool to produce [NockApps](https://github.com/zorp-corp/nockchain) and manage project builds and dependencies.
+
+> 🚨 **Status**:  Pre-release development.  Nockup works but does not yet offer a stable interface and user experience.
 
 [NockApp](https://github.com/zorp-corp/nockchain) is a general-purpose framework for building apps that run the Nock ISA.  It is particularly well-suited for use with [Nockchain](https://nockchain.org) and the Nock ZKVM.
 
@@ -217,7 +219,7 @@ However, if you want to produce multiple binaries and kernels, you should supply
 
 In the `Cargo.toml` file, include both targets explicitly:
 
-```
+```toml
 [[bin]]
 name = "main1"
 path = "src/bin/main1.rs"
@@ -229,7 +231,7 @@ path = "src/bin/main2.rs"
 
 Nockup is opinionated here, and will match `hoon/app/main1.hoon`, etc., as kernels; that is,
 
-```
+```sh
 nockup build myproject
 ```
 
@@ -331,7 +333,7 @@ These are simply copied over from the source directory in the repository, so car
 
 Nockup can use `stable` build of `hoon` and `hoonc`.  As of this release, there is not yet a `nightly` build, but we demonstrate its support here:
 
-```
+```sh
 $ ./target/debug/nockup channel list
 Default channel: "stable"
 Architecture: "aarch64"
@@ -348,7 +350,7 @@ Architecture: "aarch64"
 
 To uninstall Nockup delete the binary and remove the installation cache:
 
-```
+```sh
 $ rm -rf ~/.nockup
 ```
 
@@ -422,5 +424,7 @@ Code building is a general-purpose computing process, like `eval`.  You should n
 * `nockup publish`/`nockup clone` (awaiting PKI)
 
 ## Contributor's Guide
+
+### Unit Testing
 
 Some CLI testing has been implemented and is accessible via `cargo test`.  This can, of course, always be improved.
