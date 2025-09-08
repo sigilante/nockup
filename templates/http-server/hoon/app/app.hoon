@@ -1,5 +1,4 @@
-/+  html,
-    *http
+/+  *http
 /=  *  /common/wrapper
 =>
 |%
