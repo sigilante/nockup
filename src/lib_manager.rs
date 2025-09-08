@@ -236,14 +236,17 @@ fn find_library_source_dir(repo_dir: &Path, spec: &LibrarySpec) -> Result<PathBu
     // Look for /desk or /hoon directory
     let desk_dir = base_dir.join("desk");
     let hoon_dir = base_dir.join("hoon");
-    
+    let src_dir = base_dir.join("src");
+
     if desk_dir.exists() {
         Ok(desk_dir)
     } else if hoon_dir.exists() {
         Ok(hoon_dir)
+    } else if src_dir.exists() {
+        Ok(src_dir)
     } else {
         Err(anyhow::anyhow!(
-            "No '/desk' or '/hoon' directory found in repository. Expected Hoon library structure not found."
+            "No '/desk' or '/hoon' or '/src' directory found in repository. Expected Hoon library structure not found."
         ))
     }
 }

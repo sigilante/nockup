@@ -4,7 +4,7 @@
 
 NockApp is a general-purpose framework for building apps that run the Nock ISA.  It is particularly well-suited for use with [Nockchain](https://nockchain.org) and the Nock ZKVM.
 
-![](https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/RCA_Indian_Head_Test_Pattern.svg/2560px-RCA_Indian_Head_Test_Pattern.svg.png)
+![](./img/hero.png)
 
 ## Usage
 
@@ -258,6 +258,8 @@ To that end, Nockup supports three patterns for importing libraries:
 
 A single file may be plucked out of context from a public repo for inclusion.
 
+- [`urbit/urbit`:  `bits.hoon`](https://github.com/urbit/urbit/blob/develop/pkg/arvo/lib/bits.hoon) bitwise aliases for Hoon stdlib
+
 ```toml
 [libraries.bits]
 url = "https://github.com/urbit/urbit"
@@ -269,7 +271,7 @@ This supplies `bits.hoon` at `/hoon/lib/bits.hoon`.  (The developer is responsib
 
 #### Top-Level Libraries
 
-A simple Hoon library repo should supply a `/desk` or `/hoon` directory at the top level.  The `/app`, `/lib` and `/sur` contents are copied directly into `/hoon`.
+A simple Hoon library repo should supply a `/desk`, `/hoon`, or `/src` directory at the top level.  (While Rust typically reserves `/src` for `.rs` files, Hoon repositories are not generally configured to expect a Rust runtime and may use the `/src` directory for Hoon source files.)  The `/app`, `/lib` and `/sur` contents are copied directly into `/hoon`.
 
 Sequent is a good example of the simplest possible structure:
 
@@ -285,9 +287,14 @@ commit = "0f6e6777482447d4464948896b763c080dc9e559"
 
 which supplies `/desk/lib/seq.hoon` at `/hoon/lib/seq.hoon` and ignores `/mar` and `/tests` (which are both Urbit-specific affordances).
 
+Other libraries of note include:
+
+- [`lynko/re.hoon`](https://github.com/lynko/re.hoon)
+- [`mikolajpp/bytestream`](https://github.com/mikolajpp/bytestream)
+
 #### Nested Libraries
 
-A more complex structure features top-level nesting before `/desk`, such as with the Urbit numerical computing suite.
+A more complex structure features top-level nesting before the Hoon source library (`/desk`, `/hoon`, or `/src`), such as with the Urbit numerical computing suite.
 
 - [`urbit/numerics`](https://github.com/urbit/numerics)
 

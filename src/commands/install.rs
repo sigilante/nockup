@@ -41,7 +41,7 @@ pub async fn run() -> Result<()> {
     println!("📝 Config installed at: {}", config_path.display());
     config["channel"] = toml::Value::String("stable".into());
     // Get architecture of current platform.
-    config["architecture"] = toml::Value::String(std::env::consts::ARCH.into());
+    config["architecture"] = toml::Value::String(get_target_identifier());
     // Write architecture to config file
     fs::write(config_path, toml::to_string(&config)?).context("Failed to write config file")?;
 
@@ -62,6 +62,21 @@ pub async fn run() -> Result<()> {
     );
 
     Ok(())
+}
+
+fn get_target_identifier() -> String {
+    let arch = std::env::consts::ARCH;
+    let os = std::env::consts::OS;
+    
+    match (arch, os) {
+        ("x86_64", "linux") => "x86_64-unknown-linux-gnu".to_string(),
+        ("x86_64", "windows") => "x86_64-pc-windows-msvc".to_string(),
+        ("x86_64", "macos") => "x86_64-apple-darwin".to_string(),
+        ("aarch64", "linux") => "aarch64-unknown-linux-gnu".to_string(),
+        ("aarch64", "macos") => "aarch64-apple-darwin".to_string(),
+        ("aarch64", "windows") => "aarch64-pc-windows-msvc".to_string(),
+        _ => format!("{}-unknown-{}", arch, os), // fallback
+    }
 }
 
 async fn prepend_path_to_shell_rc(bin_dir: &PathBuf) -> Result<()> {
