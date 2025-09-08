@@ -106,7 +106,7 @@ Resolving deltas: 100% (1/1), done.
 📂 Templates are now available in: /Users/myuser/.nockup/templates
 
 # Initialize a default project.
-$ cp ~/.nockup/templates/basic/manifest.toml arcadia.toml
+$ cp ~/.nockup/manifests/example-manifest.toml arcadia.toml
 $ nockup init arcadia
 Initializing new NockApp project 'arcadia'...
   create Cargo.toml
@@ -251,6 +251,8 @@ To that end, Nockup supports three patterns for importing libraries:
 2. Repository imports, simple structure.
 3. Nested repository imports.
 
+Examples of each are provided in [`default-manifest-with-libraries.toml`](https://github.com/sigilante/nockup/blob/master/default-manifest-with-libraries.toml).
+
 #### Single Libraries
 
 A single file may be plucked out of context from a public repo for inclusion.
@@ -284,7 +286,7 @@ commit = "0f6e6777482447d4464948896b763c080dc9e559"
 
 which supplies `/desk/lib/seq.hoon` at `/hoon/lib/seq.hoon` and ignores `/mar` and `/tests` (which are both Urbit-specific affordances).
 
-Other libraries of note include:
+Other Hoon libraries of note include:
 
 - [`lynko/re.hoon`](https://github.com/lynko/re.hoon)
 - [`mikolajpp/bytestream`](https://github.com/mikolajpp/bytestream)

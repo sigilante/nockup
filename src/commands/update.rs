@@ -165,6 +165,19 @@ async fn clone_templates(templates_dir: &PathBuf) -> Result<()> {
     // Move just the templates directory to our cache location
     fs::rename(&repo_templates_dir, templates_dir)?;
 
+    // Check if manifests directory exists in the repo
+    let repo_manifests_dir = temp_dir.join("manifests");
+    if !repo_manifests_dir.exists() {
+        // Cleanup and return error
+        fs::remove_dir_all(&temp_dir).ok();
+        return Err(anyhow::anyhow!(
+            "No 'manifests' directory found in the repository"
+        ));
+    }
+
+    // Move just the manifests directory to our cache location
+    fs::rename(&repo_manifests_dir, templates_dir)?;
+
     // Update the commit.toml file.
     let commit_file = templates_dir.join("commit.toml");
     let commit_data = format!("[commit]\nid = \"{}\"\n", commit_id);
@@ -172,7 +185,7 @@ async fn clone_templates(templates_dir: &PathBuf) -> Result<()> {
 
     // Clean up the temporary repo directory
     fs::remove_dir_all(&temp_dir)?;
-    println!("{} Templates downloaded successfully", "✓".green());
+    println!("{} Templates and manifests downloaded successfully", "✓".green());
     Ok(())
 }
 
