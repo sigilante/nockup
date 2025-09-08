@@ -4,7 +4,7 @@
 
 NockApp is a general-purpose framework for building apps that run the Nock ISA.  It is particularly well-suited for use with [Nockchain](https://nockchain.org) and the Nock ZKVM.
 
-![](./img/hero.png)
+![](./img/hero.jpg)
 
 ## Usage
 
