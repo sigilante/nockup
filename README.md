@@ -10,24 +10,32 @@ NockApp is a general-purpose framework for building apps that run the Nock ISA. 
 
 Nockup supports the following `nockup` commands.
 
-### Management
+### Operations
 
-- `install`:  Initialize Nockup cache and download templates.
-- `update`:  Check for updates to `nockup`, `hoon`, and `hoonc`.
-- `help`:  Print this message or the help of the given subcommand(s).
+- `nockup install`:  Initialize Nockup cache and download binaries and templates.
+- `nockup update`:  Check for updates to binaries and templates.
+- `nockup help`:  Print this message or the help of the given subcommand(s).
 
 ### Project
 
-- `init`:  Initialize a new NockApp project from a .toml config file.
-- `build`:  Build a NockApp project.
-- `run`:  Run a NockApp project.
+- `nockup init`:  Initialize a new NockApp project from a `.toml` config file.
+- `nockup build`:  Build a NockApp project using Cargo.
+- `nockup run`:  Run a NockApp project.
 
 ### channel
 
-- `channel list`: List all available channels.
-- `channel set`: Set the active channel, from `stable` and `nightly`.  (Most users will prefer `stable`.)
+- `nockup channel list`: List all available channels.
+- `nockup channel set`: Set the active channel, from `stable` and `nightly`.  (Most users will prefer `stable`.)
 
 ## Installation
+
+### From Script
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/sigilante/nockup/master/install.sh | bash
+```
+
+### From Source
 
 1. Install Nockchain and build `hoon` and `hoonc`.
 
