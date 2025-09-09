@@ -161,38 +161,38 @@ async fn fetch_library_repo(cache_dir: &Path, lib_name: &str, spec: &LibrarySpec
         (None, Some(branch)) => branch.clone(),
         _ => unreachable!(), // Already validated
     };
-    
+
     let repo_cache_dir = cache_dir.join(format!("{}_{}", repo_name, unique_id));
-    
+
     // If already cached, return it
     if repo_cache_dir.exists() {
         return Ok(repo_cache_dir);
     }
-    
+
     // Clone the repository
     println!("    ⬇️ Cloning repository...");
-    
+
     let mut git_cmd = Command::new("git");
     git_cmd.args(&["clone", &spec.url]);
-    
+
     // If branch specified, clone that branch
     if let Some(branch) = &spec.branch {
         git_cmd.args(&["--branch", branch]);
     }
-    
+
     git_cmd.arg(&repo_cache_dir);
-    
+
     let output = git_cmd
         .output()
         .context("Failed to execute git clone")?;
-    
+
     if !output.status.success() {
         return Err(anyhow::anyhow!(
             "Git clone failed: {}",
             String::from_utf8_lossy(&output.stderr)
         ));
     }
-    
+
     // If commit specified, checkout that commit
     if let Some(commit) = &spec.commit {
         let checkout_output = Command::new("git")
@@ -200,7 +200,7 @@ async fn fetch_library_repo(cache_dir: &Path, lib_name: &str, spec: &LibrarySpec
             .current_dir(&repo_cache_dir)
             .output()
             .context("Failed to checkout commit")?;
-        
+
         if !checkout_output.status.success() {
             return Err(anyhow::anyhow!(
                 "Git checkout failed: {}",
@@ -208,7 +208,7 @@ async fn fetch_library_repo(cache_dir: &Path, lib_name: &str, spec: &LibrarySpec
             ));
         }
     }
-    
+
     Ok(repo_cache_dir)
 }
 
@@ -219,10 +219,10 @@ fn extract_repo_name(url: &str) -> Result<String> {
     if parts.len() < 2 {
         return Err(anyhow::anyhow!("Invalid GitHub URL format"));
     }
-    
+
     let repo_name = parts[parts.len() - 1];
     let repo_name = repo_name.trim_end_matches(".git");
-    
+
     Ok(repo_name.to_string())
 }
 
@@ -232,7 +232,7 @@ fn find_library_source_dir(repo_dir: &Path, spec: &LibrarySpec) -> Result<PathBu
     } else {
         repo_dir.to_path_buf()
     };
-    
+
     // Look for /desk or /hoon directory
     let desk_dir = base_dir.join("desk");
     let hoon_dir = base_dir.join("hoon");

@@ -1,17 +1,17 @@
-# codetalker
+# {{project_name}}
 
 A NockApp project created with `nockup`.
 
 ## Description
 
-Demonstration app for NockApps to communicate with each other via peeks and pokes.
+{{project_description}}
 
 ## Building
 
 To build this project:
 
 ```bash
-nockup build codetalker
+nockup build {{project_name}}
 ```
 
 Or using cargo directly:
@@ -25,7 +25,7 @@ cargo build --release
 To run this project:
 
 ```bash
-nockup run codetalker
+nockup run {{project_name}}
 ```
 
 Or using cargo directly:
@@ -58,4 +58,4 @@ This project uses both Rust and Hoon:
 
 ## License
 
-This project is licensed under [LICENSE_NAME].
+This project is licensed under {{license}}.

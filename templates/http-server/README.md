@@ -58,4 +58,4 @@ This project uses both Rust and Hoon:
 
 ## License
 
-This project is licensed under [LICENSE_NAME].
+This project is licensed under {{license}}.

@@ -1,17 +1,17 @@
-# repl
+# {{project_name}}
 
 A NockApp project created with `nockup`.
 
 ## Description
 
-A simple REPL application.
+{{project_description}}
 
 ## Building
 
 To build this project:
 
 ```bash
-nockup build repl
+nockup build {{project_name}}
 ```
 
 Or using cargo directly:
@@ -25,7 +25,7 @@ cargo build --release
 To run this project:
 
 ```bash
-nockup run repl
+nockup run {{project_name}}
 ```
 
 Or using cargo directly:
@@ -58,4 +58,4 @@ This project uses both Rust and Hoon:
 
 ## License
 
-This project is licensed under [LICENSE_NAME].
+This project is licensed under {{license}}.
