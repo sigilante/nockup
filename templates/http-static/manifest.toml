@@ -8,4 +8,4 @@ repository = "https://github.com/{{github_username}}/{{project_name}}"
 homepage = "https://github.com/{{github_username}}/{{project_name}}"
 keywords = ["nockapp", "nockchain", "hoon"]
 edition = "2021"
-template = "basic"
+template = "http-static"
