@@ -151,7 +151,7 @@ $ nockup build arcadia
    Compiling proc-macro2 v1.0.101
 * * *
 I (11:53:08) "hoonc: build succeeded, sending out write effect"
-I (11:53:08) "hoonc: output written successfully to '/Users/neal/zorp/nockup/arcadia/out.jam'"
+I (11:53:08) "hoonc: output written successfully to '/Users/myuser/zorp/nockup/arcadia/out.jam'"
 no panic!
 ✓ Hoon compilation completed successfully!
 
@@ -168,7 +168,7 @@ I (11:53:15) Pokes awaiting implementation
 ✓ Run completed successfully!
 ```
 
-The final product is, of course, a binary which you may run either directly (from `./target/release`) or via `nockup run` (as demonstrated here).
+The final product is, of course, a binary which you may run either via `nockup run` (as demonstrated here) or directly (from `./target/release`).
 
 ### Project Manifests and Templates
 
@@ -188,6 +188,8 @@ keywords = ["nockapp", "nockchain", "hoon"]
 nockapp_commit_hash = "336f744b6b83448ec2b86473a3dec29b15858999"
 template = "basic"
 ```
+
+Manifests let you set several project parameters and specify the template to use.  This information will also be used to populate a README file.  (By default we supply the [MIT License](https://opensource.org/licenses/MIT) and we specify the version as [0.1.0](https://0ver.org/).)
 
 One of the design goals of Nockup is to avoid the need to write much, if any, Rust code to successfully deploy a NockApp.  To that end, we provide templates which by and large only expect the developer to write in Hoon or another language which targets the Nock ISA.
 
@@ -409,21 +411,30 @@ Code building is a general-purpose computing process, like `eval`.  You should n
 
 ## Roadmap
 
-### Release Checklist
+### Release Roadmap
 
 * add Apple code signing support
 * update manifest files (and install/update strings) to `zorp-corp/nockchain`
 * unify batch/continuous kernels via `exit` event:  `[%exit code=@]`
-* replit instance with release?
+* Replit instance with release
 
 ### Later
 
 * `nockup test`
 * expand repertoire of templates
-  * appropriate Hoon libraries
+  * list and ship appropriate Hoon libraries
 * `nockup publish`/`nockup clone` (awaiting PKI)
 
 ## Contributor's Guide
+
+### Release Checklist
+
+Each time [Nockchain](https://github.com/zorp-corp/nockchain) or Nockup updates:
+
+- [x] Update checksums and code signatures (automatic).
+- [ ] Update commit hashes in release channels (manual).
+- [ ] Bump versions in templates and channels if necessary (manual).
+- [ ] Check and update downstream clients like Replit if necessary (manual).
 
 ### Unit Testing
 

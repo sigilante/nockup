@@ -1,0 +1,11 @@
+[project]
+name = "{{project_name}}"
+version = "0.1.0"
+description = "{{project_description}}"
+authors = ["{{author_name}} <{{author_email}}>"]
+license = "MIT"
+repository = "https://github.com/{{github_username}}/{{project_name}}"
+homepage = "https://github.com/{{github_username}}/{{project_name}}"
+keywords = ["nockapp", "nockchain", "hoon"]
+edition = "2021"
+template = "chain"
