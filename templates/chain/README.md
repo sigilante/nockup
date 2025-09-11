@@ -37,7 +37,7 @@ cargo run
 ## Project Structure
 
 - `src/main.rs` - Main Rust entry point
-- `src/lib.rs` - Core NockApp library code  
+- `src/error.rs` - Core NockApp error management code  
 - `src/app.hoon` - Hoon application logic
 - `manifest.toml` - NockApp configuration
 - `build.rs` - Build script for compiling Hoon code

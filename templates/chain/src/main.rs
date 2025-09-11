@@ -77,59 +77,21 @@ async fn main() -> Result<(), Box<dyn Error>> {
     //  not the chain.  (+peek cannot issue effects.)
     let mut poke_slab = NounSlab::new();
     let head = make_tas(&mut poke_slab, "get-heaviest-block").as_noun();
-    //  Make into a Hoon /path type.
+    //  Make into a Hoon /head path type.
     let peek_noun = T(&mut poke_slab, &[head, D(0x0)]);
 
-    //  Poke the chain.
-    // let head2 = make_tas(&mut poke_slab, "list-notes-by-pubkey").as_noun();
-    // let poke_noun = T(&mut poke_slab, &[head2, D(0x0)]);
-
-    //  Issue both pokes to the Nockchain instance.
-    // let both_noun = T(&mut poke_slab, &[peek_noun, poke_noun, D(0x0)]);
+    //  Poke the chain with the peek request.
     poke_slab.set_root(peek_noun);
 
-    nockapp
-        .add_io_driver(grpc_listener_driver(format!("http://127.0.0.1:{}", "5555".to_string())))
-        .await;
     nockapp
         .add_io_driver(one_punch_driver(poke_slab, Operation::Poke))
         .await;
     nockapp
+        .add_io_driver(grpc_listener_driver(format!("http://127.0.0.1:{}", "5555".to_string())))
+        .await;
+    nockapp
         .add_io_driver(exit_driver())
         .await;
-
-    // loop {
-    //     print!("repl> ");
-    //     io::stdout().flush().unwrap();
-    //     let mut input = String::new();
-    //     match io::stdin().read_line(&mut input) {
-    //         Ok(0) => {
-    //             break;
-    //         }
-    //         Ok(_) => {
-    //             let input = input.trim();
-    //             match process_input(&mut nockapp, input).await {
-    //                 Ok(result) => {
-    //                     println!("{}", result);
-    //                 }
-    //                 Err(e) => {
-    //                     if e.to_string().contains("Exit command received") {
-    //                         println!("Exiting...");
-    //                         break;
-    //                     } else {
-    //                         println!("Error: {}", e);
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //         Err(error) => {
-    //             println!("Closing program...");
-    //             break;
-    //         }
-    //     }
-    // }
-
-    // Ok(())
 
     nockapp.run().await;
 
