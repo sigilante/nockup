@@ -201,7 +201,7 @@ A project is specified by its manifest file, which includes details like the pro
 - `http-server`:  stateful HTTP server.
 - `repl`:  read-eval-print loop.
 - `chain`:  Nockchain listener, simplified from `nockchain-wallet`.
-- `rollup`:  rollup bundler for NockApps to Nockchain.
+- `rollup`:  Nockchain rollup bundler for NockApps.
 
 #### Multiple Targets
 
