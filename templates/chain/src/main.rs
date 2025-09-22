@@ -28,13 +28,11 @@ use nockapp::{exit_driver, file_driver, markdown_driver, one_punch_driver};
 #[derive(Subcommand, Debug, Clone)]
 pub enum Commands {
     GetHeaviestBlock,
-    ListNotesByPubkey,
 }
 impl Commands {
     fn as_wire_tag(&self) -> &'static str {
         match self {
             Commands::GetHeaviestBlock => "get-heaviest-block",
-            Commands::ListNotesByPubkey => "list-notes-by-pubkey",
         }
     }
 }

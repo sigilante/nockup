@@ -14,7 +14,7 @@
 
 > 🚨 **Important**:  During pre-release development, this will fail due to hash mismatches on the binaries.  Use the "From Source" instructions instead.
 
-Prerequisites: Rust toolchain, Git
+Prerequisites: Rust toolchain (`rustup`, `cargo`, &c.), Git.
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/sigilante/nockup/master/install.sh | bash
@@ -200,12 +200,13 @@ A project is specified by its manifest file, which includes details like the pro
 - `http-static`:  static HTTP file server.
 - `http-server`:  stateful HTTP server.
 - `repl`:  read-eval-print loop.
-- `chain`:  Nockchain listener, simplified from `nockchain-wallet`.
+- `chain`:  Nockchain listener, built using `nockchain-wallet`.
+- `oracle`:  Nockchain attestation poster, built using `nockchain-wallet`.
 - `rollup`:  Nockchain rollup bundler for NockApps.
 
 #### Multiple Targets
 
-A Rust project (and _a fortiori_ a NockApp project) can produce more than one binary target.  This is scenario is demonstrated by the `grpc` template.
+A NockApp project can produce more than one binary target.  This is scenario is demonstrated by the `grpc` template.
 
 The default expectation for a single-binary project is to supply the following two files:
 
@@ -416,14 +417,14 @@ Code building is a general-purpose computing process, like `eval`.  You should n
 * add Apple code signing support
 * update manifest files (and install/update strings) to `zorp-corp/nockchain`
 * unify batch/continuous kernels via `exit` event:  `[%exit code=@]`
-* Replit instance with release
 
 ### Later
 
-* `nockup test`
+* `nockup test` to run unit tests
 * expand repertoire of templates
   * list and ship appropriate Hoon libraries
 * `nockup publish`/`nockup clone` (awaiting PKI)
+* Replit instance (needs light client of Nockchain)
 
 ## Contributor's Guide
 
