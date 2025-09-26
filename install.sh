@@ -15,6 +15,7 @@ GITHUB_REPO="sigilante/nockchain"
 RELEASE_TAG="stable-build-862c3adb0e1403ddd1a80ed9cc9dbde50aa6ea51"
 VERSION="0.0.2"
 CHANNEL="stable"
+CONFIG_URL="https://raw.githubusercontent.com/sigilante/nockup/refs/heads/master/default-config.toml"
 
 # Function to print colored output
 print_info() {
@@ -109,6 +110,43 @@ create_temp_dir() {
     echo "$temp_dir"
 }
 
+# Function to setup config file
+setup_config() {
+    local config_dir="$HOME/.nockup"
+    local config_file="$config_dir/config.toml"
+    
+    # Create config directory if it doesn't exist
+    mkdir -p "$config_dir"
+    
+    # Check if config file already exists
+    if [[ -f "$config_file" ]]; then
+        print_info "Config file already exists at: $config_file"
+        return 0
+    fi
+    
+    print_step "Downloading default config file"
+    print_info "Downloading from: $CONFIG_URL"
+    
+    # Download the default config
+    if download_file "$CONFIG_URL" "$config_file"; then
+        print_success "Downloaded default config to: $config_file"
+    else
+        print_error "Failed to download default config file"
+        print_info "You may need to create $config_file manually"
+        print_info "or check your internet connection"
+        
+        # Create a minimal config file as fallback
+        print_warning "Creating minimal fallback config file"
+        cat > "$config_file" << EOF
+# Nockup configuration file
+[default]
+channel = "$CHANNEL"
+version = "$VERSION"
+EOF
+        print_info "Created minimal config at: $config_file"
+    fi
+}
+
 # Function to add to PATH
 add_to_path() {
     local bin_dir="$1"
@@ -167,6 +205,9 @@ verify_binary() {
 # Main installation function
 main() {
     print_step "Starting Nockup installation"
+    
+    # Setup config file first (before doing anything else)
+    setup_config
     
     # Detect platform
     local target
@@ -240,6 +281,9 @@ main() {
     # Verify the binary works
     verify_binary "$nockup_path"
 
+    # Add to PATH
+    add_to_path "$install_dir"
+
     # Set channel and run install
     print_step "Setting channel to $CHANNEL and running installation"
     if "$nockup_path" channel set "$CHANNEL" && "$nockup_path" install; then
@@ -264,6 +308,8 @@ main() {
     print_info "  2. Verify installation: nockup --help"
     print_info "  3. Explore available templates: nockup list"
     echo ""
+    print_info "Configuration file location: $HOME/.nockup/config.toml"
+    print_info "Installation directory: $install_dir"
 }
 
 # Check if we're being sourced or executed
