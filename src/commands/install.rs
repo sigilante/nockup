@@ -407,7 +407,7 @@ async fn download_binaries(config: &toml::Value) -> Result<()> {
     let channel = format!("channel-nockup-{}", channel);
     let manifest_path = cache_dir.join("toolchain").join(format!("{}.toml", channel));
     let manifest = std::fs::read_to_string(&manifest_path)
-        .context(format!("Failed to read channel manifest for '{}.toml'", channel))?;
+        .context(format!("Failed to read channel manifest for '{}.toml' at path {}", channel, manifest_path.display()))?;
     let manifest: toml::Value = toml::de::from_str(&manifest).context(format!(
         "Failed to parse channel manifest for '{}'",
         channel
