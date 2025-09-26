@@ -239,56 +239,133 @@ async fn update_toolchain_files(toolchain_dir: &PathBuf) -> Result<()> {
 }
 
 async fn clone_toolchain_files(toolchain_dir: &PathBuf) -> Result<()> {
-    // Remove existing directory if it exists but is empty/corrupted
+    // Remove existing directory if it exists
     if toolchain_dir.exists() {
         fs::remove_dir_all(toolchain_dir)?;
     }
+    fs::create_dir_all(toolchain_dir)?;
 
-    // Create a temporary directory for the full clone
-    let temp_dir = toolchain_dir.parent().unwrap().join("temp_repo");
-    if temp_dir.exists() {
-        fs::remove_dir_all(&temp_dir)?;
+    println!("{} Fetching latest channel manifests from GitHub releases...", "⬇️".green());
+
+    // Async function to get latest manifest for a channel
+    async fn get_latest_manifest(channel: &str, toolchain_dir: &PathBuf) -> Result<()> {
+        let manifest_file = format!("{}-manifest.toml", channel);
+        let output_file = toolchain_dir.join(format!("channel-nockup-{}.toml", channel));
+        
+        println!("{} Fetching latest {} manifest...", "🔍".yellow(), channel);
+        
+        // Get latest release for this channel
+        let api_url = "https://api.github.com/repos/sigilante/nockchain/releases";
+        let client = reqwest::Client::new();
+        let response = client
+            .get(api_url)
+            .header("User-Agent", "nockup")
+            .send()
+            .await
+            .context("Failed to fetch releases from GitHub API")?;
+
+        if !response.status().is_success() {
+            return Err(anyhow::anyhow!(
+                "Failed to fetch releases: HTTP {}",
+                response.status()
+            ));
+        }
+
+        let releases: serde_json::Value = response.json().await
+            .context("Failed to parse releases JSON")?;
+
+        // Find latest release for this channel
+        let latest_tag = releases.as_array()
+            .ok_or_else(|| anyhow::anyhow!("Invalid releases response"))?
+            .iter()
+            .filter_map(|release| {
+                let tag_name = release["tag_name"].as_str()?;
+                if tag_name.starts_with(&format!("{}-build-", channel)) {
+                    Some(tag_name.to_string())
+                } else {
+                    None
+                }
+            })
+            .next()
+            .ok_or_else(|| anyhow::anyhow!("No {} releases found", channel))?;
+
+        let manifest_url = format!(
+            "https://github.com/sigilante/nockchain/releases/download/{}/{}",
+            latest_tag, manifest_file
+        );
+
+        println!("{} Downloading from: {}", "⬇️".blue(), manifest_url);
+        
+        // Download the manifest
+        let response = client
+            .get(&manifest_url)
+            .header("User-Agent", "nockup")
+            .send()
+            .await
+            .context("Failed to download manifest")?;
+
+        if !response.status().is_success() {
+            return Err(anyhow::anyhow!(
+                "Failed to download manifest: HTTP {}",
+                response.status()
+            ));
+        }
+
+        let content = response.text().await
+            .context("Failed to read manifest content")?;
+
+        tokio_fs::write(&output_file, content).await
+            .context("Failed to write manifest file")?;
+
+        println!("{} Downloaded: channel-nockup-{}.toml", "✅".green(), channel);
+        
+        Ok(())
     }
 
-    let repo_url = format!("https://github.com/{}.git", GITHUB_REPO);
+    // Download stable and nightly manifests
+    let channels = ["stable", "nightly"];
+    let mut success_count = 0;
 
-    // Clone the full repo to temp directory; suppress output
-    let mut command = Command::new("git");
-    command
-        .arg("clone")
-        .arg("--depth=1") // Shallow clone for faster download
-        .arg("--branch")
-        .arg("master")
-        .arg(&repo_url)
-        .arg(&temp_dir);
+    for channel in &channels {
+        match get_latest_manifest(channel, toolchain_dir).await {
+            Ok(_) => success_count += 1,
+            Err(e) => {
+                println!("{} Failed to download {} manifest: {}", "⚠️".yellow(), channel, e);
+                
+                // Create minimal fallback for stable channel only
+                if *channel == "stable" {
+                    let fallback_path = toolchain_dir.join("channel-nockup-stable.toml");
+                    let fallback_content = format!(
+                        r#"# Fallback stable channel configuration
+manifest-version = "1"
+date = "{}"
 
-    command.stdout(Stdio::null());
-    command.stderr(Stdio::null());
-    let status = command.status().await?;
+[pkg.nockup]
+version = "0.3.0"
+components = ["core"]
 
-    if !status.success() {
-        return Err(anyhow::anyhow!(
-            "Failed to clone toolchain files from GitHub. Exit code: {}",
-            status.code().unwrap_or(-1)
-        ));
+[profiles.default]
+components = ["core"]
+"#,
+                        chrono::Utc::now().format("%Y-%m-%d")
+                    );
+                    
+                    tokio_fs::write(&fallback_path, fallback_content).await
+                        .context("Failed to write fallback config")?;
+                    
+                    println!("{} Created fallback stable manifest", "📝".blue());
+                    success_count += 1;
+                }
+            }
+        }
     }
 
-    // Check if toolchain directory exists in the repo
-    let repo_toolchain_dir = temp_dir.join("toolchain");
-    if !repo_toolchain_dir.exists() {
-        // Cleanup and return error
-        fs::remove_dir_all(&temp_dir).ok();
-        return Err(anyhow::anyhow!(
-            "No 'toolchain' directory found in the repository"
-        ));
+    if success_count > 0 {
+        println!("{} Toolchain files setup complete ({}/{} channels)", "✅".green(), success_count, channels.len());
+    } else {
+        return Err(anyhow::anyhow!("Failed to download any toolchain files"));
     }
 
-    // Move just the toolchain directory to our cache location
-    fs::rename(&repo_toolchain_dir, toolchain_dir)?;
-
-    // Clean up the temporary repo directory
-    fs::remove_dir_all(&temp_dir)?;
-    println!("{} Toolchain files downloaded successfully", "✓".green());
     Ok(())
 }
 
