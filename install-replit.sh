@@ -106,62 +106,79 @@ create_temp_dir() {
 }
 
 # Function to setup toolchain directory with channel manifests
+# Function to setup toolchain directory with channel manifests
 setup_toolchain() {
     local toolchain_dir="$HOME/.nockup/toolchain"
-    local nockup_repo_url="https://raw.githubusercontent.com/sigilante/nockup/master/toolchain"
     
     # Create toolchain directory if it doesn't exist
     mkdir -p "$toolchain_dir"
     
     print_step "Setting up toolchain directory"
-    print_info "Downloading channel manifests from: $nockup_repo_url"
+    print_info "Fetching latest channel manifests from GitHub releases"
     
-    # Try to get directory listing from GitHub API first
-    local api_url="https://api.github.com/repos/sigilante/nockup/contents/toolchain"
-    local temp_listing="/tmp/toolchain_listing.json"
-    
-    # Attempt to get file list from GitHub API
-    local toolchain_files=()
-    if download_file "$api_url" "$temp_listing" 2>/dev/null; then
-        # Extract .toml files from the API response
-        if command_exists grep && command_exists sed; then
-            readarray -t toolchain_files < <(grep '"name":' "$temp_listing" | grep '\.toml"' | sed 's/.*"name": *"\([^"]*\)".*/\1/')
+    # Function to get latest manifest for a channel
+    get_latest_manifest() {
+        local channel="$1"
+        local manifest_file="${channel}-manifest.toml"
+        local output_file="${toolchain_dir}/channel-nockup-${channel}.toml"
+        
+        print_info "Fetching latest ${channel} manifest..."
+        
+        # Get latest release for this channel
+        local api_url="https://api.github.com/repos/sigilante/nockchain/releases"
+        local temp_releases="/tmp/releases_${channel}.json"
+        
+        if ! download_file "$api_url" "$temp_releases" 2>/dev/null; then
+            print_warning "Failed to fetch releases from GitHub API for ${channel}"
+            return 1
         fi
-        rm -f "$temp_listing"
-    fi
-    
-    # Fallback to known files if API fails
-    if [[ ${#toolchain_files[@]} -eq 0 ]]; then
-        print_warning "Could not get directory listing, using fallback file list"
-        toolchain_files=(
-            "channel-nockup-stable.toml"
-            "channel-nockup-nightly.toml"
-        )
-    else
-        print_info "Found ${#toolchain_files[@]} toolchain files via GitHub API"
-    fi
-    
-    # Download each toolchain file
-    for file in "${toolchain_files[@]}"; do
-        [[ -z "$file" ]] && continue  # Skip empty entries
         
-        local file_url="${nockup_repo_url}/${file}"
-        local file_path="${toolchain_dir}/${file}"
+        # Extract latest tag for this channel
+        local latest_tag=""
+        if command_exists grep && command_exists sed; then
+            latest_tag=$(grep -o "\"tag_name\":\"${channel}-build-[^\"]*\"" "$temp_releases" | \
+                        sed 's/"tag_name":"\([^"]*\)"/\1/' | head -1)
+        fi
         
-        if [[ -f "$file_path" ]]; then
-            print_info "Toolchain file already exists: $file"
+        rm -f "$temp_releases"
+        
+        if [[ -z "$latest_tag" ]]; then
+            print_warning "No ${channel} releases found"
+            return 1
+        fi
+        
+        local manifest_url="https://github.com/sigilante/nockchain/releases/download/${latest_tag}/${manifest_file}"
+        
+        print_info "Downloading from: $manifest_url"
+        if download_file "$manifest_url" "$output_file" 2>/dev/null; then
+            print_success "Downloaded: channel-nockup-${channel}.toml"
+            return 0
+        else
+            print_warning "Failed to download ${channel} manifest"
+            return 1
+        fi
+    }
+    
+    # Download stable and nightly manifests
+    local channels=("stable" "nightly")
+    local success_count=0
+    
+    for channel in "${channels[@]}"; do
+        local output_file="${toolchain_dir}/channel-nockup-${channel}.toml"
+        
+        if [[ -f "$output_file" ]]; then
+            print_info "Toolchain file already exists: channel-nockup-${channel}.toml"
+            ((success_count++))
             continue
         fi
         
-        print_info "Downloading toolchain file: $file"
-        if download_file "$file_url" "$file_path" 2>/dev/null; then
-            print_success "Downloaded: $file"
+        if get_latest_manifest "$channel"; then
+            ((success_count++))
         else
-            print_warning "Failed to download: $file"
-            # Create minimal fallbacks for the known critical files only
-            if [[ "$file" == "channel-nockup-stable.toml" ]]; then
+            # Create minimal fallback for stable channel only
+            if [[ "$channel" == "stable" ]]; then
                 print_info "Creating minimal channel-nockup-stable.toml fallback"
-                cat > "$file_path" << EOF
+                cat > "$output_file" << EOF
 # Stable channel configuration for nockup
 [channel]
 name = "stable"

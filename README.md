@@ -443,10 +443,9 @@ Code building is a general-purpose computing process, like `eval`.  You should n
 Each time [Nockchain](https://github.com/zorp-corp/nockchain) or Nockup updates:
 
 - [x] Update checksums and code signatures (automatic).
-- [ ] Update versions and commit hashes in release channels (manual).
+- [x] Update versions and commit hashes in toolchain channels (automatic).
 - [ ] Update versions and commit hashes in install scripts (manual).
-- [ ] Bump versions in templates and channels if necessary (manual).
-- [ ] Check and update downstream clients like Replit if necessary (manual).
+- [ ] Check and update downstream clients like Replit if necessary (manual per instance, but `nockup update` works).
 
 ### Unit Testing
 

@@ -36,15 +36,6 @@ pub async fn show_version_info() -> Result<()> {
 }
 
 async fn get_binary_version(binary_name: &str) -> Result<String> {
-    // Debug: Print current PATH
-    println!("Current PATH: {}", std::env::var("PATH").unwrap_or_default());
-    
-    // Debug: Try manual search
-    let home = std::env::var("HOME").unwrap_or_default();
-    let manual_path = format!("{}/.nockup/bin/{}", home, binary_name);
-    println!("Checking manual path: {}", manual_path);
-    println!("Manual path exists: {}", std::path::Path::new(&manual_path).exists());
-    
     // First check if binary exists in PATH
     let binary_path =
         which::which(binary_name).context(format!("{} not found in PATH", binary_name))?;
