@@ -403,10 +403,11 @@ async fn download_binaries(config: &toml::Value) -> Result<()> {
         .ok_or_else(|| anyhow::anyhow!("Invalid architecture in config"))?;
 
     // Load channel details from ./toolchain/
+    let cache_dir = get_cache_dir()?;
     let channel = format!("channel-nockup-{}", channel);
-    let manifest_path = format!("./toolchain/{}.toml", channel);
+    let manifest_path = cache_dir.join("toolchain").join(format!("{}.toml", channel));
     let manifest = std::fs::read_to_string(&manifest_path)
-        .context(format!("Failed to read channel manifest for '{}'", channel))?;
+        .context(format!("Failed to read channel manifest for '{}.toml'", channel))?;
     let manifest: toml::Value = toml::de::from_str(&manifest).context(format!(
         "Failed to parse channel manifest for '{}'",
         channel
