@@ -245,15 +245,18 @@ async fn clone_toolchain_files(toolchain_dir: &PathBuf) -> Result<()> {
     }
     fs::create_dir_all(toolchain_dir)?;
 
-    println!("{} Fetching latest channel manifests from GitHub releases...", "⬇️".green());
+    println!(
+        "{} Fetching latest channel manifests from GitHub releases...",
+        "⬇️".green()
+    );
 
     // Async function to get latest manifest for a channel
     async fn get_latest_manifest(channel: &str, toolchain_dir: &PathBuf) -> Result<()> {
         let manifest_file = format!("{}-manifest.toml", channel);
         let output_file = toolchain_dir.join(format!("channel-nockup-{}.toml", channel));
-        
+
         println!("{} Fetching latest {} manifest...", "🔍".yellow(), channel);
-        
+
         // Get latest release for this channel
         let api_url = "https://api.github.com/repos/sigilante/nockchain/releases";
         let client = reqwest::Client::new();
@@ -271,11 +274,14 @@ async fn clone_toolchain_files(toolchain_dir: &PathBuf) -> Result<()> {
             ));
         }
 
-        let releases: serde_json::Value = response.json().await
+        let releases: serde_json::Value = response
+            .json()
+            .await
             .context("Failed to parse releases JSON")?;
 
         // Find latest release for this channel
-        let latest_tag = releases.as_array()
+        let latest_tag = releases
+            .as_array()
             .ok_or_else(|| anyhow::anyhow!("Invalid releases response"))?
             .iter()
             .filter_map(|release| {
@@ -295,7 +301,7 @@ async fn clone_toolchain_files(toolchain_dir: &PathBuf) -> Result<()> {
         );
 
         println!("{} Downloading from: {}", "⬇️".blue(), manifest_url);
-        
+
         // Download the manifest
         let response = client
             .get(&manifest_url)
@@ -311,14 +317,21 @@ async fn clone_toolchain_files(toolchain_dir: &PathBuf) -> Result<()> {
             ));
         }
 
-        let content = response.text().await
+        let content = response
+            .text()
+            .await
             .context("Failed to read manifest content")?;
 
-        tokio_fs::write(&output_file, content).await
+        tokio_fs::write(&output_file, content)
+            .await
             .context("Failed to write manifest file")?;
 
-        println!("{} Downloaded: channel-nockup-{}.toml", "✅".green(), channel);
-        
+        println!(
+            "{} Downloaded: channel-nockup-{}.toml",
+            "✅".green(),
+            channel
+        );
+
         Ok(())
     }
 
@@ -330,8 +343,13 @@ async fn clone_toolchain_files(toolchain_dir: &PathBuf) -> Result<()> {
         match get_latest_manifest(channel, toolchain_dir).await {
             Ok(_) => success_count += 1,
             Err(e) => {
-                println!("{} Failed to download {} manifest: {}", "⚠️".yellow(), channel, e);
-                
+                println!(
+                    "{} Failed to download {} manifest: {}",
+                    "⚠️".yellow(),
+                    channel,
+                    e
+                );
+
                 // Create minimal fallback for stable channel only
                 if *channel == "stable" {
                     let fallback_path = toolchain_dir.join("channel-nockup-stable.toml");
@@ -349,10 +367,11 @@ components = ["core"]
 "#,
                         chrono::Utc::now().format("%Y-%m-%d")
                     );
-                    
-                    tokio_fs::write(&fallback_path, fallback_content).await
+
+                    tokio_fs::write(&fallback_path, fallback_content)
+                        .await
                         .context("Failed to write fallback config")?;
-                    
+
                     println!("{} Created fallback stable manifest", "📝".blue());
                     success_count += 1;
                 }
@@ -361,7 +380,12 @@ components = ["core"]
     }
 
     if success_count > 0 {
-        println!("{} Toolchain files setup complete ({}/{} channels)", "✅".green(), success_count, channels.len());
+        println!(
+            "{} Toolchain files setup complete ({}/{} channels)",
+            "✅".green(),
+            success_count,
+            channels.len()
+        );
     } else {
         return Err(anyhow::anyhow!("Failed to download any toolchain files"));
     }
@@ -667,7 +691,8 @@ async fn extract_binary_from_archive(
             std::fs::write(&temp_path, buffer).context("Failed to write extracted binary")?;
 
             // Atomic rename - works even for self-update
-            std::fs::rename(&temp_path, &target_path).context("Failed to move binary to final location")?;
+            std::fs::rename(&temp_path, &target_path)
+                .context("Failed to move binary to final location")?;
 
             // Make executable
             #[cfg(unix)]
