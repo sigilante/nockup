@@ -105,6 +105,81 @@ create_temp_dir() {
     echo "$temp_dir"
 }
 
+# Function to setup toolchain directory with channel manifests
+setup_toolchain() {
+    local toolchain_dir="$HOME/.nockup/toolchain"
+    local nockup_repo_url="https://raw.githubusercontent.com/sigilante/nockup/master/toolchain"
+    
+    # Create toolchain directory if it doesn't exist
+    mkdir -p "$toolchain_dir"
+    
+    print_step "Setting up toolchain directory"
+    print_info "Downloading channel manifests from: $nockup_repo_url"
+    
+    # Try to get directory listing from GitHub API first
+    local api_url="https://api.github.com/repos/sigilante/nockup/contents/toolchain"
+    local temp_listing="/tmp/toolchain_listing.json"
+    
+    # Attempt to get file list from GitHub API
+    local toolchain_files=()
+    if download_file "$api_url" "$temp_listing" 2>/dev/null; then
+        # Extract .toml files from the API response
+        if command_exists grep && command_exists sed; then
+            readarray -t toolchain_files < <(grep '"name":' "$temp_listing" | grep '\.toml"' | sed 's/.*"name": *"\([^"]*\)".*/\1/')
+        fi
+        rm -f "$temp_listing"
+    fi
+    
+    # Fallback to known files if API fails
+    if [[ ${#toolchain_files[@]} -eq 0 ]]; then
+        print_warning "Could not get directory listing, using fallback file list"
+        toolchain_files=(
+            "channel-nockup-stable.toml"
+            "channel-nockup-nightly.toml"
+        )
+    else
+        print_info "Found ${#toolchain_files[@]} toolchain files via GitHub API"
+    fi
+    
+    # Download each toolchain file
+    for file in "${toolchain_files[@]}"; do
+        [[ -z "$file" ]] && continue  # Skip empty entries
+        
+        local file_url="${nockup_repo_url}/${file}"
+        local file_path="${toolchain_dir}/${file}"
+        
+        if [[ -f "$file_path" ]]; then
+            print_info "Toolchain file already exists: $file"
+            continue
+        fi
+        
+        print_info "Downloading toolchain file: $file"
+        if download_file "$file_url" "$file_path" 2>/dev/null; then
+            print_success "Downloaded: $file"
+        else
+            print_warning "Failed to download: $file"
+            # Create minimal fallbacks for the known critical files only
+            if [[ "$file" == "channel-nockup-stable.toml" ]]; then
+                print_info "Creating minimal channel-nockup-stable.toml fallback"
+                cat > "$file_path" << EOF
+# Stable channel configuration for nockup
+[channel]
+name = "stable"
+version = "$VERSION"
+
+[binaries]
+nockup = "$VERSION"
+hoon = "0.1.0"
+hoonc = "0.2.0"
+EOF
+            fi
+        fi
+    done
+    
+    print_success "Toolchain directory setup complete"
+    print_info "Toolchain files location: $toolchain_dir"
+}
+
 # Function to setup config file
 setup_config() {
     local config_dir="$HOME/.nockup"
@@ -228,8 +303,9 @@ main() {
     print_info "This installer is optimized for the Replit environment"
     echo ""
     
-    # Setup config file first
+    # Setup config file and toolchain first
     setup_config
+    setup_toolchain
     
     # Detect platform (with Replit defaults)
     local target
