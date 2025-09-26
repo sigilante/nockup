@@ -585,7 +585,12 @@ async fn extract_binary_from_archive(
                 .read_to_end(&mut buffer)
                 .context("Failed to read binary from archive")?;
 
-            std::fs::write(&target_path, buffer).context("Failed to write extracted binary")?;
+            // Write to temporary file first, then rename to avoid issues with self-update
+            let temp_path = target_path.with_extension("tmp");
+            std::fs::write(&temp_path, buffer).context("Failed to write extracted binary")?;
+
+            // Atomic rename - works even for self-update
+            std::fs::rename(&temp_path, &target_path).context("Failed to move binary to final location")?;
 
             // Make executable
             #[cfg(unix)]
