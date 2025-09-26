@@ -35,8 +35,8 @@ pub async fn run(project: String) -> Result<()> {
         .await
         .context("Failed to read Cargo.toml")?;
 
-    let cargo_toml_parsed: toml::Value = toml::from_str(&cargo_toml_content)
-        .context("Failed to parse Cargo.toml")?;
+    let cargo_toml_parsed: toml::Value =
+        toml::from_str(&cargo_toml_content).context("Failed to parse Cargo.toml")?;
 
     let expected_binaries = if let Some(bins) = cargo_toml_parsed.get("bin") {
         bins.as_array()
@@ -118,10 +118,9 @@ pub async fn run(project: String) -> Result<()> {
             .stdout(Stdio::inherit())
             .stderr(Stdio::inherit());
 
-        let hoonc_status = hoonc_command
-            .status()
-            .await
-            .context("Failed to execute hoonc command - make sure hoonc is installed and in PATH")?;
+        let hoonc_status = hoonc_command.status().await.context(
+            "Failed to execute hoonc command - make sure hoonc is installed and in PATH",
+        )?;
 
         if !hoonc_status.success() {
             return Err(anyhow::anyhow!(
@@ -132,11 +131,21 @@ pub async fn run(project: String) -> Result<()> {
 
         // move out.jam to {bin_name}.jam if the program has multiple names
         if binaries.len() > 1 {
-            let target_jam = project_dir.join(format!("{}.jam", bin_path.file_stem().unwrap().to_string_lossy()));
+            let target_jam = project_dir.join(format!(
+                "{}.jam",
+                bin_path.file_stem().unwrap().to_string_lossy()
+            ));
             tokio::fs::rename(project_dir.join("out.jam"), &target_jam)
                 .await
-                .context(format!("Failed to rename out.jam to {}", target_jam.display()))?;
-            println!("{} Renamed out.jam to {}", "🔀".green(), target_jam.display().to_string().cyan());
+                .context(format!(
+                    "Failed to rename out.jam to {}",
+                    target_jam.display()
+                ))?;
+            println!(
+                "{} Renamed out.jam to {}",
+                "🔀".green(),
+                target_jam.display().to_string().cyan()
+            );
         }
     }
 

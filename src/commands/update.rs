@@ -186,7 +186,10 @@ async fn clone_templates(templates_dir: &PathBuf) -> Result<()> {
 
     // Clean up the temporary repo directory
     fs::remove_dir_all(&temp_dir)?;
-    println!("{} Templates and manifests downloaded successfully", "✓".green());
+    println!(
+        "{} Templates and manifests downloaded successfully",
+        "✓".green()
+    );
     Ok(())
 }
 
@@ -309,9 +312,14 @@ async fn download_binaries(config: &toml::Value) -> Result<()> {
     // Load channel details from cache dir /toolchain
     let cache_dir = get_cache_dir()?;
     let channel = format!("channel-nockup-{}", channel);
-    let manifest_path = cache_dir.join("toolchain").join(format!("{}.toml", channel));
-    let manifest = std::fs::read_to_string(&manifest_path)
-        .context(format!("Failed to read channel manifest for '{}.toml' at path {}", channel, manifest_path.display()))?;
+    let manifest_path = cache_dir
+        .join("toolchain")
+        .join(format!("{}.toml", channel));
+    let manifest = std::fs::read_to_string(&manifest_path).context(format!(
+        "Failed to read channel manifest for '{}.toml' at path {}",
+        channel,
+        manifest_path.display()
+    ))?;
     let manifest: toml::Value = toml::de::from_str(&manifest).context(format!(
         "Failed to parse channel manifest for '{}'",
         channel

@@ -49,32 +49,39 @@ pub async fn process_libraries(project_dir: &Path, manifest: &ProjectManifest) -
         }
 
         println!("{} Processing library dependencies...", "📚".cyan());
-        
+
         let cache_dir = get_library_cache_dir()?;
         let project_lib_dir = project_dir.join("hoon").join("lib");
-        
+
         // Ensure library directory exists
         fs::create_dir_all(&project_lib_dir)
             .context("Failed to create project library directory")?;
 
         for (lib_name, lib_spec) in libraries {
-            println!("  {} Fetching library '{}'...", "⬇️".green(), lib_name.cyan());
-            
+            println!(
+                "  {} Fetching library '{}'...",
+                "⬇️".green(),
+                lib_name.cyan()
+            );
+
             // Validate library spec
             if let Err(e) = validate_library_spec(lib_spec) {
                 println!("    ❌ Validation failed for '{}': {}", lib_name, e);
                 return Err(e);
             }
-            
+
             // Get or clone the repository
             let repo_dir = match fetch_library_repo(&cache_dir, lib_name, lib_spec).await {
                 Ok(dir) => dir,
                 Err(e) => {
-                    println!("    ❌ Failed to fetch repository for '{}': {}", lib_name, e);
+                    println!(
+                        "    ❌ Failed to fetch repository for '{}': {}",
+                        lib_name, e
+                    );
                     return Err(e);
                 }
             };
-            
+
             // Handle single file vs directory/full library
             if let Some(file_path) = &lib_spec.file {
                 // Single file import
@@ -84,24 +91,29 @@ pub async fn process_libraries(project_dir: &Path, manifest: &ProjectManifest) -
                 let source_dir = match find_library_source_dir(&repo_dir, lib_spec) {
                     Ok(dir) => dir,
                     Err(e) => {
-                        println!("    ❌ Failed to find source directory for '{}': {}", lib_name, e);
+                        println!(
+                            "    ❌ Failed to find source directory for '{}': {}",
+                            lib_name, e
+                        );
                         return Err(e);
                     }
                 };
-                
+
                 // Copy library files to project
-                if let Err(e) = copy_library_files(&source_dir, &project_lib_dir, lib_name, lib_spec) {
+                if let Err(e) =
+                    copy_library_files(&source_dir, &project_lib_dir, lib_name, lib_spec)
+                {
                     println!("    ❌ Failed to copy files for '{}': {}", lib_name, e);
                     return Err(e);
                 }
             }
-            
+
             println!("    ✓ Installed library '{}'", lib_name);
         }
-        
+
         println!("{} All libraries processed successfully!", "✓".green());
     }
-    
+
     Ok(())
 }
 
@@ -120,7 +132,7 @@ fn validate_library_spec(spec: &LibrarySpec) -> Result<()> {
         }
         _ => {} // Valid: exactly one of branch or commit is specified
     }
-    
+
     // Ensure mutually exclusive directory/file
     match (&spec.directory, &spec.file) {
         (Some(_), Some(_)) => {
@@ -130,14 +142,14 @@ fn validate_library_spec(spec: &LibrarySpec) -> Result<()> {
         }
         _ => {} // Valid: can have neither, or exactly one
     }
-    
+
     // Validate URL is GitHub (for now)
     if !spec.url.starts_with("https://github.com/") {
         return Err(anyhow::anyhow!(
             "Only GitHub repositories are currently supported. URL must start with 'https://github.com/'"
         ));
     }
-    
+
     Ok(())
 }
 
@@ -146,14 +158,17 @@ fn get_library_cache_dir() -> Result<PathBuf> {
         .ok_or_else(|| anyhow::anyhow!("Could not find home directory"))?
         .join(".nockup")
         .join("library_cache");
-    
-    fs::create_dir_all(&cache_dir)
-        .context("Failed to create library cache directory")?;
-    
+
+    fs::create_dir_all(&cache_dir).context("Failed to create library cache directory")?;
+
     Ok(cache_dir)
 }
 
-async fn fetch_library_repo(cache_dir: &Path, lib_name: &str, spec: &LibrarySpec) -> Result<PathBuf> {
+async fn fetch_library_repo(
+    cache_dir: &Path,
+    lib_name: &str,
+    spec: &LibrarySpec,
+) -> Result<PathBuf> {
     // Create a unique directory name based on URL and commit/branch
     let repo_name = extract_repo_name(&spec.url)?;
     let unique_id = match (&spec.commit, &spec.branch) {
@@ -182,9 +197,7 @@ async fn fetch_library_repo(cache_dir: &Path, lib_name: &str, spec: &LibrarySpec
 
     git_cmd.arg(&repo_cache_dir);
 
-    let output = git_cmd
-        .output()
-        .context("Failed to execute git clone")?;
+    let output = git_cmd.output().context("Failed to execute git clone")?;
 
     if !output.status.success() {
         return Err(anyhow::anyhow!(
@@ -251,12 +264,17 @@ fn find_library_source_dir(repo_dir: &Path, spec: &LibrarySpec) -> Result<PathBu
     }
 }
 
-fn copy_library_files(source_dir: &Path, dest_lib_dir: &Path, lib_name: &str, spec: &LibrarySpec) -> Result<()> {
+fn copy_library_files(
+    source_dir: &Path,
+    dest_lib_dir: &Path,
+    lib_name: &str,
+    spec: &LibrarySpec,
+) -> Result<()> {
     // Always use flattened approach - copy contents directly to appropriate directories
     let project_hoon_dir = dest_lib_dir.parent().unwrap(); // Get /hoon from /hoon/lib
-    
+
     copy_top_level_library(source_dir, project_hoon_dir, source_dir)?;
-    
+
     Ok(())
 }
 
@@ -267,7 +285,7 @@ fn ensure_directory_exists(dir: &Path) -> Result<()> {
 
 fn copy_single_file(repo_dir: &Path, project_lib_dir: &Path, file_path: &str) -> Result<()> {
     let source_file = repo_dir.join(file_path);
-    
+
     // Check if the source file exists
     if !source_file.exists() {
         return Err(anyhow::anyhow!(
@@ -275,15 +293,15 @@ fn copy_single_file(repo_dir: &Path, project_lib_dir: &Path, file_path: &str) ->
             file_path
         ));
     }
-    
+
     // Determine destination based on file path structure
     let file_name = source_file
         .file_name()
         .ok_or_else(|| anyhow::anyhow!("Invalid file path: {}", file_path))?;
-    
+
     // Get the project's /hoon directory (parent of /hoon/lib)
     let project_hoon_dir = project_lib_dir.parent().unwrap();
-    
+
     // Determine destination directory based on file path
     let dest_dir = if file_path.contains("/lib/") {
         project_hoon_dir.join("lib")
@@ -295,18 +313,23 @@ fn copy_single_file(repo_dir: &Path, project_lib_dir: &Path, file_path: &str) ->
         // Default to lib if no specific directory is found
         project_hoon_dir.join("lib")
     };
-    
+
     // Ensure destination directory exists
     fs::create_dir_all(&dest_dir)
         .with_context(|| format!("Failed to create directory '{}'", dest_dir.display()))?;
-    
+
     // Copy the file
     let dest_file = dest_dir.join(file_name);
-    fs::copy(&source_file, &dest_file)
-        .with_context(|| format!("Failed to copy file '{}' to '{}'", source_file.display(), dest_file.display()))?;
-    
+    fs::copy(&source_file, &dest_file).with_context(|| {
+        format!(
+            "Failed to copy file '{}' to '{}'",
+            source_file.display(),
+            dest_file.display()
+        )
+    })?;
+
     println!("      copy {}", file_path);
-    
+
     Ok(())
 }
 
@@ -318,30 +341,31 @@ fn copy_top_level_library(src_dir: &Path, dest_dir: &Path, root_src: &Path) -> R
         let src_path = entry.path();
         let file_name = entry.file_name();
         let file_name_str = file_name.to_string_lossy();
-        
+
         // Skip excluded directories
         if src_path.is_dir() && (file_name_str == "mar" || file_name_str == "tests") {
             continue;
         }
-        
+
         if src_path.is_dir() {
             // Create the corresponding directory in destination and copy its contents
             let dest_subdir = dest_dir.join(&file_name);
-            fs::create_dir_all(&dest_subdir)
-                .with_context(|| format!("Failed to create directory '{}'", dest_subdir.display()))?;
+            fs::create_dir_all(&dest_subdir).with_context(|| {
+                format!("Failed to create directory '{}'", dest_subdir.display())
+            })?;
             copy_directory_contents(&src_path, &dest_subdir, root_src)?;
         } else {
             if should_copy_file(&src_path) {
                 let dest_path = dest_dir.join(&file_name);
                 fs::copy(&src_path, &dest_path)
                     .with_context(|| format!("Failed to copy file '{}'", src_path.display()))?;
-                
+
                 let relative_src = src_path.strip_prefix(root_src).unwrap_or(&src_path);
                 println!("      copy {}", relative_src.display());
             }
         }
     }
-    
+
     Ok(())
 }
 
@@ -352,9 +376,9 @@ fn copy_directory_contents(src_dir: &Path, dest_dir: &Path, root_src: &Path) -> 
         let entry = entry?;
         let src_path = entry.path();
         let file_name = entry.file_name();
-        
+
         let dest_path = dest_dir.join(&file_name);
-        
+
         if src_path.is_dir() {
             // Create subdirectory and recurse
             fs::create_dir_all(&dest_path)
@@ -365,14 +389,14 @@ fn copy_directory_contents(src_dir: &Path, dest_dir: &Path, root_src: &Path) -> 
             if should_copy_file(&src_path) {
                 fs::copy(&src_path, &dest_path)
                     .with_context(|| format!("Failed to copy file '{}'", src_path.display()))?;
-                
+
                 // Show relative path for cleaner output
                 let relative_src = src_path.strip_prefix(root_src).unwrap_or(&src_path);
                 println!("      copy {}", relative_src.display());
             }
         }
     }
-    
+
     Ok(())
 }
 

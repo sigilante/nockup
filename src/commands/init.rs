@@ -22,10 +22,7 @@ pub async fn run(project_name: String) -> Result<()> {
     // Use cache dir ~/.nockup/templates/{{manifest.template}}
     let template_dir = dirs::home_dir()
         .ok_or_else(|| anyhow::anyhow!("Could not find home directory"))?
-        .join(format!(
-            ".nockup/templates/{}",
-            manifest.project.template
-        ));
+        .join(format!(".nockup/templates/{}", manifest.project.template));
 
     // Check if target directory already exists
     if target_dir.exists() {
@@ -49,7 +46,8 @@ pub async fn run(project_name: String) -> Result<()> {
     copy_template_directory(template_dir.as_path(), target_dir, &context)?;
 
     // Process library dependencies from manifest
-    process_libraries(target_dir, &manifest).await
+    process_libraries(target_dir, &manifest)
+        .await
         .context("Failed to process library dependencies")?;
 
     println!(
@@ -91,10 +89,7 @@ fn create_template_context(manifest: &ProjectManifest) -> Result<HashMap<String,
         "project_name".to_string(),
         manifest.project.project_name.clone(),
     );
-    context.insert(
-        "version".to_string(),
-        manifest.project.version.clone(),
-    );
+    context.insert("version".to_string(), manifest.project.version.clone());
     context.insert(
         "project_description".to_string(),
         manifest.project.description.clone(),
@@ -115,10 +110,7 @@ fn create_template_context(manifest: &ProjectManifest) -> Result<HashMap<String,
         "github_username".to_string(),
         manifest.project.github_username.clone(),
     );
-    context.insert(
-        "license".to_string(),
-        manifest.project.license.clone(),
-    );
+    context.insert("license".to_string(), manifest.project.license.clone());
     context.insert(
         "keywords".to_string(),
         manifest.project.keywords.join("\", \""),
@@ -127,10 +119,7 @@ fn create_template_context(manifest: &ProjectManifest) -> Result<HashMap<String,
         "nockapp_commit_hash".to_string(),
         manifest.project.nockapp_commit_hash.clone(),
     );
-    context.insert(
-        "template".to_string(),
-        manifest.project.template.clone(),
-    );
+    context.insert("template".to_string(), manifest.project.template.clone());
 
     Ok(context)
 }
