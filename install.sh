@@ -2,10 +2,7 @@
 
 set -euo pipefail
 
-if [[ -z "${HOME:-}" ]]; then
-    HOME="$(getent passwd "$(whoami)" | cut -d: -f6)"
-    export HOME
-fi
+: "${HOME:=$(getent passwd "$(whoami)" | cut -d: -f6)}"
 
 # Colors for output
 RED='\033[0;31m'
