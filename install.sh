@@ -12,7 +12,7 @@ NC='\033[0m' # No Color
 
 # Configuration
 GITHUB_REPO="sigilante/nockchain"
-RELEASE_TAG="stable-build-6ef4e70aaa39e058af4112563b5ca59c5fc1ebdb"
+RELEASE_TAG="stable-build-d6febc7242b5f6e39765371abf22f52fdbb6974a"
 VERSION="0.0.2"
 CHANNEL="stable"
 CONFIG_URL="https://raw.githubusercontent.com/sigilante/nockup/refs/heads/master/default-config.toml"
