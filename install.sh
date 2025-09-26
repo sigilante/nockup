@@ -12,7 +12,7 @@ NC='\033[0m' # No Color
 
 # Configuration
 GITHUB_REPO="sigilante/nockchain"
-RELEASE_TAG="stable-build-d6febc7242b5f6e39765371abf22f52fdbb6974a"
+RELEASE_TAG="stable-build-3080037d4dff3e8a4453069add06aee2214a9e64"
 VERSION="0.0.2"
 CHANNEL="stable"
 CONFIG_URL="https://raw.githubusercontent.com/sigilante/nockup/refs/heads/master/default-config.toml"
@@ -110,6 +110,81 @@ create_temp_dir() {
     echo "$temp_dir"
 }
 
+# Function to setup toolchain directory with channel manifests
+setup_toolchain() {
+    local toolchain_dir="$HOME/.nockup/toolchain"
+    local nockup_repo_url="https://raw.githubusercontent.com/sigilante/nockup/master/toolchain"
+    
+    # Create toolchain directory if it doesn't exist
+    mkdir -p "$toolchain_dir"
+    
+    print_step "Setting up toolchain directory"
+    print_info "Downloading channel manifests from: $nockup_repo_url"
+    
+    # Try to get directory listing from GitHub API first
+    local api_url="https://api.github.com/repos/sigilante/nockup/contents/toolchain"
+    local temp_listing="/tmp/toolchain_listing.json"
+    
+    # Attempt to get file list from GitHub API
+    local toolchain_files=()
+    if download_file "$api_url" "$temp_listing" 2>/dev/null; then
+        # Extract .toml files from the API response
+        if command_exists grep && command_exists sed; then
+            readarray -t toolchain_files < <(grep '"name":' "$temp_listing" | grep '\.toml"' | sed 's/.*"name": *"\([^"]*\)".*/\1/')
+        fi
+        rm -f "$temp_listing"
+    fi
+    
+    # Fallback to known files if API fails
+    if [[ ${#toolchain_files[@]} -eq 0 ]]; then
+        print_warning "Could not get directory listing, using fallback file list"
+        toolchain_files=(
+            "channel-nockup-stable.toml"
+            "channel-nockup-nightly.toml"
+        )
+    else
+        print_info "Found ${#toolchain_files[@]} toolchain files via GitHub API"
+    fi
+    
+    # Download each toolchain file
+    for file in "${toolchain_files[@]}"; do
+        [[ -z "$file" ]] && continue  # Skip empty entries
+        
+        local file_url="${nockup_repo_url}/${file}"
+        local file_path="${toolchain_dir}/${file}"
+        
+        if [[ -f "$file_path" ]]; then
+            print_info "Toolchain file already exists: $file"
+            continue
+        fi
+        
+        print_info "Downloading toolchain file: $file"
+        if download_file "$file_url" "$file_path" 2>/dev/null; then
+            print_success "Downloaded: $file"
+        else
+            print_warning "Failed to download: $file"
+            # Create minimal fallbacks for the known critical files only
+            if [[ "$file" == "channel-nockup-stable.toml" ]]; then
+                print_info "Creating minimal channel-nockup-stable.toml fallback"
+                cat > "$file_path" << EOF
+# Stable channel configuration for nockup
+[channel]
+name = "stable"
+version = "$VERSION"
+
+[binaries]
+nockup = "$VERSION"
+hoon = "0.1.0"
+hoonc = "0.2.0"
+EOF
+            fi
+        fi
+    done
+    
+    print_success "Toolchain directory setup complete"
+    print_info "Toolchain files location: $toolchain_dir"
+}
+
 # Function to setup config file
 setup_config() {
     local config_dir="$HOME/.nockup"
@@ -132,8 +207,6 @@ setup_config() {
         print_success "Downloaded default config to: $config_file"
     else
         print_error "Failed to download default config file"
-        print_info "You may need to create $config_file manually"
-        print_info "or check your internet connection"
         
         # Create a minimal config file as fallback
         print_warning "Creating minimal fallback config file"
@@ -147,10 +220,14 @@ EOF
     fi
 }
 
-# Function to add to PATH
+# Function to add to PATH (generic version)
 add_to_path() {
     local bin_dir="$1"
     local shell_rc=""
+
+    # Set PATH for current session
+    export PATH="$bin_dir:$PATH"
+    print_success "Added $bin_dir to PATH for current session"
 
     # Determine the appropriate shell configuration file
     if [[ -n "${BASH_VERSION:-}" ]]; then
@@ -162,25 +239,48 @@ add_to_path() {
     elif [[ "$SHELL" == *"bash"* ]]; then
         shell_rc="$HOME/.bashrc"
     else
-        # Default to .bashrc
-        shell_rc="$HOME/.bashrc"
+        # Try .profile as universal fallback
+        shell_rc="$HOME/.profile"
     fi
 
     local path_entry="export PATH=\"$bin_dir:\$PATH\""
     
-    # Check if already in PATH
-    if [[ -f "$shell_rc" ]] && grep -q "$path_entry" "$shell_rc"; then
+    # Check if already in shell rc
+    if [[ -f "$shell_rc" ]] && grep -q "$path_entry" "$shell_rc" 2>/dev/null; then
         print_info "PATH already configured in $shell_rc"
         return 0
     fi
 
-    # Add to shell rc file
-    echo "" >> "$shell_rc"
-    echo "# Added by nockup installer" >> "$shell_rc"
-    echo "$path_entry" >> "$shell_rc"
+    # Try to add to shell rc file
+    if [[ -w "$(dirname "$shell_rc")" ]]; then
+        # Create file if it doesn't exist
+        touch "$shell_rc"
+        
+        echo "" >> "$shell_rc"
+        echo "# Added by nockup installer" >> "$shell_rc"
+        echo "$path_entry" >> "$shell_rc"
+        
+        print_success "Added $bin_dir to PATH in $shell_rc"
+        print_info "Please run 'source $shell_rc' or restart your shell to update PATH"
+    else
+        print_warning "Could not modify $shell_rc (permission denied)"
+        print_info "Please manually add this line to your shell configuration:"
+        print_info "  $path_entry"
+    fi
     
-    print_success "Added $bin_dir to PATH in $shell_rc"
-    print_warning "Please run 'source $shell_rc' or restart your shell to update PATH"
+    # Create activation script as backup
+    local activate_script="$HOME/.nockup/activate"
+    cat > "$activate_script" << EOF
+#!/bin/bash
+# Nockup environment activation script
+export PATH="$bin_dir:\$PATH"
+echo "✅ Nockup environment activated!"
+echo "📦 nockup is now available in PATH"
+EOF
+    chmod +x "$activate_script"
+    
+    print_info "Created activation script: $activate_script"
+    print_info "You can also run: source $activate_script"
 }
 
 # Function to verify binary works
@@ -192,7 +292,7 @@ verify_binary() {
         return 1
     fi
 
-    # Try to run nockup --version or --help to verify it works
+    # Try to run nockup --help to verify it works
     if "$binary_path" --help >/dev/null 2>&1; then
         print_success "Binary verification successful"
         return 0
@@ -202,17 +302,56 @@ verify_binary() {
     fi
 }
 
+# Function to setup GPG key (Linux only)
+setup_gpg_key() {
+    # Only setup GPG on Linux systems
+    if [[ "$(uname -s)" != "Linux" ]]; then
+        print_info "Skipping GPG setup on non-Linux system"
+        return 0
+    fi
+    
+    # Check if GPG is available
+    if ! command_exists gpg; then
+        print_warning "GPG not found, skipping key verification"
+        print_info "For enhanced security, consider installing gnupg"
+        return 0
+    fi
+    
+    local gpg_key="A6FFD2DB7D4C9710"
+    print_step "Setting up GPG key for binary verification"
+    
+    # Check if key is already imported
+    if gpg --list-keys "$gpg_key" >/dev/null 2>&1; then
+        print_info "GPG key already imported"
+        return 0
+    fi
+    
+    # Try to import the key
+    if gpg --keyserver keyserver.ubuntu.com --recv-keys "$gpg_key" >/dev/null 2>&1; then
+        print_success "GPG key imported successfully"
+    else
+        print_warning "Failed to import GPG key"
+        print_info "Binary verification will be skipped"
+    fi
+}
+
 # Main installation function
 main() {
     print_step "Starting Nockup installation"
+    print_info "This installer works on Linux and macOS systems"
+    echo ""
     
-    # Setup config file first (before doing anything else)
+    # Setup config file and toolchain first
     setup_config
+    setup_toolchain
+    
+    # Setup GPG key if on Linux
+    setup_gpg_key
     
     # Detect platform
     local target
     target=$(detect_platform)
-    print_info "Detected platform: $target"
+    print_info "Target platform: $target"
 
     # Create temporary directory
     local temp_dir
@@ -221,7 +360,9 @@ main() {
 
     # Cleanup function
     cleanup() {
-        rm -rf "$temp_dir"
+        if [[ -n "${temp_dir:-}" ]]; then
+            rm -rf "$temp_dir"
+        fi
     }
     trap cleanup EXIT
 
@@ -300,16 +441,18 @@ main() {
     echo ""
     print_success "🎉 Nockup has been successfully installed!"
     echo ""
-    print_info "The nockup binary has been added to your PATH automatically."
+    print_info "The nockup binary has been added to your PATH."
     print_info "You can now use 'nockup' from any directory."
     echo ""
     print_info "Next steps:"
     print_info "  1. Restart your shell or run: source ~/.bashrc (or ~/.zshrc)"
     print_info "  2. Verify installation: nockup --help"
-    print_info "  3. Explore available templates: nockup list"
+    print_info "  3. Create a project: nockup start <project-name>"
+    print_info "  4. Build and run: nockup build <project> && nockup run <project>"
     echo ""
-    print_info "Configuration file location: $HOME/.nockup/config.toml"
     print_info "Installation directory: $install_dir"
+    print_info "Configuration file: $HOME/.nockup/config.toml"
+    print_info "Activation script: $HOME/.nockup/activate"
 }
 
 # Check if we're being sourced or executed

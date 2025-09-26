@@ -13,7 +13,7 @@ NC='\033[0m' # No Color
 # Configuration
 GITHUB_REPO="sigilante/nockchain"
 RELEASE_TAG="stable-build-3080037d4dff3e8a4453069add06aee2214a9e64"
-VERSION="0.3.0"
+VERSION="0.0.2"
 CHANNEL="stable"
 CONFIG_URL="https://raw.githubusercontent.com/sigilante/nockup/refs/heads/master/default-config.toml"
 
@@ -319,7 +319,9 @@ main() {
 
     # Cleanup function
     cleanup() {
-        rm -rf "$temp_dir"
+        if [[ -n "${temp_dir:-}" ]]; then
+            rm -rf "$temp_dir"
+        fi
     }
     trap cleanup EXIT
 
