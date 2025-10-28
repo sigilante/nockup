@@ -20,7 +20,7 @@ Prerequisites: Rust toolchain (`rustup`, `cargo`, &c.), Git.
 curl -fsSL https://raw.githubusercontent.com/sigilante/nockup/master/install.sh | bash
 ```
 
-This checks for dependencies and then installs the Nockup binary and its requirements, including the GPG key used to verify binaries on Linux.
+This checks for dependencies and then installs the Nockup binary and its requirements, including the GPG key used to verify binaries on Linux.  (This is from the `stable` channel by default; see [Channels](#channels) for more information.)
 
 ### From Source
 
@@ -48,7 +48,7 @@ Prerequisites: Rust toolchain, Git
     Alternatively, you may install it globally using Cargo:
 
     ```sh
-    $ cargo install --path .
+    $ cargo install --path . --locked
     ```
 
 3. Install the GPG public key (on Linux).  Nockup **will not work** if you do not provide the public key.
@@ -347,14 +347,14 @@ These are simply copied over from the source directory in the repository, so car
 Nockup can use `stable` build of `hoon` and `hoonc`.  As of this release, there is not yet a `nightly` build, but we demonstrate its support here:
 
 ```sh
-$ ./target/debug/nockup channel list
+$ nockup channel list
 Default channel: "stable"
 Architecture: "aarch64"
 
-$ ./target/debug/nockup channel set nightly
+$ nockup channel set nightly
 Set default channel to 'nightly'.
 
-$ ./target/debug/nockup channel list
+$ nockup channel list
 Default channel: "nightly"
 Architecture: "aarch64"
 ```
