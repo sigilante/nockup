@@ -245,15 +245,18 @@ async fn clone_toolchain_files(toolchain_dir: &PathBuf) -> Result<()> {
     }
     fs::create_dir_all(toolchain_dir)?;
 
-    println!("{} Fetching latest channel manifests from GitHub releases...", "⬇️".green());
+    println!(
+        "{} Fetching latest channel manifests from GitHub releases...",
+        "⬇️".green()
+    );
 
     // Async function to get latest manifest for a channel
     async fn get_latest_manifest(channel: &str, toolchain_dir: &PathBuf) -> Result<()> {
         let manifest_file = format!("{}-manifest.toml", channel);
         let output_file = toolchain_dir.join(format!("channel-nockup-{}.toml", channel));
-        
+
         println!("{} Fetching latest {} manifest...", "🔍".yellow(), channel);
-        
+
         // Get latest release for this channel
         let api_url = "https://api.github.com/repos/sigilante/nockchain/releases";
         let client = reqwest::Client::new();
@@ -271,11 +274,14 @@ async fn clone_toolchain_files(toolchain_dir: &PathBuf) -> Result<()> {
             ));
         }
 
-        let releases: serde_json::Value = response.json().await
+        let releases: serde_json::Value = response
+            .json()
+            .await
             .context("Failed to parse releases JSON")?;
 
         // Find latest release for this channel
-        let latest_tag = releases.as_array()
+        let latest_tag = releases
+            .as_array()
             .ok_or_else(|| anyhow::anyhow!("Invalid releases response"))?
             .iter()
             .filter_map(|release| {
@@ -295,7 +301,7 @@ async fn clone_toolchain_files(toolchain_dir: &PathBuf) -> Result<()> {
         );
 
         println!("{} Downloading from: {}", "⬇️".blue(), manifest_url);
-        
+
         // Download the manifest
         let response = client
             .get(&manifest_url)
@@ -311,14 +317,21 @@ async fn clone_toolchain_files(toolchain_dir: &PathBuf) -> Result<()> {
             ));
         }
 
-        let content = response.text().await
+        let content = response
+            .text()
+            .await
             .context("Failed to read manifest content")?;
 
-        tokio_fs::write(&output_file, content).await
+        tokio_fs::write(&output_file, content)
+            .await
             .context("Failed to write manifest file")?;
 
-        println!("{} Downloaded: channel-nockup-{}.toml", "✅".green(), channel);
-        
+        println!(
+            "{} Downloaded: channel-nockup-{}.toml",
+            "✅".green(),
+            channel
+        );
+
         Ok(())
     }
 
@@ -328,7 +341,12 @@ async fn clone_toolchain_files(toolchain_dir: &PathBuf) -> Result<()> {
 
     for channel in &channels {
         if let Err(e) = get_latest_manifest(channel, toolchain_dir).await {
-            println!("{} Failed to download {} manifest: {}", "⚠️".yellow(), channel, e);
+            println!(
+                "{} Failed to download {} manifest: {}",
+                "⚠️".yellow(),
+                channel,
+                e
+            );
             errors.push(format!("{}: {}", channel, e));
         }
     }
@@ -343,7 +361,11 @@ async fn clone_toolchain_files(toolchain_dir: &PathBuf) -> Result<()> {
 
     // Warn if we only got some manifests
     if !errors.is_empty() {
-        println!("{} Some manifests failed to download: {}", "⚠️".yellow(), errors.join(", "));
+        println!(
+            "{} Some manifests failed to download: {}",
+            "⚠️".yellow(),
+            errors.join(", ")
+        );
     }
 
     println!("{} Toolchain files setup complete", "✅".green());
