@@ -31,22 +31,19 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Checkout upstream nockchain (for tags/commits)
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ env.NOCKCHAIN_OWNER }}/${{ env.NOCKCHAIN_REPO }}
-          path: upstream_nockchain
-          token: ${{ secrets.GITHUB_TOKEN }}
-          fetch-depth: 0
-
-      - name: Get latest nockchain commit
-        id: latest_commit
+      - name: Get latest nockchain commit and release info
+        id: nockchain_info
         run: |
-          cd upstream_nockchain
-          LATEST_COMMIT=$(git rev-parse HEAD)
-          LATEST_SHORT=$(git rev-parse --short HEAD)
+          # Get latest commit
+          LATEST_COMMIT=$(git ls-remote https://github.com/${{ env.NOCKCHAIN_OWNER }}/${{ env.NOCKCHAIN_REPO }}.git HEAD | cut -f1)
+          LATEST_SHORT=$(echo $LATEST_COMMIT | cut -c1-7)
+          
+          # Get latest release tag (if any)
+          LATEST_TAG=$(git ls-remote --tags https://github.com/${{ env.NOCKCHAIN_OWNER }}/${{ env.NOCKCHAIN_REPO }}.git | tail -1 | cut -d/ -f3 || echo "")
+          
           echo "commit=$LATEST_COMMIT" >> $GITHUB_OUTPUT
           echo "short=$LATEST_SHORT" >> $GITHUB_OUTPUT
+          echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
           echo "Latest nockchain commit: $LATEST_COMMIT"
 
       - name: Make generate script executable
@@ -54,14 +51,18 @@ jobs:
 
       - name: Generate manifests for all binaries and platforms
         run: |
+          # Export the commit hash for the script to use
+          export NOCKCHAIN_COMMIT="${{ steps.nockchain_info.outputs.commit }}"
+          export NOCKCHAIN_SHORT="${{ steps.nockchain_info.outputs.short }}"
+          
           # Define binaries and platforms
           BINARIES=("hoon" "hoonc" "nockup")
-          PLATFORMS=("linux64" "darwin64")  # or "macos64" - check what the CI produces
+          PLATFORMS=("linux64" "darwin64")
           
           # Generate manifest for each combination
           for binary in "${BINARIES[@]}"; do
             for platform in "${PLATFORMS[@]}"; do
-              echo "Generating manifest for $binary on $platform"
+              echo "Generating manifest for $binary on $platform with commit $NOCKCHAIN_COMMIT"
               bash ./scripts/generate-manifest.sh "$binary" "$platform"
             done
           done
@@ -72,23 +73,9 @@ jobs:
           git config user.email "${GIT_USER_EMAIL}"
           if [ -n "$(git status --porcelain)" ]; then
             git add "${MANIFEST_DIR}"
-            COMMIT_MSG="chore(manifests): sync Nockup binaries from ${NOCKCHAIN_OWNER}/${NOCKCHAIN_REPO}"
-            if [ "${{ github.event_name }}" == "push" ]; then
-              COMMIT_MSG="$COMMIT_MSG (triggered by push)"
-            elif [ "${{ github.event_name }}" == "schedule" ]; then
-              COMMIT_MSG="$COMMIT_MSG (daily sync)"
-            else
-              COMMIT_MSG="$COMMIT_MSG (manual trigger)"
-            fi
-            COMMIT_MSG="$COMMIT_MSG @ ${{ steps.latest_commit.outputs.short }} - $(date -u +%Y-%m-%d)"
+            COMMIT_MSG="chore(manifests): sync Nockup binaries from ${NOCKCHAIN_OWNER}/${NOCKCHAIN_REPO} @ ${{ steps.nockchain_info.outputs.short }}"
             git commit -m "$COMMIT_MSG"
             git push origin HEAD
           else
             echo "No changes to commit."
           fi
-        env:
-          GIT_USER_NAME: ${{ env.GIT_USER_NAME }}
-          GIT_USER_EMAIL: ${{ env.GIT_USER_EMAIL }}
-          MANIFEST_DIR: ${{ env.MANIFEST_DIR }}
-          NOCKCHAIN_OWNER: ${{ env.NOCKCHAIN_OWNER }}
-          NOCKCHAIN_REPO: ${{ env.NOCKCHAIN_REPO }}
