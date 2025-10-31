@@ -2,13 +2,14 @@ manifest-version = "1"
 date = "2025-10-31"
 commit = "67b0737940509eabeff87e4ac55d74e3598f93be"
 commit_short = "67b0737"
+release_tag = "stable-build-67b0737940509eabeff87e4ac55d74e3598f93be"
 
 [pkg.nockup]
-version = "stable-build-67b0737940509eabeff87e4ac55d74e3598f93be"
+version = "0.1.0"
 components = ["core"]
 
-[pkg.nockup.target.darwin64]
+[pkg.nockup.target.x86_64-apple-darwin]
 available = true
-url = "https://github.com/sigilante/nockchain/releases/download/stable-build-67b0737940509eabeff87e4ac55d74e3598f93be/nockup-darwin64"
+url = "https://github.com/sigilante/nockchain/releases/download/stable-build-67b0737940509eabeff87e4ac55d74e3598f93be/nockup-stable-0.1.0-x86_64-apple-darwin.tar.gz"
 hash_blake3 = "0000000000000000000000000000000000000000000000000000000000000000"
 hash_sha1 = "0000000000000000000000000000000000000000"
