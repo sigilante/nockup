@@ -1,0 +1,68 @@
+name: Sync Nockup toolchains
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 06 * * *' # daily at 06:00 UTC
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    env:
+      NOCKCHAIN_OWNER: sigilante
+      NOCKCHAIN_REPO: nockchain
+      MANIFEST_DIR: toolchains
+      GIT_USER_NAME: github-actions[bot]
+      GIT_USER_EMAIL: github-actions[bot]@users.noreply.github.com
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout upstream nockchain (for tags/commits)
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.NOCKCHAIN_OWNER }}/${{ env.NOCKCHAIN_REPO }}
+          path: upstream_nockchain
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Make generate script executable
+        run: chmod +x ./scripts/generate-manifest.sh
+
+      - name: Generate manifests from upstream releases/commits
+        run: |
+          ./scripts/generate-manifest.sh \
+            --upstream-repo "${{ env.NOCKCHAIN_OWNER }}/${{ env.NOCKCHAIN_REPO }}" \
+            --upstream-path "upstream_nockchain" \
+            --manifest-dir "${{ env.MANIFEST_DIR }}" \
+            --github-token "${{ secrets.GITHUB_TOKEN }}"
+        env:
+          NOCKCHAIN_OWNER: ${{ env.NOCKCHAIN_OWNER }}
+          NOCKCHAIN_REPO: ${{ env.NOCKCHAIN_REPO }}
+          MANIFEST_DIR: ${{ env.MANIFEST_DIR }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Commit and push changes if any
+        run: |
+          git config user.name "${GIT_USER_NAME}"
+          git config user.email "${GIT_USER_EMAIL}"
+          if [ -n "$(git status --porcelain)" ]; then
+            git add "${MANIFEST_DIR}"
+            git commit -m "chore(manifests): sync Nockup binaries from ${NOCKCHAIN_OWNER}/${NOCKCHAIN_REPO} ($(date -u +%Y-%m-%d))"
+            git push origin HEAD
+          else
+            echo "No changes to commit."
+          fi
+        env:
+          GIT_USER_NAME: ${{ env.GIT_USER_NAME }}
+          GIT_USER_EMAIL: ${{ env.GIT_USER_EMAIL }}
+          MANIFEST_DIR: ${{ env.MANIFEST_DIR }}
+          NOCKCHAIN_OWNER: ${{ env.NOCKCHAIN_OWNER }}
+          NOCKCHAIN_REPO: ${{ env.NOCKCHAIN_REPO }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
