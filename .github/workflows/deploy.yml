@@ -31,6 +31,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install b3sum for hash computation
+        run: |
+          cargo install b3sum
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
       - name: Get latest nockchain commit and release info
         id: nockchain_info
         run: |
@@ -58,14 +63,31 @@ jobs:
           # Define binaries and platforms
           BINARIES=("hoon" "hoonc" "nockup")
           PLATFORMS=("linux64" "darwin64")
+          CHANNEL="stable"
+          
+          # Track if any manifests were generated successfully
+          SUCCESS=0
           
           # Generate manifest for each combination
           for binary in "${BINARIES[@]}"; do
             for platform in "${PLATFORMS[@]}"; do
               echo "Generating manifest for $binary on $platform with commit $NOCKCHAIN_COMMIT"
-              bash ./scripts/generate-manifest.sh "$binary" "$platform"
+              if bash ./scripts/generate-manifest.sh "$binary" "$platform" "$CHANNEL"; then
+                SUCCESS=$((SUCCESS + 1))
+                echo "✓ Successfully generated manifest for $binary-$platform"
+              else
+                echo "⚠ Failed to generate manifest for $binary-$platform (release may not exist yet)"
+              fi
             done
           done
+          
+          echo "Successfully generated $SUCCESS manifests"
+          
+          # If no manifests were generated, fail the workflow
+          if [ $SUCCESS -eq 0 ]; then
+            echo "Error: No manifests were generated successfully"
+            exit 1
+          fi
 
       - name: Commit and push changes if any
         run: |
@@ -76,6 +98,26 @@ jobs:
             COMMIT_MSG="chore(manifests): sync Nockup binaries from ${NOCKCHAIN_OWNER}/${NOCKCHAIN_REPO} @ ${{ steps.nockchain_info.outputs.short }}"
             git commit -m "$COMMIT_MSG"
             git push origin HEAD
+            echo "✓ Pushed updated manifests"
           else
             echo "No changes to commit."
           fi
+
+      # Upload artifacts with correct path pattern
+      - name: Upload Linux manifests
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: manifests-x86_64-unknown-linux-gnu
+          path: toolchains/*-x86_64-unknown-linux-gnu-*.toml
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Upload macOS manifests
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: manifests-x86_64-apple-darwin
+          path: toolchains/*-x86_64-apple-darwin-*.toml
+          retention-days: 7
+          if-no-files-found: warn

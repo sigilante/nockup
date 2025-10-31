@@ -31,7 +31,7 @@ case "$PLATFORM" in
         TARGET="x86_64-unknown-linux-gnu"
         ;;
     darwin64)
-        TARGET="x86_64-apple-darwin"
+        TARGET="aarch64-apple-darwin"
         ;;
     *)
         echo "Unknown platform: $PLATFORM" >&2
