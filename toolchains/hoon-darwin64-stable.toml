@@ -1,0 +1,14 @@
+manifest-version = "1"
+date = "2025-10-31"
+commit = "67b0737940509eabeff87e4ac55d74e3598f93be"
+commit_short = "67b0737"
+
+[pkg.hoon]
+version = "stable-build-67b0737940509eabeff87e4ac55d74e3598f93be"
+components = ["core"]
+
+[pkg.hoon.target.darwin64]
+available = true
+url = "https://github.com/sigilante/nockchain/releases/download/stable-build-67b0737940509eabeff87e4ac55d74e3598f93be/hoon-darwin64"
+hash_blake3 = "0000000000000000000000000000000000000000000000000000000000000000"
+hash_sha1 = "0000000000000000000000000000000000000000"
