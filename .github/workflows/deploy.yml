@@ -1,6 +1,13 @@
 name: Sync Nockup toolchains
 
 on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'scripts/**'
+      - '.github/workflows/deploy.yml'
+      - 'toolchains/**'
   workflow_dispatch:
   schedule:
     - cron: '0 06 * * *' # daily at 06:00 UTC
@@ -32,21 +39,32 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
+      - name: Get latest nockchain commit
+        id: latest_commit
+        run: |
+          cd upstream_nockchain
+          LATEST_COMMIT=$(git rev-parse HEAD)
+          LATEST_SHORT=$(git rev-parse --short HEAD)
+          echo "commit=$LATEST_COMMIT" >> $GITHUB_OUTPUT
+          echo "short=$LATEST_SHORT" >> $GITHUB_OUTPUT
+          echo "Latest nockchain commit: $LATEST_COMMIT"
+
       - name: Make generate script executable
         run: chmod +x ./scripts/generate-manifest.sh
 
-      - name: Generate manifests from upstream releases/commits
+      - name: Generate manifests for all binaries and platforms
         run: |
-          ./scripts/generate-manifest.sh \
-            --upstream-repo "${{ env.NOCKCHAIN_OWNER }}/${{ env.NOCKCHAIN_REPO }}" \
-            --upstream-path "upstream_nockchain" \
-            --manifest-dir "${{ env.MANIFEST_DIR }}" \
-            --github-token "${{ secrets.GITHUB_TOKEN }}"
-        env:
-          NOCKCHAIN_OWNER: ${{ env.NOCKCHAIN_OWNER }}
-          NOCKCHAIN_REPO: ${{ env.NOCKCHAIN_REPO }}
-          MANIFEST_DIR: ${{ env.MANIFEST_DIR }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Define binaries and platforms
+          BINARIES=("hoon" "hoonc" "nockup")
+          PLATFORMS=("linux64" "darwin64")  # or "macos64" - check what the CI produces
+          
+          # Generate manifest for each combination
+          for binary in "${BINARIES[@]}"; do
+            for platform in "${PLATFORMS[@]}"; do
+              echo "Generating manifest for $binary on $platform"
+              bash ./scripts/generate-manifest.sh "$binary" "$platform"
+            done
+          done
 
       - name: Commit and push changes if any
         run: |
@@ -54,7 +72,16 @@ jobs:
           git config user.email "${GIT_USER_EMAIL}"
           if [ -n "$(git status --porcelain)" ]; then
             git add "${MANIFEST_DIR}"
-            git commit -m "chore(manifests): sync Nockup binaries from ${NOCKCHAIN_OWNER}/${NOCKCHAIN_REPO} ($(date -u +%Y-%m-%d))"
+            COMMIT_MSG="chore(manifests): sync Nockup binaries from ${NOCKCHAIN_OWNER}/${NOCKCHAIN_REPO}"
+            if [ "${{ github.event_name }}" == "push" ]; then
+              COMMIT_MSG="$COMMIT_MSG (triggered by push)"
+            elif [ "${{ github.event_name }}" == "schedule" ]; then
+              COMMIT_MSG="$COMMIT_MSG (daily sync)"
+            else
+              COMMIT_MSG="$COMMIT_MSG (manual trigger)"
+            fi
+            COMMIT_MSG="$COMMIT_MSG @ ${{ steps.latest_commit.outputs.short }} - $(date -u +%Y-%m-%d)"
+            git commit -m "$COMMIT_MSG"
             git push origin HEAD
           else
             echo "No changes to commit."
@@ -65,4 +92,3 @@ jobs:
           MANIFEST_DIR: ${{ env.MANIFEST_DIR }}
           NOCKCHAIN_OWNER: ${{ env.NOCKCHAIN_OWNER }}
           NOCKCHAIN_REPO: ${{ env.NOCKCHAIN_REPO }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
