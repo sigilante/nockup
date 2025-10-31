@@ -5,7 +5,7 @@ use anyhow::{Context, Result};
 use crate::cli::ChannelAction;
 
 fn set_channel(channel: &str) -> Result<()> {
-    // validate that is 'nightly' or 'stable'
+    // validate that is 'nightly' or 'stable', change later when more are supported
     if channel != "nightly" && channel != "stable" {
         return Err(anyhow::anyhow!("Invalid channel: {}", channel));
     }

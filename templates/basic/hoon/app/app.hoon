@@ -46,7 +46,7 @@
       ~[[%effect 'Invalid cause format']]
     ~>  %slog.[1 (cat 3 'poked: ' -.u.cause)]
     ~>  %slog.[0 'Pokes awaiting implementation']
-    `state
+    [~ state]
   --
 --
 ((moat |) inner)

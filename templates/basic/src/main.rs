@@ -1,9 +1,9 @@
 use std::error::Error;
-use std::io::{self, Write};
 use std::fs;
 
-use nockapp::{AtomExt,NockApp};
 use nockapp::kernel::boot;
+use nockapp::{exit_driver, http_driver, AtomExt, NockApp};
+
 use nockapp::noun::slab::NounSlab;
 use nockapp::wire::{SystemWire, Wire};
 use nockvm::noun::{Atom, D, T};

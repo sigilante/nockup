@@ -9,7 +9,7 @@ use nockapp::kernel::boot;
 use nockapp::noun::slab::NounSlab;
 use nockapp::wire::{SystemWire, Wire, WireRepr, WireTag as AppWireTag};
 use nockapp::{AtomExt, Bytes, NockApp, NockAppError, Noun};
-use nockapp::{exit_driver, file_driver, markdown_driver};
+use nockapp::{exit_driver, file_driver};
 use nockapp::utils::make_tas;
 use nockapp_grpc::NockAppGrpcServer;
 use nockapp_grpc::client::NockAppGrpcClient;

@@ -51,7 +51,7 @@
     ^-  (list effect)
     =/  pid  42  :: implementation-specific meaning
     =/  val  -.u.cause
-    :~  [%grpc %peek pid %codetalker /path]
+    :~  [%grpc %peek pid %talk /path]
         [%grpc %poke pid val]
         [%exit ~]
     ==

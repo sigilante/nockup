@@ -47,9 +47,6 @@
       :_  state
       ^-  (list effect)
       ~[[%effect 'Invalid cause format']]
-    ~&  "hey"
-    :: ?>  ?=(%command -.u.cause)
-    :: ~>  %slog.[1 :((cury cat 3) 'poked: ' -.u.cause ' "' +.u.cause '"')]
     ~>  %slog.[0 'Received poke']
     `state
   --
