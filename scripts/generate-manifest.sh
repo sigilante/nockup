@@ -15,7 +15,7 @@ fi
 # Get nockchain info from environment or git
 NOCKCHAIN_OWNER=${NOCKCHAIN_OWNER:-sigilante}
 NOCKCHAIN_REPO=${NOCKCHAIN_REPO:-nockchain}
-NOCKCHAIN_COMMIT=${NOCKCHAIN_COMMIT:-$(git ls-remote https://github.com/$NOCKCHAIN_OWNER/$NOCKCHAIN_REPO.git HEAD | cut -f1)}
+NOCKCHAIN_COMMIT=${NOCKCHAIN_COMMIT:-$(git rev-parse HEAD)}
 NOCKCHAIN_SHORT=$(echo $NOCKCHAIN_COMMIT | cut -c1-7)
 DATE=$(date +%Y-%m-%d)
 
@@ -31,7 +31,12 @@ case "$PLATFORM" in
         TARGET="x86_64-unknown-linux-gnu"
         ;;
     darwin64)
+        # Apple Silicon (M1/M2/M3/M4/M5)
         TARGET="aarch64-apple-darwin"
+        ;;
+    darwinx86)
+        # Intel Macs (legacy, if needed)
+        TARGET="x86_64-apple-darwin"
         ;;
     *)
         echo "Unknown platform: $PLATFORM" >&2
@@ -72,14 +77,25 @@ fi
 # If version extraction failed, try to fetch from Cargo.toml at this commit
 if [ "$VERSION" = "0.1.0" ]; then
     echo "Attempting to fetch version from Cargo.toml at commit $NOCKCHAIN_COMMIT" >&2
-    CARGO_URL="https://raw.githubusercontent.com/$NOCKCHAIN_OWNER/$NOCKCHAIN_REPO/$NOCKCHAIN_COMMIT/crates/${BINARY}/Cargo.toml"
-    CARGO_CONTENT=$(curl -s "$CARGO_URL")
     
-    if [ -n "$CARGO_CONTENT" ] && ! echo "$CARGO_CONTENT" | grep -q "404: Not Found"; then
-        VERSION_FROM_CARGO=$(echo "$CARGO_CONTENT" | grep '^version[[:space:]]*=' | head -1 | sed 's/.*"\([0-9.]*\)".*/\1/')
+    # Try local file first (since we're in the nockchain repo)
+    if [ -f "crates/${BINARY}/Cargo.toml" ]; then
+        VERSION_FROM_CARGO=$(grep '^version[[:space:]]*=' "crates/${BINARY}/Cargo.toml" | head -1 | sed 's/.*"\([0-9.]*\)".*/\1/')
         if [ -n "$VERSION_FROM_CARGO" ]; then
             VERSION="$VERSION_FROM_CARGO"
-            echo "Found version from Cargo.toml: $VERSION" >&2
+            echo "Found version from local Cargo.toml: $VERSION" >&2
+        fi
+    else
+        # Fall back to fetching from GitHub
+        CARGO_URL="https://raw.githubusercontent.com/$NOCKCHAIN_OWNER/$NOCKCHAIN_REPO/$NOCKCHAIN_COMMIT/crates/${BINARY}/Cargo.toml"
+        CARGO_CONTENT=$(curl -s "$CARGO_URL")
+        
+        if [ -n "$CARGO_CONTENT" ] && ! echo "$CARGO_CONTENT" | grep -q "404: Not Found"; then
+            VERSION_FROM_CARGO=$(echo "$CARGO_CONTENT" | grep '^version[[:space:]]*=' | head -1 | sed 's/.*"\([0-9.]*\)".*/\1/')
+            if [ -n "$VERSION_FROM_CARGO" ]; then
+                VERSION="$VERSION_FROM_CARGO"
+                echo "Found version from remote Cargo.toml: $VERSION" >&2
+            fi
         fi
     fi
 fi
@@ -132,7 +148,7 @@ else
 fi
 
 # Create manifest directory if it doesn't exist
-MANIFEST_DIR="${MANIFEST_DIR:-toolchains}"
+MANIFEST_DIR="${MANIFEST_DIR:-crates/nockup/toolchains}"
 mkdir -p "$MANIFEST_DIR"
 
 # Generate manifest file
