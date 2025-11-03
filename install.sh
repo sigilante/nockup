@@ -114,7 +114,7 @@ create_temp_dir() {
 
 # Function to setup toolchain directory with channel manifests
 setup_toolchain() {
-    local toolchain_dir="$HOME/.nockup/toolchain"
+    local toolchain_dir="$HOME/.nockup/toolchains"
     
     # Create toolchain directory if it doesn't exist
     mkdir -p "$toolchain_dir"
@@ -243,10 +243,6 @@ add_to_path() {
     local bin_dir="$1"
     local shell_rc=""
 
-    # Set PATH for current session
-    export PATH="$bin_dir:$PATH"
-    print_success "Added $bin_dir to PATH for current session"
-
     # Determine the appropriate shell configuration file
     if [[ -n "${BASH_VERSION:-}" ]]; then
         shell_rc="$HOME/.bashrc"
@@ -266,39 +262,37 @@ add_to_path() {
     # Check if already in shell rc
     if [[ -f "$shell_rc" ]] && grep -q "$path_entry" "$shell_rc" 2>/dev/null; then
         print_info "PATH already configured in $shell_rc"
-        return 0
-    fi
-
-    # Try to add to shell rc file
-    if [[ -w "$(dirname "$shell_rc")" ]]; then
-        # Create file if it doesn't exist
-        touch "$shell_rc"
-        
-        echo "" >> "$shell_rc"
-        echo "# Added by nockup installer" >> "$shell_rc"
-        echo "$path_entry" >> "$shell_rc"
-        
-        print_success "Added $bin_dir to PATH in $shell_rc"
-        print_info "Please run 'source $shell_rc' or restart your shell to update PATH"
     else
-        print_warning "Could not modify $shell_rc (permission denied)"
-        print_info "Please manually add this line to your shell configuration:"
-        print_info "  $path_entry"
+        # Try to add to shell rc file
+        if [[ -w "$(dirname "$shell_rc")" ]]; then
+            # Create file if it doesn't exist
+            touch "$shell_rc"
+            
+            echo "" >> "$shell_rc"
+            echo "# Added by nockup installer" >> "$shell_rc"
+            echo "$path_entry" >> "$shell_rc"
+            
+            print_success "Added $bin_dir to PATH in $shell_rc"
+        else
+            print_warning "Could not modify $shell_rc (permission denied)"
+            print_info "Please manually add this line to your shell configuration:"
+            print_info "  $path_entry"
+        fi
     fi
     
-    # Create activation script as backup
-    local activate_script="$HOME/.nockup/activate"
+    # Create activation script
+    local activate_script="$HOME/.nockup/activate.sh"
     cat > "$activate_script" << EOF
 #!/bin/bash
 # Nockup environment activation script
+# Usage: source ~/.nockup/activate.sh
 export PATH="$bin_dir:\$PATH"
 echo "✅ Nockup environment activated!"
 echo "📦 nockup is now available in PATH"
 EOF
     chmod +x "$activate_script"
     
-    print_info "Created activation script: $activate_script"
-    print_info "You can also run: source $activate_script"
+    print_success "Created activation script: $activate_script"
 }
 
 # Function to verify binary works
@@ -459,18 +453,36 @@ main() {
     echo ""
     print_success "🎉 Nockup has been successfully installed!"
     echo ""
-    print_info "The nockup binary has been added to your PATH."
-    print_info "You can now use 'nockup' from any directory."
+    
+    # Provide command to activate PATH immediately
+    echo -e "${YELLOW}═══════════════════════════════════════════════════════════════${NC}"
+    echo -e "${GREEN}To use nockup immediately in this terminal, run:${NC}"
     echo ""
+    echo -e "  ${CYAN}export PATH=\"$install_dir:\$PATH\"${NC}"
+    echo ""
+    echo -e "${GREEN}Or copy and run this command:${NC}"
+    echo ""
+    echo -e "  ${CYAN}eval 'export PATH=\"$install_dir:\$PATH\"'${NC}"
+    echo ""
+    echo -e "${YELLOW}═══════════════════════════════════════════════════════════════${NC}"
+    echo ""
+    
     print_info "Next steps:"
-    print_info "  1. Restart your shell or run: source ~/.bashrc (or ~/.zshrc)"
-    print_info "  2. Verify installation: nockup --help"
-    print_info "  3. Create a project: nockup start <project-name>"
-    print_info "  4. Build and run: nockup build <project> && nockup run <project>"
+    print_info "  1. Run the export command above to use nockup immediately, OR"
+    print_info "  2. Restart your shell to automatically load the updated PATH"
+    print_info "  3. Verify installation: nockup --help"
+    print_info "  4. Create a project: nockup start <project-name>"
+    print_info "  5. Build and run: nockup build <project> && nockup run <project>"
     echo ""
     print_info "Installation directory: $install_dir"
     print_info "Configuration file: $HOME/.nockup/config.toml"
-    print_info "Activation script: $HOME/.nockup/activate"
+    print_info "Activation script: source $HOME/.nockup/activate.sh"
+    echo ""
+    
+    # Write the export command to a temp file for easy copy
+    local export_cmd_file="$HOME/.nockup/.last_install_export"
+    echo "export PATH=\"$install_dir:\$PATH\"" > "$export_cmd_file"
+    chmod +x "$export_cmd_file"
 }
 
 # Check if we're being sourced or executed
