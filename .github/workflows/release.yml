@@ -47,22 +47,18 @@ jobs:
             echo "version=pr-${{ github.event.number }}" >> $GITHUB_OUTPUT
           fi
 
-      - name: Debug - List Cargo.toml files
-        run: |
-          echo "=== Repository structure ==="
-          find . -name "Cargo.toml" -type f
-          echo "=== Checking expected paths ==="
-          ls -la crates/hoon/Cargo.toml 2>/dev/null || echo "crates/hoon/Cargo.toml not found"
-          ls -la crates/hoonc/Cargo.toml 2>/dev/null || echo "crates/hoonc/Cargo.toml not found"
-          ls -la crates/nockup/Cargo.toml 2>/dev/null || echo "crates/nockup/Cargo.toml not found"
-          ls -la Cargo.toml 2>/dev/null || echo "Root Cargo.toml not found"
-
       - name: Extract Cargo versions
         id: cargo-versions
         run: |
-          HOON_VERSION=$(grep '^version[[:space:]]*=' crates/hoon/Cargo.toml | sed 's/.*=[[:space:]]*"\([^"]*\)".*/\1/' | head -1)
-          HOONC_VERSION=$(grep '^version[[:space:]]*=' crates/hoonc/Cargo.toml | sed 's/.*=[[:space:]]*"\([^"]*\)".*/\1/' | head -1)
-          NOCKUP_VERSION=$(grep '^version[[:space:]]*=' crates/nockup/Cargo.toml | sed 's/.*=[[:space:]]*"\([^"]*\)".*/\1/' | head -1)
+          # Get workspace version from root Cargo.toml for hoon
+          HOON_VERSION=$(awk '/\[workspace.package\]/,/^\[/ {if ($0 ~ /^[[:space:]]*version[[:space:]]*=/) {gsub(/.*"/, ""); gsub(/".*/, ""); print; exit}}' Cargo.toml)
+          
+          # Get hoonc version directly from its Cargo.toml
+          HOONC_VERSION=$(grep '^[[:space:]]*version[[:space:]]*=' crates/hoonc/Cargo.toml | grep -v 'workspace' | sed 's/.*=[[:space:]]*"\([^"]*\)".*/\1/' | head -1)
+          
+          # Get nockup version directly from its Cargo.toml
+          NOCKUP_VERSION=$(grep '^[[:space:]]*version[[:space:]]*=' crates/nockup/Cargo.toml | grep -v 'workspace' | sed 's/.*=[[:space:]]*"\([^"]*\)".*/\1/' | head -1)
+          
           # For nightly, append date
           if [[ "${{ steps.channel.outputs.channel }}" == "nightly" ]]; then
             DATE=$(date +%Y%m%d)
@@ -70,11 +66,20 @@ jobs:
             HOONC_VERSION="${HOONC_VERSION}-${DATE}"
             NOCKUP_VERSION="${NOCKUP_VERSION}-${DATE}"
           fi
+          
+          # Debug output
+          echo "HOON_VERSION='$HOON_VERSION' (from workspace)"
+          echo "HOONC_VERSION='$HOONC_VERSION' (from local Cargo.toml)"
+          echo "NOCKUP_VERSION='$NOCKUP_VERSION' (from local Cargo.toml)"
+          
           # Validate versions
           if [[ -z "$HOON_VERSION" || -z "$HOONC_VERSION" || -z "$NOCKUP_VERSION" ]]; then
             echo "Error: Missing version in one or more Cargo.toml files"
+            echo "Debugging root Cargo.toml workspace section:"
+            grep -A 10 '\[workspace.package\]' Cargo.toml || echo "No [workspace.package] section found"
             exit 1
           fi
+          
           echo "hoon_version=$HOON_VERSION" >> $GITHUB_OUTPUT
           echo "hoonc_version=$HOONC_VERSION" >> $GITHUB_OUTPUT
           echo "nockup_version=$NOCKUP_VERSION" >> $GITHUB_OUTPUT
