@@ -281,7 +281,7 @@ jobs:
         if: steps.channel.outputs.channel != 'pr'
         uses: actions/upload-artifact@v4
         with:
-          name: manifests-${{ matrix.target }}
+          name: toolchains-${{ matrix.target }}
           path: "*-${{ matrix.target }}-manifest.toml"
           retention-days: 7
 
@@ -315,14 +315,14 @@ jobs:
       - name: Download all manifest artifacts
         uses: actions/download-artifact@v4
         with:
-          path: manifests/
-          pattern: manifests-*
+          path: toolchains/
+          pattern: toolchains-*
           merge-multiple: true
           
       - name: List downloaded manifests
         run: |
           echo "Downloaded manifests:"
-          find manifests/ -name "*.toml" -type f | sort
+          find toolchains/ -name "*.toml" -type f | sort
           
       - name: Create collation script
         run: |
@@ -414,7 +414,7 @@ jobs:
           
       - name: Collate manifests
         run: |
-          ./scripts/collate-manifests.sh ${{ steps.channel.outputs.channel }} manifests/ > ${{ steps.channel.outputs.channel }}-manifest.toml
+          ./scripts/collate-manifests.sh ${{ steps.channel.outputs.channel }} toolchains/ > ${{ steps.channel.outputs.channel }}-manifest.toml
           
       - name: Show final manifest
         run: |
@@ -446,7 +446,7 @@ jobs:
           cp ${{ steps.channel.outputs.channel }}-manifest.toml crates/nockup/toolchains/
           
           # Also copy individual target manifests for reference
-          for manifest in manifests/*-manifest.toml; do
+          for manifest in toolchains/*-manifest.toml; do
             if [ -f "$manifest" ]; then
               cp "$manifest" crates/nockup/toolchains/
             fi
