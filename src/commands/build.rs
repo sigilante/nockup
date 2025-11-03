@@ -17,8 +17,7 @@ pub async fn run(project: String) -> Result<()> {
     let manifest_path = project_dir.join("manifest.toml");
     if !manifest_path.exists() {
         return Err(anyhow::anyhow!(
-            "Not a NockApp project: '{}' missing manifest.toml",
-            project
+            "Not a NockApp project: '{}' missing manifest.toml", project
         ));
     }
 
