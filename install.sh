@@ -14,8 +14,8 @@ NC='\033[0m' # No Color
 
 # Configuration
 GITHUB_REPO="sigilante/nockchain"
-RELEASE_TAG="stable-build-9e71fb71211fefe0f2dd5173d2ee83d6cbe73d85"
-VERSION="0.3.0"
+# RELEASE_TAG="stable-build-9e71fb71211fefe0f2dd5173d2ee83d6cbe73d85"
+# VERSION="0.3.0"
 CHANNEL="stable"
 CONFIG_URL="https://raw.githubusercontent.com/sigilante/nockup/refs/heads/master/default-config.toml"
 
@@ -38,6 +38,51 @@ print_error() {
 
 print_step() {
     echo -e "${CYAN}🚀 $1${NC}"
+}
+
+# Function to get latest release for channel
+get_latest_release() {
+    local channel="$1"
+    local api_url="https://api.github.com/repos/${GITHUB_REPO}/releases"
+    
+    print_step "Fetching latest ${channel} release information..."
+    
+    # Create temp file for releases
+    local temp_releases
+    temp_releases=$(create_temp_dir)/releases.json
+    
+    if ! download_file "$api_url" "$temp_releases"; then
+        print_error "Failed to fetch release information from GitHub"
+        return 1
+    fi
+    
+    # Extract latest tag for this channel
+    local latest_tag
+    if command_exists grep && command_exists sed; then
+        latest_tag=$(grep -o "\"tag_name\":\"${channel}-build-[^\"]*\"" "$temp_releases" | \
+                    sed 's/"tag_name":"\([^"]*\)"/\1/' | head -1)
+    fi
+    
+    if [[ -z "$latest_tag" ]]; then
+        print_error "No ${channel} releases found"
+        return 1
+    fi
+    
+    # Extract version from release info if available, or parse from tag
+    # Assuming your releases have a version field or you can parse from tag
+    local version
+    version=$(grep -B 2 "\"tag_name\":\"${latest_tag}\"" "$temp_releases" | \
+              grep -o "\"name\":\"[^\"]*\"" | sed 's/"name":"\([^"]*\)"/\1/' | head -1)
+    
+    # If version not in name, extract from tag or default to a pattern
+    if [[ -z "$version" ]]; then
+        # Extract version pattern like 0.3.0 if it's in the tag
+        version=$(echo "$latest_tag" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || echo "latest")
+    fi
+    
+    rm -f "$temp_releases"
+    
+    echo "$latest_tag|$version"
 }
 
 # Function to detect platform and architecture
@@ -359,7 +404,22 @@ main() {
     
     # Setup GPG key if on Linux
     setup_gpg_key
+
+    # Fetch latest release information
+    local release_info
+    release_info=$(get_latest_release "$CHANNEL")
+    if [[ $? -ne 0 ]]; then
+        print_error "Failed to fetch latest release information"
+        exit 1
+    fi
     
+    # Parse release info
+    RELEASE_TAG=$(echo "$release_info" | cut -d'|' -f1)
+    VERSION=$(echo "$release_info" | cut -d'|' -f2)
+    
+    print_info "Latest ${CHANNEL} release: ${RELEASE_TAG}"
+    print_info "Version: ${VERSION}"
+
     # Detect platform
     local target
     target=$(detect_platform)
