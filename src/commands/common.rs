@@ -326,24 +326,11 @@ async fn clone_toolchain_files(toolchain_dir: &PathBuf) -> Result<()> {
             .await
             .context("Failed to parse releases JSON")?;
 
-        let latest_tag = releases
-            .as_array()
-            .ok_or_else(|| anyhow::anyhow!("Invalid releases response"))?
-            .iter()
-            .filter_map(|release| {
-                let tag_name = release["tag_name"].as_str()?;
-                if tag_name.starts_with(&format!("{}-build-", channel)) {
-                    Some(tag_name.to_string())
-                } else {
-                    None
-                }
-            })
-            .next()
-            .ok_or_else(|| anyhow::anyhow!("No {} releases found", channel))?;
+        let latest_tag = get_git_commit_id().await?;
 
         let manifest_url = format!(
-            "https://github.com/sigilante/nockchain/releases/download/{}/{}",
-            latest_tag, manifest_file
+            "https://github.com/sigilante/nockchain/releases/download/{}-build-{}/{}",
+            channel, latest_tag, manifest_file
         );
 
         println!("{} Downloading from: {}", "⬇️".blue(), manifest_url);
