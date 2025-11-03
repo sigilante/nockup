@@ -389,7 +389,7 @@ async fn download_binaries(config: &toml::Value) -> Result<()> {
         .as_str()
         .ok_or_else(|| anyhow::anyhow!("Invalid architecture in config"))?;
 
-    // Load channel details from cache dir /toolchain
+    // Load channel details from ./toolchain/
     let cache_dir = get_cache_dir()?;
     let channel = format!("channel-nockup-{}", channel);
     let manifest_path = cache_dir
@@ -435,12 +435,26 @@ async fn download_binaries(config: &toml::Value) -> Result<()> {
         println!("{} Blake3 checksum passed.", "✅".green());
         println!("{} SHA1 checksum passed.", "✅".green());
 
-        // Download archive and signature
+        // Download archive
         let archive_path = download_file(&archive_url).await?;
-        let signature_path = download_file(&signature_url).await?;
 
-        // Verify GPG signature first
-        verify_gpg_signature(&archive_path, &signature_path).await?;
+        // Only verify signatures on Linux (we don't have signing certificates for other platforms yet)
+        if std::env::consts::OS == "linux" {
+            // Download signature
+            let signature_path = download_file(&signature_url).await?;
+
+            // Verify GPG signature first
+            verify_gpg_signature(&archive_path, &signature_path).await?;
+
+            // Clean up signature file
+            fs::remove_file(&signature_path)?;
+        } else {
+            println!(
+                "{} Skipping signature verification on {} (not yet supported)",
+                "⚠️".yellow(),
+                std::env::consts::OS
+            );
+        }
 
         // Verify checksums of the archive
         verify_checksums(&archive_path, &archive_blake3, &archive_sha1).await?;
@@ -454,7 +468,6 @@ async fn download_binaries(config: &toml::Value) -> Result<()> {
 
         // Clean up downloaded files
         fs::remove_file(&archive_path)?;
-        fs::remove_file(&signature_path)?;
     }
 
     Ok(())
