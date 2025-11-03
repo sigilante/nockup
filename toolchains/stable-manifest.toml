@@ -1,0 +1,60 @@
+manifest-version = "1"
+date = "2025-11-01"
+
+# Global package info
+[pkg.nockup]
+version = "0.3.0"
+components = ["core"]
+extensions = []
+
+# Profiles
+[profiles.default]
+components = ["core"]
+[profiles.minimal]
+components = ["core"]
+
+# nockup binaries
+# From nockup-aarch64-apple-darwin-manifest.toml
+[pkg.nockup.target.aarch64-apple-darwin]
+available = true
+url = "https://github.com/sigilante/nockchain/releases/download/stable-build-a3d1508fdb4ca151bd3d4c3809b1d20725620e25/nockup-stable-0.3.0-aarch64-apple-darwin.tar.gz"
+hash_blake3 = "96ae4f82a45d8be74f4843661f85ba2db31de814c3ad5e70c824d7d708f6c475"
+hash_sha1 = "a79974e62365234aca7f4e6d7c27636bc8c12673"
+
+# From nockup-x86_64-unknown-linux-gnu-manifest.toml
+[pkg.nockup.target.x86_64-unknown-linux-gnu]
+available = true
+url = "https://github.com/sigilante/nockchain/releases/download/stable-build-a3d1508fdb4ca151bd3d4c3809b1d20725620e25/nockup-stable-0.3.0-x86_64-unknown-linux-gnu.tar.gz"
+hash_blake3 = "445517ca2d33568347afd2fcd2e3ff9256484916790b448dd7355459ac0e15ff"
+hash_sha1 = "1b02c58fe7bd21f72b875b5714b7cccef3c54a0a"
+
+# hoonc binaries
+# From hoonc-aarch64-apple-darwin-manifest.toml
+[pkg.hoonc.target.aarch64-apple-darwin]
+available = true
+url = "https://github.com/sigilante/nockchain/releases/download/stable-build-a3d1508fdb4ca151bd3d4c3809b1d20725620e25/hoonc-stable-0.2.0-aarch64-apple-darwin.tar.gz"
+hash_blake3 = "41bf155d88a6d4a3b0e6a8eefc8d3d982393c26f5ee0c57a42cc2f7c48c0e9e0"
+hash_sha1 = "701a89f42e3539e164432593170b13a3df6eb2a3"
+
+# From hoonc-x86_64-unknown-linux-gnu-manifest.toml
+[pkg.hoonc.target.x86_64-unknown-linux-gnu]
+available = true
+url = "https://github.com/sigilante/nockchain/releases/download/stable-build-a3d1508fdb4ca151bd3d4c3809b1d20725620e25/hoonc-stable-0.2.0-x86_64-unknown-linux-gnu.tar.gz"
+hash_blake3 = "9cfe842c2219559f666ced23ab0dcdc3a1d66143a7c68e695a0d16077fc84c29"
+hash_sha1 = "51bc271b07ece84aee15969dbb5bc9a08445c8ac"
+
+# hoon binaries
+# From hoon-aarch64-apple-darwin-manifest.toml
+[pkg.hoon.target.aarch64-apple-darwin]
+available = true
+url = "https://github.com/sigilante/nockchain/releases/download/stable-build-a3d1508fdb4ca151bd3d4c3809b1d20725620e25/hoon-stable-0.1.0-aarch64-apple-darwin.tar.gz"
+hash_blake3 = "c0920a695aa800fd1c36c1e01d07d68743cffec4c538eeb78f9389793c83427b"
+hash_sha1 = "348711452237ff0d27ab6fd9d21521d9e8d337e4"
+
+# From hoon-x86_64-unknown-linux-gnu-manifest.toml
+[pkg.hoon.target.x86_64-unknown-linux-gnu]
+available = true
+url = "https://github.com/sigilante/nockchain/releases/download/stable-build-a3d1508fdb4ca151bd3d4c3809b1d20725620e25/hoon-stable-0.1.0-x86_64-unknown-linux-gnu.tar.gz"
+hash_blake3 = "81f43d91e2998ffff20b9a51e4c401ffca22cea2a6a095da65d20cff7fe8edc6"
+hash_sha1 = "cae207c16e7752be668f6aedcc313c2652320a6b"
+

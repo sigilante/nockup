@@ -199,7 +199,7 @@ async fn update_templates(templates_dir: &PathBuf) -> Result<()> {
 }
 
 async fn download_toolchain_files(cache_dir: &PathBuf) -> Result<()> {
-    let toolchain_dir = cache_dir.join("toolchain");
+    let toolchain_dir = cache_dir.join("toolchains");
 
     // Check if toolchain directory already has content
     if has_existing_toolchain_files(&toolchain_dir).await? {
@@ -393,7 +393,7 @@ async fn download_binaries(config: &toml::Value) -> Result<()> {
     let cache_dir = get_cache_dir()?;
     let channel = format!("channel-nockup-{}", channel);
     let manifest_path = cache_dir
-        .join("toolchain")
+        .join("toolchains")
         .join(format!("{}.toml", channel));
     let manifest = std::fs::read_to_string(&manifest_path).context(format!(
         "Failed to read channel manifest for '{}.toml' at path {}",
@@ -509,12 +509,7 @@ async fn verify_gpg_signature(
 
         // Try to import the public key from keyserver
         let import_output = Command::new("gpg")
-            .args([
-                "--keyserver",
-                "keyserver.ubuntu.com",
-                "--recv-keys",
-                "A6FFD2DB7D4C9710",
-            ])
+            .args(["--keyserver", "keyserver.ubuntu.com", "--recv-keys", "A6FFD2DB7D4C9710"])
             .output()
             .await
             .context("Failed to import public key from keyserver")?;
@@ -546,12 +541,7 @@ async fn verify_gpg_signature(
             // Try alternative keyserver
             println!("{} Trying alternative keyserver...", "🔑".yellow());
             let alt_import = Command::new("gpg")
-                .args([
-                    "--keyserver",
-                    "keys.openpgp.org",
-                    "--recv-keys",
-                    "A6FFD2DB7D4C9710",
-                ])
+                .args(["--keyserver", "keys.openpgp.org", "--recv-keys", "A6FFD2DB7D4C9710"])
                 .output()
                 .await;
 
@@ -607,8 +597,7 @@ async fn verify_gpg_signature(
         if !retry_output.status.success() {
             let retry_stderr = String::from_utf8_lossy(&retry_output.stderr);
             return Err(anyhow::anyhow!(
-                "GPG signature verification failed after key import: {}",
-                retry_stderr
+                "GPG signature verification failed after key import: {}", retry_stderr
             ));
         }
 
@@ -617,14 +606,12 @@ async fn verify_gpg_signature(
             println!("{} GPG signature verified successfully", "✅".green());
         } else {
             return Err(anyhow::anyhow!(
-                "GPG signature verification failed: {}",
-                retry_stderr
+                "GPG signature verification failed: {}", retry_stderr
             ));
         }
     } else {
         return Err(anyhow::anyhow!(
-            "GPG signature verification failed: {}",
-            stderr
+            "GPG signature verification failed: {}", stderr
         ));
     }
 
@@ -695,8 +682,7 @@ async fn extract_binary_from_archive(
 
     if !found_binary {
         return Err(anyhow::anyhow!(
-            "Binary '{}' not found in archive",
-            binary_name
+            "Binary '{}' not found in archive", binary_name
         ));
     }
 
@@ -741,9 +727,7 @@ async fn verify_checksums(
     let computed_blake3 = blake3::hash(&bytes);
     if computed_blake3.to_string() != expected_blake3 {
         return Err(anyhow::anyhow!(
-            "Checksum verification failed: expected {}, got {}",
-            expected_blake3,
-            computed_blake3
+            "Checksum verification failed: expected {}, got {}", expected_blake3, computed_blake3
         ));
     }
 
@@ -759,9 +743,7 @@ async fn verify_checksums(
         let expected_hex = hex::encode(&expected_sha1);
         let computed_hex = hex::encode(computed_sha1.as_slice());
         return Err(anyhow::anyhow!(
-            "Checksum verification failed: expected {}, got {}",
-            expected_hex,
-            computed_hex
+            "Checksum verification failed: expected {}, got {}", expected_hex, computed_hex
         ));
     }
     Ok(())

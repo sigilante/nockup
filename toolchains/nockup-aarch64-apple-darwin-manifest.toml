@@ -1,0 +1,12 @@
+manifest-version = "1"
+date = "2025-11-01"
+
+[pkg.nockup]
+version = "0.3.0"
+components = ["core"]
+
+[pkg.nockup.target.aarch64-apple-darwin]
+available = true
+url = "https://github.com/sigilante/nockchain/releases/download/stable-build-a3d1508fdb4ca151bd3d4c3809b1d20725620e25/nockup-stable-0.3.0-aarch64-apple-darwin.tar.gz"
+hash_blake3 = "96ae4f82a45d8be74f4843661f85ba2db31de814c3ad5e70c824d7d708f6c475"
+hash_sha1 = "a79974e62365234aca7f4e6d7c27636bc8c12673"

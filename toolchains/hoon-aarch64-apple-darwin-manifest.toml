@@ -1,0 +1,12 @@
+manifest-version = "1"
+date = "2025-11-01"
+
+[pkg.hoon]
+version = "0.1.0"
+components = ["core"]
+
+[pkg.hoon.target.aarch64-apple-darwin]
+available = true
+url = "https://github.com/sigilante/nockchain/releases/download/stable-build-a3d1508fdb4ca151bd3d4c3809b1d20725620e25/hoon-stable-0.1.0-aarch64-apple-darwin.tar.gz"
+hash_blake3 = "c0920a695aa800fd1c36c1e01d07d68743cffec4c538eeb78f9389793c83427b"
+hash_sha1 = "348711452237ff0d27ab6fd9d21521d9e8d337e4"

@@ -68,8 +68,7 @@ fn load_project_config(project_name: &str) -> Result<ProjectManifest> {
 
     if !config_path.exists() {
         return Err(anyhow::anyhow!(
-            "Project configuration file '{}.toml' not found",
-            project_name
+            "Project configuration file '{}.toml' not found", project_name
         ));
     }
 

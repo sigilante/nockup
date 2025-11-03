@@ -110,7 +110,7 @@ create_temp_dir() {
 # Function to setup toolchain directory with channel manifests
 # Function to setup toolchain directory with channel manifests
 setup_toolchain() {
-    local toolchain_dir="$HOME/.nockup/toolchain"
+    local toolchain_dir="$HOME/.nockup/toolchains"
     
     # Create toolchain directory if it doesn't exist
     mkdir -p "$toolchain_dir"

@@ -58,8 +58,7 @@ async fn get_binary_version(binary_name: &str) -> Result<String> {
     if !file_info.contains(expected_arch) {
         return Err(anyhow::anyhow!(
             "Binary architecture mismatch for {}: expected {}, found different architecture",
-            binary_name,
-            expected_arch
+            binary_name, expected_arch
         ));
     }
 
@@ -80,8 +79,7 @@ async fn get_binary_version(binary_name: &str) -> Result<String> {
     }
 
     Err(anyhow::anyhow!(
-        "Could not determine {} version - none of the common version flags worked",
-        binary_name
+        "Could not determine {} version - none of the common version flags worked", binary_name
     ))
 }
 
