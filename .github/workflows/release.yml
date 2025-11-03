@@ -47,6 +47,16 @@ jobs:
             echo "version=pr-${{ github.event.number }}" >> $GITHUB_OUTPUT
           fi
 
+      - name: Debug - List Cargo.toml files
+        run: |
+          echo "=== Repository structure ==="
+          find . -name "Cargo.toml" -type f
+          echo "=== Checking expected paths ==="
+          ls -la crates/hoon/Cargo.toml 2>/dev/null || echo "crates/hoon/Cargo.toml not found"
+          ls -la crates/hoonc/Cargo.toml 2>/dev/null || echo "crates/hoonc/Cargo.toml not found"
+          ls -la crates/nockup/Cargo.toml 2>/dev/null || echo "crates/nockup/Cargo.toml not found"
+          ls -la Cargo.toml 2>/dev/null || echo "Root Cargo.toml not found"
+
       - name: Extract Cargo versions
         id: cargo-versions
         run: |
