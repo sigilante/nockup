@@ -14,117 +14,30 @@ NC='\033[0m' # No Color
 
 # Configuration
 GITHUB_REPO="sigilante/nockchain"
-# RELEASE_TAG="stable-build-9e71fb71211fefe0f2dd5173d2ee83d6cbe73d85"
-# VERSION="0.3.0"
-VERSION="unknown"  # Default value, will be updated
-RELEASE_TAG="unknown"  # Default value, will be updated
+VERSION="unknown"
+RELEASE_TAG="unknown"
 CHANNEL="stable"
 CONFIG_URL="https://raw.githubusercontent.com/sigilante/nockup/refs/heads/master/default-config.toml"
 
-# Function to print colored output
+# Function to print colored output (to stderr so it doesn't interfere with function returns)
 print_info() {
-    echo -e "${BLUE}ℹ️  $1${NC}"
+    echo -e "${BLUE}ℹ️  $1${NC}" >&2
 }
 
 print_success() {
-    echo -e "${GREEN}✅ $1${NC}"
+    echo -e "${GREEN}✅ $1${NC}" >&2
 }
 
 print_warning() {
-    echo -e "${YELLOW}⚠️  $1${NC}"
+    echo -e "${YELLOW}⚠️  $1${NC}" >&2
 }
 
 print_error() {
-    echo -e "${RED}❌ $1${NC}"
+    echo -e "${RED}❌ $1${NC}" >&2
 }
 
 print_step() {
-    echo -e "${CYAN}🚀 $1${NC}"
-}
-
-# Function to get latest release for channel
-get_latest_release() {
-    local channel="$1"
-    local api_url="https://api.github.com/repos/${GITHUB_REPO}/releases"
-    
-    print_step "Fetching latest ${channel} release information..."
-    
-    # Create temp file for releases
-    local temp_releases
-    temp_releases=$(create_temp_dir)/releases.json
-    
-    if ! download_file "$api_url" "$temp_releases"; then
-        print_error "Failed to fetch release information from GitHub"
-        return 1
-    fi
-    
-    # Extract latest tag for this channel
-    local latest_tag
-    if command_exists grep && command_exists sed; then
-        latest_tag=$(grep -o "\"tag_name\":\"${channel}-build-[^\"]*\"" "$temp_releases" | \
-                    sed 's/"tag_name":"\([^"]*\)"/\1/' | head -1)
-    fi
-    
-    if [[ -z "$latest_tag" ]]; then
-        print_error "No ${channel} releases found"
-        return 1
-    fi
-    
-    # Extract version from release info if available, or parse from tag
-    # Assuming your releases have a version field or you can parse from tag
-    local version
-    version=$(grep -B 2 "\"tag_name\":\"${latest_tag}\"" "$temp_releases" | \
-              grep -o "\"name\":\"[^\"]*\"" | sed 's/"name":"\([^"]*\)"/\1/' | head -1)
-    
-    # If version not in name, extract from tag or default to a pattern
-    if [[ -z "$version" ]]; then
-        # Extract version pattern like 0.3.0 if it's in the tag
-        version=$(echo "$latest_tag" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || echo "latest")
-    fi
-    
-    rm -f "$temp_releases"
-    
-    echo "$latest_tag|$version"
-}
-
-# Function to detect platform and architecture
-detect_platform() {
-    local arch
-    local os
-    local target
-
-    # Detect architecture
-    case "$(uname -m)" in
-        x86_64|amd64)
-            arch="x86_64"
-            ;;
-        arm64|aarch64)
-            arch="aarch64"
-            ;;
-        *)
-            print_error "Unsupported architecture: $(uname -m)"
-            print_info "Supported architectures: x86_64, aarch64"
-            exit 1
-            ;;
-    esac
-
-    # Detect operating system
-    case "$(uname -s)" in
-        Linux)
-            os="unknown-linux-gnu"
-            ;;
-        Darwin)
-            os="apple-darwin"
-            ;;
-        *)
-            print_error "Unsupported operating system: $(uname -s)"
-            print_info "Supported operating systems: Linux, macOS"
-            exit 1
-            ;;
-    esac
-
-    target="${arch}-${os}"
-    echo "$target"
+    echo -e "${CYAN}🚀 $1${NC}" >&2
 }
 
 # Function to check if command exists
@@ -143,7 +56,7 @@ download_file() {
         wget -q "$url" -O "$output"
     else
         print_error "Neither curl nor wget found. Please install one of them."
-        exit 1
+        return 1
     fi
 }
 
@@ -159,17 +72,110 @@ create_temp_dir() {
     echo "$temp_dir"
 }
 
+# Function to get latest release for channel
+get_latest_release() {
+    local channel="$1"
+    local api_url="https://api.github.com/repos/${GITHUB_REPO}/releases"
+    
+    print_step "Fetching latest ${channel} release information..."
+    
+    local temp_releases="/tmp/nockup-releases-$$.json"
+    
+    print_info "Downloading release list from: $api_url"
+    if ! download_file "$api_url" "$temp_releases"; then
+        print_error "Failed to fetch release information from GitHub"
+        return 1
+    fi
+    
+    print_info "Parsing release information..."
+    
+    if [[ ! -s "$temp_releases" ]]; then
+        print_error "Downloaded release file is empty"
+        rm -f "$temp_releases"
+        return 1
+    fi
+    
+    # Extract latest tag - allow for optional whitespace after colon
+    local latest_tag=""
+    latest_tag=$(grep -o "\"tag_name\"[[:space:]]*:[[:space:]]*\"${channel}-build-[^\"]*\"" "$temp_releases" 2>/dev/null | \
+                sed 's/"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)"/\1/' | head -1) || true
+    
+    if [[ -z "$latest_tag" ]]; then
+        print_error "No ${channel} releases found"
+        print_info "Looking for tags matching: ${channel}-build-*"
+        print_info "Available tags:"
+        grep -o "\"tag_name\"[[:space:]]*:[[:space:]]*\"[^\"]*\"" "$temp_releases" 2>/dev/null | \
+            sed 's/"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)"/\1/' | head -5 >&2 || echo "  (none found)" >&2
+        rm -f "$temp_releases"
+        return 1
+    fi
+    
+    print_info "Found release tag: $latest_tag"
+    
+    # Extract version - allow for optional whitespace
+    local version=""
+    version=$(grep -B 2 "\"tag_name\"[[:space:]]*:[[:space:]]*\"${latest_tag}\"" "$temp_releases" 2>/dev/null | \
+              grep -o "\"name\"[[:space:]]*:[[:space:]]*\"[^\"]*\"" | \
+              sed 's/"name"[[:space:]]*:[[:space:]]*"\([^"]*\)"/\1/' | head -1) || true
+    
+    if [[ -z "$version" ]]; then
+        version=$(echo "$latest_tag" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+') || version="latest"
+    fi
+    
+    print_info "Version: $version"
+    
+    rm -f "$temp_releases"
+    
+    echo "$latest_tag|$version"
+}
+
+# Function to detect platform and architecture
+detect_platform() {
+    local arch
+    local os
+    local target
+
+    case "$(uname -m)" in
+        x86_64|amd64)
+            arch="x86_64"
+            ;;
+        arm64|aarch64)
+            arch="aarch64"
+            ;;
+        *)
+            print_error "Unsupported architecture: $(uname -m)"
+            print_info "Supported architectures: x86_64, aarch64"
+            exit 1
+            ;;
+    esac
+
+    case "$(uname -s)" in
+        Linux)
+            os="unknown-linux-gnu"
+            ;;
+        Darwin)
+            os="apple-darwin"
+            ;;
+        *)
+            print_error "Unsupported operating system: $(uname -s)"
+            print_info "Supported operating systems: Linux, macOS"
+            exit 1
+            ;;
+    esac
+
+    target="${arch}-${os}"
+    echo "$target"
+}
+
 # Function to setup toolchain directory with channel manifests
 setup_toolchain() {
     local toolchain_dir="$HOME/.nockup/toolchains"
     
-    # Create toolchain directory if it doesn't exist
     mkdir -p "$toolchain_dir"
     
     print_step "Setting up toolchain directory"
     print_info "Fetching latest channel manifests from GitHub releases"
     
-    # Function to get latest manifest for a channel
     get_latest_manifest() {
         local channel="$1"
         local manifest_file="${channel}-manifest.toml"
@@ -177,21 +183,17 @@ setup_toolchain() {
         
         print_info "Fetching latest ${channel} manifest..."
         
-        # Get latest release for this channel
         local api_url="https://api.github.com/repos/sigilante/nockchain/releases"
         local temp_releases="/tmp/releases_${channel}.json"
         
-        if ! download_file "$api_url" "$temp_releases" 2>/dev/null; then
+        if ! download_file "$api_url" "$temp_releases"; then
             print_warning "Failed to fetch releases from GitHub API for ${channel}"
             return 1
         fi
         
-        # Extract latest tag for this channel
         local latest_tag=""
-        if command_exists grep && command_exists sed; then
-            latest_tag=$(grep -o "\"tag_name\":\"${channel}-build-[^\"]*\"" "$temp_releases" | \
-                        sed 's/"tag_name":"\([^"]*\)"/\1/' | head -1)
-        fi
+        latest_tag=$(grep -o "\"tag_name\":\"${channel}-build-[^\"]*\"" "$temp_releases" 2>/dev/null | \
+                    sed 's/"tag_name":"\([^"]*\)"/\1/' | head -1) || true
         
         rm -f "$temp_releases"
         
@@ -203,7 +205,7 @@ setup_toolchain() {
         local manifest_url="https://github.com/sigilante/nockchain/releases/download/${latest_tag}/${manifest_file}"
         
         print_info "Downloading from: $manifest_url"
-        if download_file "$manifest_url" "$output_file" 2>/dev/null; then
+        if download_file "$manifest_url" "$output_file"; then
             print_success "Downloaded: channel-nockup-${channel}.toml"
             return 0
         else
@@ -212,7 +214,6 @@ setup_toolchain() {
         fi
     }
     
-    # Download stable and nightly manifests
     local channels=("stable" "nightly")
     local success_count=0
     
@@ -228,7 +229,6 @@ setup_toolchain() {
         if get_latest_manifest "$channel"; then
             ((success_count++))
         else
-            # Create minimal fallback for stable channel only
             if [[ "$channel" == "stable" ]]; then
                 print_info "Creating minimal channel-nockup-stable.toml fallback"
                 cat > "$output_file" << EOF
@@ -242,6 +242,7 @@ nockup = "$VERSION"
 hoon = "0.1.0"
 hoonc = "0.2.0"
 EOF
+                ((success_count++))
             fi
         fi
     done
@@ -255,10 +256,8 @@ setup_config() {
     local config_dir="$HOME/.nockup"
     local config_file="$config_dir/config.toml"
     
-    # Create config directory if it doesn't exist
     mkdir -p "$config_dir"
     
-    # Check if config file already exists
     if [[ -f "$config_file" ]]; then
         print_info "Config file already exists at: $config_file"
         return 0
@@ -267,30 +266,24 @@ setup_config() {
     print_step "Downloading default config file"
     print_info "Downloading from: $CONFIG_URL"
     
-    # Download the default config
     if download_file "$CONFIG_URL" "$config_file"; then
         print_success "Downloaded default config to: $config_file"
     else
-        print_error "Failed to download default config file"
-        
-        # Create a minimal config file as fallback
-        print_warning "Creating minimal fallback config file"
+        print_warning "Failed to download default config file, creating fallback"
         cat > "$config_file" << EOF
 # Nockup configuration file
-[default]
 channel = "$CHANNEL"
-version = "$VERSION"
+architecture = "$(uname -m)"
 EOF
         print_info "Created minimal config at: $config_file"
     fi
 }
 
-# Function to add to PATH (generic version)
+# Function to add to PATH
 add_to_path() {
     local bin_dir="$1"
     local shell_rc=""
 
-    # Determine the appropriate shell configuration file
     if [[ -n "${BASH_VERSION:-}" ]]; then
         shell_rc="$HOME/.bashrc"
     elif [[ -n "${ZSH_VERSION:-}" ]]; then
@@ -300,19 +293,15 @@ add_to_path() {
     elif [[ "$SHELL" == *"bash"* ]]; then
         shell_rc="$HOME/.bashrc"
     else
-        # Try .profile as universal fallback
         shell_rc="$HOME/.profile"
     fi
 
     local path_entry="export PATH=\"$bin_dir:\$PATH\""
     
-    # Check if already in shell rc
     if [[ -f "$shell_rc" ]] && grep -q "$path_entry" "$shell_rc" 2>/dev/null; then
         print_info "PATH already configured in $shell_rc"
     else
-        # Try to add to shell rc file
         if [[ -w "$(dirname "$shell_rc")" ]]; then
-            # Create file if it doesn't exist
             touch "$shell_rc"
             
             echo "" >> "$shell_rc"
@@ -327,13 +316,12 @@ add_to_path() {
         fi
     fi
     
-    # Create activation script
     local activate_script="$HOME/.nockup/activate.sh"
-    cat > "$activate_script" << EOF
+    cat > "$activate_script" << 'EOF'
 #!/bin/bash
 # Nockup environment activation script
 # Usage: source ~/.nockup/activate.sh
-export PATH="$bin_dir:\$PATH"
+export PATH="$HOME/.nockup/bin:$PATH"
 echo "✅ Nockup environment activated!"
 echo "📦 nockup is now available in PATH"
 EOF
@@ -351,7 +339,6 @@ verify_binary() {
         return 1
     fi
 
-    # Try to run nockup --help to verify it works
     if "$binary_path" --help >/dev/null 2>&1; then
         print_success "Binary verification successful"
         return 0
@@ -363,76 +350,61 @@ verify_binary() {
 
 # Function to setup GPG key (Linux only)
 setup_gpg_key() {
-    # Only setup GPG on Linux systems
     if [[ "$(uname -s)" != "Linux" ]]; then
-        print_info "Skipping GPG setup on non-Linux system"
         return 0
     fi
     
-    # Check if GPG is available
     if ! command_exists gpg; then
-        print_warning "GPG not found, skipping key verification"
-        print_info "For enhanced security, consider installing gnupg"
         return 0
     fi
     
     local gpg_key="A6FFD2DB7D4C9710"
-    print_step "Setting up GPG key for binary verification"
     
-    # Check if key is already imported
     if gpg --list-keys "$gpg_key" >/dev/null 2>&1; then
-        print_info "GPG key already imported"
         return 0
     fi
     
-    # Try to import the key
-    if gpg --keyserver keyserver.ubuntu.com --recv-keys "$gpg_key" >/dev/null 2>&1; then
-        print_success "GPG key imported successfully"
-    else
-        print_warning "Failed to import GPG key"
-        print_info "Binary verification will be skipped"
-    fi
+    gpg --keyserver keyserver.ubuntu.com --recv-keys "$gpg_key" >/dev/null 2>&1 || true
 }
 
 # Main installation function
 main() {
     print_step "Starting Nockup installation"
     print_info "This installer works on Linux and macOS systems"
-    echo ""
+    echo "" >&2
     
-    # Fetch latest release information FIRST
+    # Try to get latest release
     local release_info
+    set +e  # Temporarily disable exit on error
     release_info=$(get_latest_release "$CHANNEL")
-    if [[ $? -ne 0 ]]; then
+    local get_release_status=$?
+    set -e  # Re-enable exit on error
+    
+    if [[ $get_release_status -ne 0 ]] || [[ -z "$release_info" ]]; then
         print_error "Failed to fetch latest release information"
+        print_info "Please check your internet connection and try again"
         exit 1
     fi
     
-    # Parse release info and set VERSION
     RELEASE_TAG=$(echo "$release_info" | cut -d'|' -f1)
     VERSION=$(echo "$release_info" | cut -d'|' -f2)
     
-    print_info "Latest ${CHANNEL} release: ${RELEASE_TAG}"
-    print_info "Version: ${VERSION}"
+    print_success "Latest ${CHANNEL} release: ${RELEASE_TAG}"
+    print_success "Version: ${VERSION}"
+    echo "" >&2
     
-    # NOW setup config file and toolchain (they can use VERSION)
     setup_config
     setup_toolchain
-    
-    # Setup GPG key if on Linux
     setup_gpg_key
 
-    # Detect platform
     local target
     target=$(detect_platform)
     print_info "Target platform: $target"
 
-    # Create temporary directory
     local temp_dir
     temp_dir=$(create_temp_dir)
     print_info "Using temporary directory: $temp_dir"
 
-    # Cleanup function
     cleanup() {
         if [[ -n "${temp_dir:-}" ]]; then
             rm -rf "$temp_dir"
@@ -440,15 +412,13 @@ main() {
     }
     trap cleanup EXIT
 
-    # Construct download URL
-    local archive_name="nockup-${CHANNEL}-${VERSION}-${target}.tar.gz"
+    local archive_name="nockup-${CHANNEL}-latest-${target}.tar.gz"
     local download_url="https://github.com/${GITHUB_REPO}/releases/download/${RELEASE_TAG}/${archive_name}"
     local archive_path="${temp_dir}/${archive_name}"
 
     print_step "Downloading Nockup binary"
     print_info "URL: $download_url"
 
-    # Download the archive
     if ! download_file "$download_url" "$archive_path"; then
         print_error "Failed to download Nockup binary"
         print_info "Please check:"
@@ -459,7 +429,6 @@ main() {
 
     print_success "Downloaded Nockup archive"
 
-    # Extract the archive
     print_step "Extracting Nockup binary"
     
     if ! tar -xzf "$archive_path" -C "$temp_dir"; then
@@ -467,39 +436,33 @@ main() {
         exit 1
     fi
 
-    # Find the nockup binary in the extracted files
     local nockup_binary
     nockup_binary=$(find "$temp_dir" -name "nockup" -type f | head -1)
     
     if [[ -z "$nockup_binary" ]]; then
         print_error "Could not find nockup binary in extracted archive"
         print_info "Archive contents:"
-        ls -la "$temp_dir"
+        ls -la "$temp_dir" >&2
         exit 1
     fi
 
-    print_success "Extracted Nockup binary: $nockup_binary"
+    print_success "Extracted Nockup binary"
 
-    # Create installation directory
     local install_dir="$HOME/.nockup/bin"
     local nockup_path="$install_dir/nockup"
     
     print_step "Installing Nockup binary"
     mkdir -p "$install_dir"
     
-    # Copy binary to installation directory
     cp "$nockup_binary" "$nockup_path"
     chmod +x "$nockup_path"
     
     print_success "Installed Nockup to: $nockup_path"
 
-    # Verify the binary works
     verify_binary "$nockup_path"
 
-    # Add to PATH
     add_to_path "$install_dir"
 
-    # Set channel and run install
     print_step "Setting channel to $CHANNEL and running installation"
     if "$nockup_path" channel set "$CHANNEL" && "$nockup_path" install; then
         print_success "Nockup installation completed successfully!"
@@ -511,43 +474,25 @@ main() {
         exit 1
     fi
 
-    # Final instructions
-    echo ""
+    echo "" >&2
     print_success "🎉 Nockup has been successfully installed!"
-    echo ""
+    echo "" >&2
     
-    # Provide command to activate PATH immediately
-    echo -e "${YELLOW}═══════════════════════════════════════════════════════════════${NC}"
-    echo -e "${GREEN}To use nockup immediately in this terminal, run:${NC}"
-    echo ""
-    echo -e "  ${CYAN}export PATH=\"$install_dir:\$PATH\"${NC}"
-    echo ""
-    echo -e "${GREEN}Or copy and run this command:${NC}"
-    echo ""
-    echo -e "  ${CYAN}eval 'export PATH=\"$install_dir:\$PATH\"'${NC}"
-    echo ""
-    echo -e "${YELLOW}═══════════════════════════════════════════════════════════════${NC}"
-    echo ""
+    echo -e "${YELLOW}═══════════════════════════════════════════════════════════════${NC}" >&2
+    echo -e "${GREEN}To use nockup immediately in this terminal, run:${NC}" >&2
+    echo "" >&2
+    echo -e "  ${CYAN}export PATH=\"$install_dir:\$PATH\"${NC}" >&2
+    echo "" >&2
+    echo -e "${YELLOW}═══════════════════════════════════════════════════════════════${NC}" >&2
+    echo "" >&2
     
     print_info "Next steps:"
-    print_info "  1. Run the export command above to use nockup immediately, OR"
-    print_info "  2. Restart your shell to automatically load the updated PATH"
-    print_info "  3. Verify installation: nockup --help"
-    print_info "  4. Create a project: nockup start <project-name>"
-    print_info "  5. Build and run: nockup build <project> && nockup run <project>"
-    echo ""
-    print_info "Installation directory: $install_dir"
-    print_info "Configuration file: $HOME/.nockup/config.toml"
-    print_info "Activation script: source $HOME/.nockup/activate.sh"
-    echo ""
-    
-    # Write the export command to a temp file for easy copy
-    local export_cmd_file="$HOME/.nockup/.last_install_export"
-    echo "export PATH=\"$install_dir:\$PATH\"" > "$export_cmd_file"
-    chmod +x "$export_cmd_file"
+    print_info "  1. Run the export command above, OR restart your shell"
+    print_info "  2. Verify installation: nockup --help"
+    print_info "  3. Create a project: nockup start <project-name>"
+    echo "" >&2
 }
 
-# Check if we're being sourced or executed
 if [[ "${BASH_SOURCE[0]:-$0}" == "${0}" ]]; then
     main "$@"
 fi

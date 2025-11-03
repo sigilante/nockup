@@ -188,24 +188,24 @@ jobs:
           
           # Create archives with channel and per-crate versions
           if [ -f dist/hoon ]; then
-            tar -czf dist/hoon-${CHANNEL}-${HOON_VERSION}-${{ matrix.target }}.tar.gz -C dist hoon
+            tar -czf dist/hoon-${CHANNEL}-latest-${{ matrix.target }}.tar.gz -C dist hoon
             # Sign the archive if this is a release build
             if [[ "$SHOULD_SIGN" == "true" ]]; then
-              gpg --batch --yes --pinentry-mode loopback --detach-sign --armor --default-key "${{ secrets.GPG_KEY_ID }}" dist/hoon-${CHANNEL}-${HOON_VERSION}-${{ matrix.target }}.tar.gz
+              gpg --batch --yes --pinentry-mode loopback --detach-sign --armor --default-key "${{ secrets.GPG_KEY_ID }}" dist/hoon-${CHANNEL}-latest-${{ matrix.target }}.tar.gz
             fi
           fi
           if [ -f dist/hoonc ]; then
-            tar -czf dist/hoonc-${CHANNEL}-${HOONC_VERSION}-${{ matrix.target }}.tar.gz -C dist hoonc
+            tar -czf dist/hoonc-${CHANNEL}-latest-${{ matrix.target }}.tar.gz -C dist hoonc
             # Sign the archive if this is a release build
             if [[ "$SHOULD_SIGN" == "true" ]]; then
-              gpg --batch --yes --pinentry-mode loopback --detach-sign --armor --default-key "${{ secrets.GPG_KEY_ID }}" dist/hoonc-${CHANNEL}-${HOONC_VERSION}-${{ matrix.target }}.tar.gz
+              gpg --batch --yes --pinentry-mode loopback --detach-sign --armor --default-key "${{ secrets.GPG_KEY_ID }}" dist/hoonc-${CHANNEL}-latest-${{ matrix.target }}.tar.gz
             fi
           fi
           if [ -f dist/nockup ]; then
-            tar -czf dist/nockup-${CHANNEL}-${NOCKUP_VERSION}-${{ matrix.target }}.tar.gz -C dist nockup
+            tar -czf dist/nockup-${CHANNEL}-latest-${{ matrix.target }}.tar.gz -C dist nockup
             # Sign the archive if this is a release build
             if [[ "$SHOULD_SIGN" == "true" ]]; then
-              gpg --batch --yes --pinentry-mode loopback --detach-sign --armor --default-key "${{ secrets.GPG_KEY_ID }}" dist/nockup-${CHANNEL}-${NOCKUP_VERSION}-${{ matrix.target }}.tar.gz
+              gpg --batch --yes --pinentry-mode loopback --detach-sign --armor --default-key "${{ secrets.GPG_KEY_ID }}" dist/nockup-${CHANNEL}-latest-${{ matrix.target }}.tar.gz
             fi
           fi
           
