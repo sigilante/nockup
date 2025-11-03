@@ -436,33 +436,3 @@ jobs:
             ${{ steps.channel.outputs.channel }}-manifest.toml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
-      - name: Commit manifests to repository
-        run: |
-          # Create toolchains directory if it doesn't exist
-          mkdir -p crates/nockup/toolchains
-          
-          # Copy the channel manifest
-          cp ${{ steps.channel.outputs.channel }}-manifest.toml crates/nockup/toolchains/
-          
-          # Also copy individual target manifests for reference
-          for manifest in toolchains/*-manifest.toml; do
-            if [ -f "$manifest" ]; then
-              cp "$manifest" crates/nockup/toolchains/
-            fi
-          done
-          
-          # Configure git
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          
-          # Commit and push if there are changes
-          git add crates/nockup/toolchains/
-          if ! git diff --staged --quiet; then
-            SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
-            git commit -m "chore(nockup): update ${{ steps.channel.outputs.channel }} toolchain manifests for ${SHORT_SHA}"
-            git push origin HEAD:${{ github.ref_name }}
-            echo "✓ Committed updated manifests to repository"
-          else
-            echo "No changes to manifests"
-          fi
