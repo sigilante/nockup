@@ -264,16 +264,16 @@ jobs:
           
           # Generate manifests for each binary that was built
           CHANNEL="${{ steps.channel.outputs.channel }}"
-          if [ -f "dist/hoon-${CHANNEL}-${{ steps.cargo-versions.outputs.hoon_version }}-${{ matrix.target }}.tar.gz" ]; then
-            ./scripts/generate-manifest.sh hoon ${{ matrix.target }} "${CHANNEL}" "${{ steps.cargo-versions.outputs.hoon_version }}" > "hoon-${{ matrix.target }}-manifest.toml"
+          if [ -f "dist/hoon-${CHANNEL}-latest-${{ matrix.target }}.tar.gz" ]; then
+            ./scripts/generate-manifest.sh hoon ${{ matrix.target }} "${CHANNEL}" "latest" > "hoon-${{ matrix.target }}-manifest.toml"
             echo "Generated manifest for hoon"
           fi
-          if [ -f "dist/hoonc-${CHANNEL}-${{ steps.cargo-versions.outputs.hoonc_version }}-${{ matrix.target }}.tar.gz" ]; then
-            ./scripts/generate-manifest.sh hoonc ${{ matrix.target }} "${CHANNEL}" "${{ steps.cargo-versions.outputs.hoonc_version }}" > "hoonc-${{ matrix.target }}-manifest.toml"
+          if [ -f "dist/hoonc-${CHANNEL}-latest-${{ matrix.target }}.tar.gz" ]; then
+            ./scripts/generate-manifest.sh hoonc ${{ matrix.target }} "${CHANNEL}" "latest" > "hoonc-${{ matrix.target }}-manifest.toml"
             echo "Generated manifest for hoonc"
           fi
-          if [ -f "dist/nockup-${CHANNEL}-${{ steps.cargo-versions.outputs.nockup_version }}-${{ matrix.target }}.tar.gz" ]; then
-            ./scripts/generate-manifest.sh nockup ${{ matrix.target }} "${CHANNEL}" "${{ steps.cargo-versions.outputs.nockup_version }}" > "nockup-${{ matrix.target }}-manifest.toml"
+          if [ -f "dist/nockup-${CHANNEL}-latest-${{ matrix.target }}.tar.gz" ]; then
+            ./scripts/generate-manifest.sh nockup ${{ matrix.target }} "${CHANNEL}" "latest" > "nockup-${{ matrix.target }}-manifest.toml"
             echo "Generated manifest for nockup"
           fi
 
@@ -292,11 +292,11 @@ jobs:
           tag_name: ${{ steps.channel.outputs.channel }}-build-${{ github.sha }}
           name: ${{ steps.channel.outputs.channel }} Build ${{ github.sha }}
           files: |
-            dist/hoon-${{ steps.channel.outputs.channel }}-${{ steps.cargo-versions.outputs.hoon_version }}-${{ matrix.target }}.tar.gz
+            dist/hoon-${{ steps.channel.outputs.channel }}-latest-${{ matrix.target }}.tar.gz
             ${{ matrix.os == 'ubuntu-latest' && format('dist/hoon-{0}-latest-{2}.tar.gz.asc', steps.channel.outputs.channel, steps.cargo-versions.outputs.hoon_version, matrix.target) || '' }}
-            dist/hoonc-${{ steps.channel.outputs.channel }}-${{ steps.cargo-versions.outputs.hoonc_version }}-${{ matrix.target }}.tar.gz
+            dist/hoonc-${{ steps.channel.outputs.channel }}-latest-${{ matrix.target }}.tar.gz
             ${{ matrix.os == 'ubuntu-latest' && format('dist/hoonc-{0}-latest-{2}.tar.gz.asc', steps.channel.outputs.channel, steps.cargo-versions.outputs.hoonc_version, matrix.target) || '' }}
-            dist/nockup-${{ steps.channel.outputs.channel }}-${{ steps.cargo-versions.outputs.nockup_version }}-${{ matrix.target }}.tar.gz
+            dist/nockup-${{ steps.channel.outputs.channel }}-latest-${{ matrix.target }}.tar.gz
             ${{ matrix.os == 'ubuntu-latest' && format('dist/nockup-{0}-latest-{2}.tar.gz.asc', steps.channel.outputs.channel, steps.cargo-versions.outputs.nockup_version, matrix.target) || '' }}
 
   collate-manifests:
