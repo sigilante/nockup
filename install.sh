@@ -16,6 +16,8 @@ NC='\033[0m' # No Color
 GITHUB_REPO="sigilante/nockchain"
 # RELEASE_TAG="stable-build-9e71fb71211fefe0f2dd5173d2ee83d6cbe73d85"
 # VERSION="0.3.0"
+VERSION="unknown"  # Default value, will be updated
+RELEASE_TAG="unknown"  # Default value, will be updated
 CHANNEL="stable"
 CONFIG_URL="https://raw.githubusercontent.com/sigilante/nockup/refs/heads/master/default-config.toml"
 
