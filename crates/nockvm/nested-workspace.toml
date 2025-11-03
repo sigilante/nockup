@@ -1,0 +1,33 @@
+[workspace]
+members = [
+    "rust/assert_no_alloc",
+    "rust/ibig",
+    "rust/nockvm",
+    "rust/nockvm_crypto",
+    "rust/nockvm_macros",
+    "rust/murmur3",
+    "rust/murmur3/murmur3-sys",
+]
+resolver = "2"
+
+[workspace.dependencies]
+ibig.path = "rust/ibig"
+nockvm_crypto.path = "rust/nockvm_crypto"
+nockvm_macros.path = "rust/nockvm_macros"
+assert_no_alloc = { path = "rust/assert_no_alloc", features = ["warn_debug"] }
+murmur3.path = "rust/murmur3"
+
+bitvec = "1.0.0"
+criterion = "0.4"
+either = "1.9.0"
+intmap = "3.1.0"
+json = "0.12.4"
+lazy_static = "1.4.0"
+libc = "0.2.126"
+memmap2 = "^0.9.5"
+num-derive = "0.3"
+num-traits = "0.2"
+rand = "0.8.5"
+signal-hook = "0.3"
+static_assertions = "1.1.0"
+thiserror = "1.0.64"

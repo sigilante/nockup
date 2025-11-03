@@ -1,0 +1,9 @@
+array_width = 80
+max_width = 100
+# use_small_heuristics = "Max"
+short_array_element_width_threshold = 90
+imports_granularity = "Module"
+reorder_imports = true
+imports_indent = "Block"
+newline_style = "Unix"
+group_imports = "StdExternalCrate"

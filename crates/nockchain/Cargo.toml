@@ -1,0 +1,63 @@
+[package]
+name = "nockchain"
+build = "build.rs"
+publish = false
+version.workspace = true
+edition.workspace = true
+
+[features]
+bazel_build = []
+jemalloc = ["tikv-jemallocator"]
+tracing-heap = ["tikv-jemallocator", "tracy-client"]
+
+[dependencies]
+hoonc.workspace = true
+kernels = { workspace = true, features = ["dumb", "miner"] }
+nockapp.workspace = true
+nockapp-grpc.workspace = true
+nockvm.workspace = true
+nockvm_macros.workspace = true
+noun-serde.workspace = true
+nockchain-types.workspace = true
+nockchain-math.workspace = true
+
+bitcoincore-rpc.workspace = true
+bs58.workspace = true
+clap.workspace = true
+equix.workspace = true
+futures.workspace = true
+ibig.workspace = true
+libp2p = { workspace = true, features = [
+    "ping",
+    "kad",
+    "identify",
+    "quic",
+    "tls",
+    "dns",
+    "tokio",
+    "macros",
+    "request-response",
+    "cbor",
+] }
+nockchain-libp2p-io.workspace = true
+num_cpus = { workspace = true }
+rand = { workspace = true }
+tempfile = { workspace = true }
+termcolor.workspace = true
+tikv-jemallocator = { workspace = true, optional = true }
+tokio = { workspace = true, features = ["full"] }
+tracing.workspace = true
+tracing-test.workspace = true
+tracy-client = { workspace = true, optional = true }
+
+zkvm-jetpack.workspace = true
+
+[build-dependencies]
+vergen = { workspace = true, features = [
+    "build",
+    "cargo",
+    "git",
+    "gitcl",
+    "rustc",
+    "si",
+] }

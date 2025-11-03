@@ -1,0 +1,35 @@
+[package]
+name = "nockvm_crypto"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+ibig.workspace = true
+
+# ed25519
+curve25519-dalek = { workspace = true, default-features = false, optional = true }
+ed25519-dalek = { workspace = true, default-features = false, optional = true }
+x25519-dalek = { workspace = true, default-features = false, optional = true }
+
+# aes_siv
+aes = { workspace = true, default-features = false, optional = true }
+aes-siv = { workspace = true, default-features = false, optional = true }
+
+# sha
+sha1 = { workspace = true, default-features = false, optional = true }
+sha2 = { workspace = true, default-features = false, optional = true }
+
+# test_vs_urcrypt
+# XX: can be removed once stable
+# rand = { version = "0.8.4", default-features = false, features = ["getrandom"], optional = true }
+# urcrypt-sys = { version = "0.1.1", optional = true }
+
+[features]
+default = ["aes_siv", "ed25519", "sha"]
+aes_siv = ["aes", "aes-siv"]
+ed25519 = ["curve25519-dalek", "ed25519-dalek", "x25519-dalek"]
+sha = ["sha1", "sha2"]
+# XX: can be removed once stable
+# test_vs_urcrypt = ["urcrypt-sys", "rand"]

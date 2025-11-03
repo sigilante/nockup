@@ -1,0 +1,60 @@
+[package]
+name = "nockvm"
+version = "0.1.0"
+authors = ["Edward Amsden <edward@tlon.io>"]
+edition = "2021"
+
+[lints.clippy]
+missing_safety_doc = "allow"
+
+# Please keep these alphabetized
+[dependencies]
+ibig.workspace = true
+murmur3.workspace = true
+nockvm_crypto = { workspace = true }
+nockvm_macros.workspace = true
+
+bitvec = { workspace = true }
+either = { workspace = true }
+intmap = { workspace = true }
+json = { workspace = true }
+lazy_static = { workspace = true }
+libc = { workspace = true }
+memmap2 = { workspace = true }
+num-derive = { workspace = true }
+num-traits = { workspace = true }
+rand = { workspace = true }
+signal-hook = { workspace = true }
+slotmap = { workspace = true }
+static_assertions = { workspace = true }
+thiserror = { workspace = true }
+tracing.workspace = true
+tracing-core.workspace = true
+
+[dev-dependencies]
+criterion = { workspace = true }
+
+[build-dependencies]
+autotools = "0.2"
+cc = "1.0"
+
+# run with e.g. 'cargo build --features check_forwarding,check_acyclic'
+[features]
+default = ["mmap"]
+nock_opcode_census = []
+malloc = []
+mmap = []
+# Dangerous
+no_check_oom = []
+# FOR DEBUGGING MEMORY ISSUES ONLY
+check_all = ["check_acyclic", "check_forwarding", "check_junior"]
+check_acyclic = []
+check_forwarding = []
+check_junior = []
+sham_hints = []
+stop_for_debug = []
+hint_dont = []
+
+[[bench]]
+name = "hoonc_hotspots"
+harness = false

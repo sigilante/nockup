@@ -1,0 +1,15 @@
+[package]
+name = "murmur3"
+version = "0.5.2"
+authors = ["Stu Small <stuart.alan.small@gmail.com>"]
+description = "A rust implementation of Murmur3 hash"
+repository = "https://github.com/stusmall/murmur3"
+keywords = ["hash", "murmur3", "murmur"]
+license = "MIT/Apache-2.0"
+edition = "2021"
+
+[dependencies]
+
+[dev-dependencies]
+murmur3-sys = { path = "./murmur3-sys" }
+quickcheck = "1.0.3"

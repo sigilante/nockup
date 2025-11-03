@@ -1,0 +1,71 @@
+[package]
+name = "nockapp"
+version.workspace = true
+edition.workspace = true
+
+[features]
+default = ["slog-tracing", "tracing-tracy"]
+slog-tracing = []
+trait-alias = []
+bazel_build = []
+tracing-tracy = ["dep:tracing-tracy"]
+
+[dependencies]
+nockvm = { workspace = true }
+nockvm_macros = { workspace = true }
+
+anyhow = { workspace = true }
+async-trait = { workspace = true }
+axum = { workspace = true }
+axum-server = { workspace = true }
+bincode = { workspace = true, features = ["serde"] }
+bitvec = { workspace = true, default-features = false, features = ["alloc"] }
+blake3 = { workspace = true }
+byteorder = { workspace = true }
+bytes = { workspace = true, features = ["serde"] }
+chrono = { workspace = true }
+clap = { workspace = true, features = ["derive", "cargo", "color", "env"] }
+config = { workspace = true }
+dirs = { workspace = true }
+either = { workspace = true }
+futures = { workspace = true }
+getrandom = { workspace = true }
+gnort = { workspace = true }
+ibig = { workspace = true }
+instant-acme = { workspace = true }
+intmap = { workspace = true }
+opentelemetry.workspace = true
+opentelemetry-otlp = { workspace = true, features = ["grpc-tonic"] }
+opentelemetry_sdk.workspace = true
+rand = { workspace = true }
+rcgen = { workspace = true }
+rustls = { workspace = true }
+rustls-pemfile = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+signal-hook = { workspace = true }
+signal-hook-tokio = { workspace = true, features = ["futures-v0_3"] }
+tempfile = { workspace = true }
+termimad = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true, features = ["time", "sync", "signal"] }
+tokio-rustls = { workspace = true }
+tokio-util = { workspace = true, features = ["rt"] }
+tonic.workspace = true
+tower-http = { workspace = true }
+tracing = { workspace = true }
+tracing-opentelemetry.workspace = true
+tracing-subscriber = { workspace = true }
+tracing-test = { workspace = true }
+tracing-tracy = { workspace = true, optional = true, features = [
+    "enable",
+    "manual-lifetime",
+    "ondemand",
+] }
+webpki-roots = { workspace = true }
+x509-parser = { workspace = true }
+yaque = { workspace = true }
+
+[lib]
+name = "nockapp"
+path = "src/lib.rs"

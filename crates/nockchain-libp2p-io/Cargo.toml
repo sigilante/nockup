@@ -1,0 +1,48 @@
+[package]
+name = "nockchain-libp2p-io"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+nockapp = { workspace = true }
+nockvm = { workspace = true }
+nockvm_macros = { workspace = true }
+noun-serde = { workspace = true }
+zkvm-jetpack = { workspace = true }
+
+bs58 = { workspace = true }
+bytes = { workspace = true }
+config = { workspace = true }
+dashmap = { workspace = true }
+either = { workspace = true }
+equix.workspace = true
+futures = { workspace = true }
+gnort = { workspace = true }
+hickory-proto = { workspace = true }
+hickory-resolver = { workspace = true }
+ibig = { workspace = true }
+libp2p = { workspace = true, features = [
+  "ping",
+  "kad",
+  "identify",
+  "quic",
+  "tls",
+  "dns",
+  "tokio",
+  "macros",
+  "request-response",
+  "memory-connection-limits",
+  "cbor",
+  "peer-store",
+] }
+rand = { workspace = true, features = ["std"] }
+serde = { workspace = true, features = ["alloc", "derive", "serde_derive"] }
+serde_bytes = { workspace = true, features = ["alloc"] }
+tokio = { workspace = true, features = ["full"] }
+tracing = { workspace = true }
+void = { workspace = true }
+
+[dev-dependencies]
+quickcheck = { workspace = true }
+serde_cbor = { workspace = true }
+cbor4ii = { workspace = true, features = ["serde1", "use_std"] }

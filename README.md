@@ -1,452 +1,383 @@
-# *Nockup*: the NockApp channel installer
+# Nockchain
 
-*Nockup* is a command-line tool to produce [NockApps](https://github.com/zorp-corp/nockchain) and manage project builds and dependencies.
+**Nockchain is programmable sound money that scales.**
 
-> 🚨 **Status**:  Pre-release development.  Nockup works but does not yet offer a stable interface and user experience.
+Nockchain is a ZK-Proof of Work L1 that combines sound money incentives with modern research into data availability, app-rollups, and intent-based composability.
 
-[The NockApp platform](https://github.com/zorp-corp/nockchain) is a general-purpose framework for building apps that run using the Nock instruction set architecture.  It is particularly well-suited for use with [Nockchain](https://nockchain.org) and the Nock ZKVM.
 
-![](./img/hero.jpg)
+*Nockchain is entirely experimental and many parts are unaudited. We make no representations or guarantees as to the behavior of this software.*
 
-## Installation
 
-### From Script
+## Setup
 
-> 🚨 **Important**:  During pre-release development, this will fail due to hash mismatches on the a binaries.  Use the "From Source" instructions instead.
+Install `rustup` by following their instructions at: [https://rustup.rs/](https://rustup.rs/)
 
-Prerequisites: Rust toolchain (`rustup`, `cargo`, &c.), Git.
+Ensure you have these dependencies installed if running on Debian/Ubuntu:
+```
+sudo apt update
+sudo apt install clang llvm-dev libclang-dev make protobuf-compiler
+```
+Clone the repo and cd into it:
+```
+git clone https://github.com/zorp-corp/nockchain.git && cd nockchain
+```
+
+Copy the example environment file and rename it to `.env`:
+```
+cp .env_example .env
+```
+
+### For Linux
+
+Linux users **must** manually set their memory overcommit status:
+
+```
+# Enable always-overcommit:
+echo 'vm.overcommit_memory=1' | sudo tee /etc/sysctl.d/99-overcommit.conf
+
+# Reload kernel parameters:
+sudo sysctl --system
+# or:
+sudo sysctl -p /etc/sysctl.d/99-overcommit.conf
+```
+
+## Install Hoon Compiler
+
+Install `hoonc`, the Hoon compiler:
+
+```
+make install-hoonc
+export PATH="$HOME/.cargo/bin:$PATH"
+```
+
+(If you build manually with `cargo build`, be sure to use `--release` for `hoonc`.)
+
+## Install Wallet
+
+After you've run the setup and build commands, install the wallet:
+
+```
+make install-nockchain-wallet
+export PATH="$HOME/.cargo/bin:$PATH"
+```
+
+See the nockchain-wallet [README](./crates/nockchain-wallet/README.md) for more information.
+
+
+## Install Nockchain
+
+After you've run the setup and build commands, install Nockchain:
+
+```
+make install-nockchain
+export PATH="$HOME/.cargo/bin:$PATH"
+```
+
+## Setup Keys
+
+To generate a new key pair:
+
+```
+nockchain-wallet keygen
+```
+
+This will print a new public/private key pair + chain code to the console, as well as the seed phrase for the private key.
+
+Use `.env_example` as a template and copy your pkh to the `.env` file.
+
+Then, in your `.env` file, set the `MINING_PKH` variable to the address of the v1 key you generated.
+
+```
+MINING_PKH=<address>
+```
+
+The miner will generate v1 coinbases spendable by the `MINING_PKH`.
+
+## Backup Keys
+
+To backup your keys, run:
+
+```
+nockchain-wallet export-keys
+```
+
+This will save your keys to a file called `keys.export` in the current directory.
+
+They can be imported later with:
+
+```
+nockchain-wallet import-keys --file keys.export
+```
+
+## Running Nodes
+
+Make sure your current directory is nockchain.
+
+To run a Nockchain node without mining.
+
+```
+bash ./scripts/run_nockchain_node.sh
+```
+
+To run a Nockchain node and mine to a pkh:
+
+```
+bash ./scripts/run_nockchain_miner.sh
+```
+
+For launch, make sure you run in a fresh working directory that does not include a .data.nockchain file from testing.
+
+## FAQ
+
+### What is a pkh?
+
+A pkh is a "pubkey hash", which is a shorter representation of a public key.  v1 pkhs are base58-encoded.
+
+### Can I use same pkh if running multiple miners?
+
+Yes, you can use the same pkh if running multiple miners.
+
+### How do I change the mining pkh?
+
+Run `nockchain-wallet keygen` to generate a new key pair.
+
+If you are using the Makefile workflow, copy the pkh to the `.env` file.
+
+### How do I run a testnet?
+
+To run a testnet on your machine, follow the same instructions as above, except use the fakenet scripts provided in the `scripts` directory.
+
+Here's how to set it up:
+
+```bash
+Make sure you have the most up-to-date version of Nockchain installed.
+
+Inside of the nockchain directory:
+
+# Create directories for each instance
+mkdir fakenet-hub fakenet-node
+
+# Copy .env to each directory
+cp .env fakenet-hub/
+cp .env fakenet-node/
+
+# Run each instance in its own directory with .env loaded
+cd fakenet-hub && sh ../scripts/run_nockchain_node_fakenet.sh
+cd fakenet-node && sh ../scripts/run_nockchain_miner_fakenet.sh
+```
+
+The hub script is bound to a fixed multiaddr and the node script sets that multiaddr as an initial
+peer so that nodes have a way of discovering eachother initially.
+
+You can run multiple instances using `run_nockchain_miner_fakenet.sh`, just make sure that
+you are running them from different directories because the checkpoint data is located in the
+working directory of the script.
+
+### What are the networking requirements?
+
+Nockchain requires:
+
+1. Internet.
+2. If you are behind a firewall, you need to specify the p2p ports to use and open them..
+   - Example: `nockchain --bind /ip4/0.0.0.0/udp/$PEER_PORT/quic-v1`
+3. **NAT Configuration (if you are behind one)**:
+   - If behind NAT, configure port forwarding for the peer port
+   - Use `--bind` to specify your public IP/domain
+   - Example: `nockchain --bind /ip4/1.2.3.4/udp/$PEER_PORT/quic-v1`
+
+### Why aren't Zorp peers connecting?
+
+Common reasons for peer connection failures:
+
+1. **Network Issues**:
+   - Firewall blocking P2P port
+   - NAT not properly configured
+   - Incorrect bind address
+
+2. **Configuration Issues**:
+   - Invalid peer IDs
+
+3. **Debug Steps**:
+   - Check logs for connection errors
+   - Verify port forwarding
+
+### What do outgoing connection failures mean?
+
+Outgoing connection failures can occur due to:
+
+1. **Network Issues**:
+   - Peer is offline
+   - Firewall blocking connection
+   - NAT traversal failure
+
+2. **Peer Issues**:
+   - Peer has reached connection limit
+   - Peer is blocking your IP
+
+3. **Debug Steps**:
+   - Check peer's status
+   - Verify network connectivity
+   - Check logs for specific error messages
+
+### How do I know if it's mining?
+
+You can check the logs for mining activity.
+
+If you see a line that looks like:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/sigilante/nockup/master/install.sh | bash
+[%mining-on 12.040.301.481.503.404.506 17.412.404.101.022.637.021 1.154.757.196.846.835.552 12.582.351.418.886.020.622 6.726.267.510.179.724.279]
 ```
 
-This checks for dependencies and then installs the Nockup binary and its requirements, including the GPG key used to verify binaries on Linux.  (This is from the `stable` channel by default; see [Channels](#channels) for more information.)
+### How do I check block height?
 
-### From Source
-
-Prerequisites: Rust toolchain, Git
-
-1. Install Nockchain and build `hoon` and `hoonc`.
-
-    ```sh
-    $ git clone https://github.com/zorp-corp/nockchain.git
-    $ cd nockchain
-    $ make install-hoonc
-    $ cargo install --locked --force --path crates/hoon --bin hoon
-    ```
-
-2. Install Nockup.
-
-    ```sh
-    $ git clone https://github.com/sigilante/nockup.git
-    $ cd nockup/
-    $ cargo build --release
-    ```
-
-    `nockup` builds by default in `./target/release`, so further commands to `nockup` refer to it in whatever location you have it.  `nockup install` will provide it in your `$PATH`.
-
-    Alternatively, you may install it globally using Cargo:
-
-    ```sh
-    $ cargo install --path . --locked
-    ```
-
-3. Install the GPG public key (on Linux).  Nockup **will not work** if you do not provide the public key.
-
-    ```sh
-    $ gpg --keyserver keyserver.ubuntu.com --recv-keys A6FFD2DB7D4C9710
-    ```
-
-4. Install `nockup` and dependencies.
-
-    ```sh
-    nockup install
-    ```
-
-5. Check for updates.
-
-    ```sh
-    $ nockup update
-    ```
-
-6. Before building, switch your `rustup` to `nightly` to satisfy `nockapp`/`nockvm` dependencies.
-
-    ```sh
-    rustup install nightly
-    rustup override set nightly
-    ```
-
-## Tutorial
-
-Nockup provides a command-line interface for managing NockApp projects.  It uses binaries to process manifest files to create NockApp projects from templates then build and run them.
+You can check the logs for a line like:
 
 ```sh
-# Show basic program information.
-$ nockup
-nockup version 0.0.1
-hoon   version 0.1.0
-hoonc  version 0.2.0
-current channel stable
-current architecture aarch64
-
-# Start the nockup environment.
-$ nockup install
-🚀 Setting up nockup cache directory...
-📁 Cache location: /Users/myuser/.nockup
-📁 Creating cache directory structure...
-✓ Created directory structure
-⬇️ Downloading templates from GitHub...
-Cloning into '/Users/myuser/.nockup/temp_repo'...
-remote: Enumerating objects: 36, done.
-remote: Counting objects: 100% (36/36), done.
-remote: Compressing objects: 100% (30/30), done.
-remote: Total 36 (delta 1), reused 18 (delta 0), pack-reused 0 (from 0)
-Receiving objects: 100% (36/36), 45.18 KiB | 1.56 MiB/s, done.
-Resolving deltas: 100% (1/1), done.
-✓ Templates downloaded successfully
-✅ Setup complete!
-📂 Templates are now available in: /Users/myuser/.nockup/templates
-
-# Initialize a default project.
-$ cp ~/.nockup/manifests/example-manifest.toml arcadia.toml
-$ nockup init arcadia
-Initializing new NockApp project 'arcadia'...
-  create Cargo.toml
-  create manifest.toml
-  create Cargo.lock
-  create hoon/app/app.hoon
-  create hoon/common/wrapper.hoon
-  create hoon/lib/lib.hoon
-  create hoon/lib/http.hoon
-  create README.md
-  create src/main.rs
-📚 Processing library dependencies...
-  ⬇️ Fetching library 'sequent'...
-    ⬇️ Cloning repository...
-      copy sys.kelvin
-      copy lib/seq.hoon
-      copy lib/test.hoon
-    ✓ Installed library 'sequent'
-✓ All libraries processed successfully!
-✓ New project created in ./arcadia//
-To get started:
-  nockup build arcadia
-  nockup run arcadia
-
-# Show project settings.
-$ cd arcadia
-$ ls
-Cargo.lock    Cargo.toml    hoon          manifest.toml README.md     src
-
-$ cd ..
-
-# Build the project (wraps hoonc).
-$ nockup build arcadia
-🔨 Building project 'arcadia'...
-    Updating crates.io index
-    Updating git repository `https://github.com/zorp-corp/nockchain.git`
-     Locking 486 packages to latest compatible versions
-      Adding matchit v0.8.4 (available: v0.8.6)
-      Adding toml v0.8.23 (available: v0.9.5)
-   Compiling proc-macro2 v1.0.101
-* * *
-I (11:53:08) "hoonc: build succeeded, sending out write effect"
-I (11:53:08) "hoonc: output written successfully to '/Users/myuser/zorp/nockup/arcadia/out.jam'"
-no panic!
-✓ Hoon compilation completed successfully!
-
-# Run the project (wraps hoon).
-$ nockup run arcadia
-🔨 Running project 'arcadia'...
-    Finished `release` profile [optimized] target(s) in 0.31s
-     Running `target/release/arcadia`
-I (11:53:14) [no] kernel::boot: Tracy tracing is enabled
-I (11:53:14) [no] kernel::boot: kernel: starting
-W (11:53:15) poked: cause
-I (11:53:15) Pokes awaiting implementation
-
-✓ Run completed successfully!
+block Vo3d2Qjy1YHMoaHJBeuQMgi4Dvi3Z2GrcHNxvNYAncgzwnQYLWnGVE added to validated blocks at 2
 ```
 
-The final product is, of course, a binary which you may run either via `nockup run` (as demonstrated here) or directly (from `./target/release`).
+That last number is the block height.
 
-### Project Templates and Manifests
+### What do common errors mean?
 
-A NockApp consists of a Rust wrapper and a Nock ISA kernel.  The wrapper handles command-line arguments, filesystem I/O, etc.  The kernel is the business logic.
+Common errors and their solutions:
 
-One of the design goals of Nockup is to avoid the need to write much, if any, Rust code to successfully deploy a NockApp.  To that end, we provide templates which by and large only expect the developer to write in Hoon or another language which targets the Nock ISA.
+1. **Connection Errors**:
+   - `Failed to dial peer`: Network connectivity issues, you may still be connected though.
+   - `Handshake with the remote timed out`: Peer might be offline, not a fatal issue.
 
-A project is specified by its manifest file, which includes details like the project name and the template to use.  Many projects will prefer the `basic` template, but other options are available in `/templates`.
+### How do I check wallet balance?
 
-#### Basic Templates
+To check your wallet balance:
 
-- `basic`:  simplest NockApp template.
-- `grpc`:  gRPC listener and broadcaster.
-- `http-static`:  static HTTP file server.
-- `http-server`:  stateful HTTP server.
-- `repl`:  read-eval-print loop.
-
-#### Nockchain Templates
-
-- `chain`:  Nockchain listener, built using `nockchain-wallet`.  Demonstrates poking and peeking the chain state.
-- `oracle`:  Nockchain attestation poster, built using `nockchain-wallet`.  Demonstrates signing a message using a private key.
-- `remote`:  Nockchain remote instance gRPC interaction.  Demonstrates interacting with a Nockchain public instance via remote gRPC.
-- `rollup`:  Nockchain rollup bundler for NockApps.  Demonstrates producing a consistent rollup and pushing it to the chain.
-
-#### Manifests
-
-A project manifest is a file containing sufficient information to produce a basic NockApp from a template with specified imports.
-
-```toml
-[project]
-name = "Et In Arcadia Ego"
-project_name = "arcadia"
-version = "1.0.0"
-description = "I too was in Arcadia."
-author_name = "Nicolas Poussin"
-author_email = "nicolas@poussin.edu"
-github_username = "arcadia"
-license = "MIT"
-keywords = ["nockapp", "nockchain", "hoon"]
-nockapp_commit_hash = "336f744b6b83448ec2b86473a3dec29b15858999"
-template = "basic"
+```bash
+# List all notes by pkh
+nockchain-wallet list-notes-by-address <your-base58-address>
 ```
 
-Manifests let you set several project parameters and specify the template to use.  This information will also be used to populate a README file.  (By default we supply the [MIT License](https://opensource.org/licenses/MIT) and we specify the version as [0.1.0](https://0ver.org/).)
+### How do I configure logging levels?
 
-#### Multiple Targets
+To reduce logging verbosity, you can set the `RUST_LOG` environment variable before running nockchain:
 
-A NockApp project can produce more than one binary target.  This is scenario is demonstrated by the `grpc` template.
+```bash
+# Show only info and above
+RUST_LOG=info nockchain
 
-The default expectation for a single-binary project is to supply the following two files:
+# Show only errors
+RUST_LOG=error nockchain
 
-1. `src/main.rs` - the main Rust driver.
-2. `hoon/app/app.hoon` - the Hoon kernel.
+# Show specific module logs (e.g. only p2p events)
+RUST_LOG=nockchain_libp2p_io=info nockchain
 
-However, if you want to produce multiple binaries and kernels, you should supply the programs in this pattern:
-
-1. `src/main1.rs` - the first Rust driver.  (This may have any name.)
-2. `src/main2.rs` - the second Rust driver.  (This may have any name.)
-3. `hoon/app/main1.hoon` - the first Hoon kernel.  (This should have the same name as the Rust driver `main1.rs`.)
-4. `hoon/app/main2.hoon` - the second Hoon kernel.  (This should have the same name as the Rust driver `main2.rs`.)
-
-In the `Cargo.toml` file, include both targets explicitly:
-
-```toml
-[[bin]]
-name = "main1"
-path = "src/bin/main1.rs"
-
-[[bin]]
-name = "main2"
-path = "src/bin/main2.rs"
+# Multiple modules with different levels
+RUST_LOG=nockchain_libp2p_io=info,nockchain=warn nockchain
 ```
 
-Nockup is opinionated here, and will match `hoon/app/main1.hoon`, etc., as kernels; that is,
+Common log levels from most to least verbose:
+- `trace`: Very detailed debugging information
+- `debug`: Debugging information
+- `info`: General operational information
+- `warn`: Warning messages
+- `error`: Error messages
 
-```sh
-nockup build myproject
+You can also add this to your `.env` file if you're running with the Makefile:
+```
+RUST_LOG=info
 ```
 
-will produce both `target/release/main1` and `target/release/main2`.
+### How do profile for performance?
 
-Projects which produce more than one binary cannot be used directly with `nockup run` since more than one process must be started.  This should be kept in mind when using templates which produce more than one binary (like `grpc`).
+Here's a demo video for the Tracy integration in Nockchain: https://x.com/nockchain/status/1948109668171051363
 
-#### Nockchain Interactions
+The main change since the video is tracing is now enabled by default. If you want to disable it you can [disable](https://doc.rust-lang.org/cargo/reference/features.html#the-default-feature) the `tracing-tracy` feature here. The tracing is [inhibited](https://www.google.com/search?q=inhibit+definition&sca_esv=677f3ddbc8bf65e8&ei=hnSCaJuSGIGlqtsP96qM0QE&ved=0ahUKEwib7Z60idaOAxWBkmoFHXcVIxoQ4dUDCBA&uact=5&oq=inhibit+definition&gs_lp=Egxnd3Mtd2l6LXNlcnAiEmluaGliaXQgZGVmaW5pdGlvbjITEAAYgAQYkQIYsQMYigUYRhj5ATIGEAAYFhgeMgYQABgWGB4yBhAAGBYYHjIGEAAYFhgeMgYQABgWGB4yBhAAGBYYHjIGEAAYFhgeMgYQABgWGB4yBhAAGBYYHjItEAAYgAQYkQIYsQMYigUYRhj5ARiXBRiMBRjdBBhGGPkBGPQDGPUDGPYD2AEBSIgaUMgFWIgZcAR4AJABAJgBeaAB7AqqAQQxOS4yuAEDyAEA-AEBmAIZoAKpC8ICDhAAGIAEGLADGIYDGIoFwgILEAAYgAQYsAMYogTCAhAQABiABBiRAhiKBRhGGPkBwgIKEAAYgAQYQxiKBcICCxAAGIAEGJECGIoFwgILEAAYgAQYsQMYgwHCAg4QABiABBixAxiDARiKBcICBRAuGIAEwgIREC4YgAQYsQMY0QMYgwEYxwHCAioQABiABBiRAhiKBRhGGPkBGJcFGIwFGN0EGEYY-QEY9AMY9QMY9gPYAQHCAg8QABiABBhDGIoFGEYY-QHCAikQABiABBhDGIoFGEYY-QEYlwUYjAUY3QQYRhj5ARj0Axj1Axj2A9gBAcICCBAuGIAEGLEDwgIIEAAYgAQYsQPCAi0QABiABBiRAhixAxiKBRhGGPkBGJcFGIwFGN0EGEYY-QEY9AMY9QMY9gPYAQHCAg0QABiABBixAxhDGIoFwgIFEAAYgATCAhEQABiABBiRAhixAxiDARiKBcICChAuGIAEGLEDGArCAgcQABiABBgKwgIKEAAYgAQYsQMYCsICBxAuGIAEGArCAg0QABiABBixAxiDARgKwgIOEAAYgAQYkQIYsQMYigXCAggQABgWGAoYHpgDAIgGAZAGBboGBggBEAEYE5IHBDIzLjKgB_ePArIHBDE5LjK4B6ALwgcGMC4yNC4xyAc5&sclient=gws-wiz-serp) by default, it only collects traces when a [Tracy profiler client](https://github.com/wolfpld/tracy) connects to the application. This means minimal (9% or less for the nockvm, shouldn't impact jetted mining) performance impact but the profiling data is available any time you'd like to connect your Nockchain instance.
 
-A Nockchain must be running locally in order to obtain chain state data.
+There are two main kinds of performance data Tracy will gather from your application. Instrumentation and samples. Instrumentation comes from the [tracing crate's](https://docs.rs/tracing/latest/tracing/) spans. The integration with [nockvm](https://github.com/zorp-corp/nockchain/tree/master/crates/nockvm) is via the same `tracing` spans. Samples are _stack samples_, so it's not a perfectly and minutely traced picture of where your time was spent. However, the default sampling rate for Tracy is _very_ high but very efficient. You should expect a problematic performance impact from connecting Tracy to an instance if every single core and hyperthread is maxed out on your machine. You should be leaving some spare threads unoccupied even on a mining instance for the Serf thread and the kernel anyway. We (Zorp Corp) generally left 4 threads unused on each mining server.
 
-For instance, with a NockApp based on the template `chain`, you need to connect to a running NockApp instance at port 5555:
+Stack samples are roughly speaking the "native" or Rust part of the application whereas instrumentation is the nockvm spans showing how much time you're spending in your Hoon arms plus any Rust functions that were also instrumented. You can tell them apart because the spans for Hoon will have weird paths like `blart/boop/snoot/goof/slam/woof` and no source location in the Tracy profiler UI. The Rust spans will have much plainer names mapping onto whatever the function was named, so a function like `fn slam()` will show up in the instrumentation as `slam` and have a source location path ending in a `*.rs` file.
+
+What makes this especially powerful is:
+
+- The profiling data is now unified into a single tool. Previously we used `samply` for Rust/native code and the JSON (nockvm) traces for the Hoon.
+- Tracy can attribute what native stack samples
+
+#### OK, but how do I get started?
+
+Build the application like normal, it's enabled by default. No special CLI arguments, it's _enabled by default_.
+
+Get a copy of the Tracy profiler client, it's a GUI C++ application that uses dear imgui. They may not have a release binary for your platform so you may need to build it yourself. Here's a tip: steal the build commands for Linux/macOS [from here](https://github.com/wolfpld/tracy/blob/6f3a023df871e180151d2e86fb656e8122e274eb/.github/workflows/linux.yml#L24-L25).
+
+They're using Arch Linux, so make sure you have these equivalent packages installed for your platform:
 
 ```
-nockup run chain -- --nockchain-socket=5555 get-heaviest-block
-# - or -
-./chain/target/release/chain --nockchain-socket=5555 get-heaviest-block
+pacman -Syu --noconfirm && pacman -S --noconfirm --needed freetype2 debuginfod wayland dbus libxkbcommon libglvnd meson cmake git wayland-protocols nodejs
 ```
 
-### Libraries
+Then to build the GUI app:
 
-A project manifest may optionally include a `[libraries]` section.  Conventionally, Hoon libraries have been manually supplied within a desk or repository by manually copying them in.  While this solves the linked library problem by using shared nouns ([~rovnys-ricfer & ~wicdev-wisryt 2024](https://urbitsystems.tech/article/v01-i01/a-solution-to-static-vs-dynamic-linking)), no universal versioning system exists and cross-repository dependencies are difficult to automate.
-
-To that end, Nockup supports three patterns for importing libraries:
-
-1. Single file imports.
-2. Repository imports, simple structure.
-3. Nested repository imports.
-
-Examples of each are provided in [`example-manifest-with-libraries.toml`](https://github.com/sigilante/nockup/blob/master/manifests/example-manifest-with-libraries.toml).
-
-#### Single Libraries
-
-A single file may be plucked out of context from a public repo for inclusion.
-
-- [`urbit/urbit`:  `bits.hoon`](https://github.com/urbit/urbit/blob/develop/pkg/arvo/lib/bits.hoon) bitwise aliases for Hoon stdlib
-
-```toml
-[libraries.bits]
-url = "https://github.com/urbit/urbit"
-branch = "develop"
-file = "pkg/arvo/lib/bits.hoon"
+```
+cmake -B profiler/build -S profiler -DCMAKE_BUILD_TYPE=Release -DGIT_REV=${{ github.sha }}
+cmake --build profiler/build --parallel
 ```
 
-This supplies `bits.hoon` at `/hoon/lib/bits.hoon`.  (The developer is responsible for managing dependencies such as `/sur` structure files.)
+Note that your Tracy profiler GUI version and the [Tracy client library version _must_ match](https://github.com/nagisa/rust_tracy_client?tab=readme-ov-file#version-support-table) or it will not work and will refuse to connect. It'll tell you why too.
 
-#### Top-Level Libraries
+If your Nockchain instance is running locally on the same machine as your Tracy profiler client GUI it will pop up in the connect menu automatically. If you're using `ssh` to connect to a remote server (see below re: security) then you will need to add the port to `127.0.0.1` like so: `127.0.0.1:8087` and hit connect after establishing the ssh connection with the port mapping.
 
-A simple Hoon library repo should supply a `/desk`, `/hoon`, or `/src` directory at the top level.  (While Rust typically reserves `/src` for `.rs` files, Hoon repositories are not generally configured to expect a Rust runtime and may use the `/src` directory for Hoon source files.)  The `/app`, `/lib` and `/sur` contents are copied directly into `/hoon`.
+By default you'll only get instrumentation, not the stack samples, generally speaking. To enable stack samples you need to change some security parameters on your Linux server. Stack sampling doesn't work on macOS natively at all, if you want to profile something with stack samples on macOS, run it in Docker with a permissive seccomp profile.
 
-Sequent is a good example of the simplest possible structure:
+Here's what you'd need to do on a typical Linux server running Ubuntu LTS to enable stack samples:
 
-- [`jackfoxy/sequent`](https://github.com/jackfoxy/sequent) list functions
-
-This is imported via the `configuration.toml` manifest:
-
-```toml
-[libraries.sequent]
-url = "https://github.com/jackfoxy/sequent"
-commit = "0f6e6777482447d4464948896b763c080dc9e559"
+```
+echo 0 | sudo tee /proc/sys/kernel/yama/ptrace_scope
+echo 1 | sudo tee /proc/sys/kernel/perf_event_paranoid
 ```
 
-which supplies `/desk/lib/seq.hoon` at `/hoon/lib/seq.hoon` and ignores `/mar` and `/tests` (which are both Urbit-specific affordances).
+Nerfing `perf_event_paranoid` might be enough by itself, ymmv. This commands only set these `sysctl` parameters until the server gets rebooted. Create a permanent `sysctl` config in `/etc` if you want to make it permanent. You might need to restart the process after changing the parameters as well.
 
-Other Hoon libraries of note include:
+#### Tracy, profiling, and security
 
-- [`lynko/re.hoon`](https://github.com/lynko/re.hoon)
-- [`mikolajpp/bytestream`](https://github.com/mikolajpp/bytestream)
+Do _not_ expose the port the tracy server binds to from the Nockchain application instance to servers or networks you do not control end-to-end. If you have a server hosted in the cloud or a leased dedicated server, leave it private and use `ssh` to create a local proxy for the port on your dev machine.
 
-#### Nested Libraries
+When I demo'd Tracy here's the ssh command I used:
 
-A more complex structure features top-level nesting before the Hoon source library (`/desk`, `/hoon`, or `/src`), such as with the Urbit numerical computing suite.
-
-- [`urbit/numerics`](https://github.com/urbit/numerics)
-
-```toml
-[libraries.math]
-url = "https://github.com/urbit/numerics"
-branch = "main"
-directory = "libmath"
-commit = "7c11c48ab3f21135caa5a4e8744a9c3f828f2607"
-
-[libraries.lagoon]
-url = "https://github.com/urbit/numerics"
-branch = "main"
-directory = "lagoon"
-commit = "7c11c48ab3f21135caa5a4e8744a9c3f828f2607"
+```
+ssh -L 8087:backbone-us-south-mig:8086 backbone-us-south-mig
 ```
 
-which supplies these files (among others) in the following pattern:
+`backbone-us-south-mig` is a hostname reference from my `~/.ssh/config` that we generate from a script I wrote to inject an Ansible inventory into the local SSH configuration. I'm using port `8087` for the local binding because running the Tracy profiler GUI binds port 8086.
 
-* `/libmath/desk/lib/math.hoon` at `/hoon/lib/math.hoon`.
-* `/lagoon/desk/lib/lagoon.hoon` at `/hoon/lib/lagoon.hoon`.
-* `/lagoon/desk/sur/lagoon.hoon` at `/hoon/sur/lagoon.hoon`.
+### Troubleshooting Common Issues
 
-These are simply copied over from the source directory in the repository, so care should be taken to ensure that files with the same name do not conflict (such as `types.hoon`).
+1. **Node Won't Start**:
+   - Check port availability
+   - Verify .env configuration
+   - Check for existing .data.nockchain file
+   - Ensure proper permissions
 
-### Channels
+2. **No Peers Connecting**:
+   - Verify port forwarding
+   - Check firewall settings
 
-Nockup can use `stable` build of `hoon` and `hoonc`.  As of this release, there is not yet a `nightly` build, but we demonstrate its support here:
+3. **Mining Not Working**:
+   - Verify mining pkh
+   - Check --mine flag
+   - Ensure peers are connected
+   - Check system resources
 
-```sh
-$ nockup channel list
-Default channel: "stable"
-Architecture: "aarch64"
+4. **Wallet Issues**:
+   - Verify key import/export
+   - Check socket connection
+   - Ensure proper permissions
 
-$ nockup channel set nightly
-Set default channel to 'nightly'.
+# Contributing
 
-$ nockup channel list
-Default channel: "nightly"
-Architecture: "aarch64"
-```
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, as defined in the Apache-2.0 license, shall be dual licensed as below, without any additional terms or conditions.
 
-## Uninstallation
+# License
 
-To uninstall Nockup delete the binary and remove the installation cache:
+Licensed under either of
 
-```sh
-$ rm -rf ~/.nockup
-```
-
-## Command Reference
-
-Nockup supports the following `nockup` commands.
-
-### Operations
-
-- `nockup install`:  Initialize Nockup cache and download binaries and templates.
-- `nockup update`:  Check for updates to binaries and templates.
-- `nockup help`:  Print this message or the help of the given subcommand(s).
-
-### Project
-
-- `nockup init`:  Initialize a new NockApp project from a `.toml` config file.
-- `nockup build`:  Build a NockApp project using Cargo.
-- `nockup run`:  Run a NockApp project.
-
-### channel
-
-- `nockup channel list`: List all available channels.
-- `nockup channel set`: Set the active channel, from `stable` and `nightly`.  (Most users will prefer `stable`.)
-
-## Security
-
-*Nockup is entirely experimental and many parts are unaudited.  We make no representations or guarantees as to the behavior of this software.*
-
-Nockup uses HTTPS for binary downloads (overriding HTTP in the channel manifests).  The commands `nockup install` and  `nockup update` have the following security measures in place:
-
-1. Check the Blake3 and SHA-1 checksums of the downloaded binaries against the expected index.
-
-    You can do this manually by running:
-
-    ```sh
-    b3sum nockup
-    sha1sum --check <file>
-    ```
-
-    and compare the answers to the expected values from the appropriate toolchain file in `~/.nockup/toolchain`.
-
-2. Check that the binaries are appropriately signed.  Binaries are signed using the [`zorp-gpg-key`](./zorp-gpg-key.pub) for Linux and a digital certificate for Apple.
-
-    You can do this manually by running:
-
-    ```sh
-    gpg --verify nockup.asc nockup
-    ```
-
-    using the `asc` signature listed in the appropriate toolchain file in `~/.nockup/toolchain`.
-
-Code building is a general-purpose computing process, like `eval`.  You should not do it on the same machine on which you store your wallet private keys [0] [1].
-
-- [0]: https://semgrep.dev/blog/2025/security-alert-nx-compromised-to-steal-wallets-and-credentials/
-- [1]: https://jdstaerk.substack.com/p/we-just-found-malicious-code-in-the
-
-## Roadmap
-
-### Release Roadmap
-
-* add Apple code signing support
-* update manifest files (and install/update strings) to `zorp-corp/nockchain`
-* unify batch/continuous kernels via `exit` event:  `[%exit code=@]`
-
-### Later
-
-* `nockup test` to run unit tests
-* expand repertoire of templates
-  * list and ship appropriate Hoon libraries
-* `nockup publish`/`nockup clone` (awaiting PKI)
-* Replit instance (needs light client of Nockchain)
-
-## Contributor's Guide
-
-### Release Checklist
-
-Each time [Nockchain](https://github.com/zorp-corp/nockchain) or Nockup updates:
-
-- [x] Update checksums and code signatures (automatic).
-- [x] Update versions and commit hashes in toolchain channels (automatic).
-- [ ] Update versions and commit hashes in install scripts (manual).
-- [ ] Check and update downstream clients like Replit if necessary (manual per instance, but `nockup update` works).
-
-### Unit Testing
-
-Some CLI testing has been implemented and is accessible via `cargo test`.  This can, of course, always be improved.
+Apache License, Version 2.0 (LICENSE-APACHE or https://www.apache.org/licenses/LICENSE-2.0)
+MIT license (LICENSE-MIT or https://opensource.org/licenses/MIT)
+at your option.

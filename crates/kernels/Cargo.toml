@@ -1,0 +1,16 @@
+[package]
+name = "kernels"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+
+[features]
+default = []
+bazel_build = []
+
+# Specific kernels
+dumb = []
+wallet = []
+miner = []
+nockchain_peek = []
