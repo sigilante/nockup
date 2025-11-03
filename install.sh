@@ -398,14 +398,7 @@ main() {
     print_info "This installer works on Linux and macOS systems"
     echo ""
     
-    # Setup config file and toolchain first
-    setup_config
-    setup_toolchain
-    
-    # Setup GPG key if on Linux
-    setup_gpg_key
-
-    # Fetch latest release information
+    # Fetch latest release information FIRST
     local release_info
     release_info=$(get_latest_release "$CHANNEL")
     if [[ $? -ne 0 ]]; then
@@ -413,12 +406,19 @@ main() {
         exit 1
     fi
     
-    # Parse release info
+    # Parse release info and set VERSION
     RELEASE_TAG=$(echo "$release_info" | cut -d'|' -f1)
     VERSION=$(echo "$release_info" | cut -d'|' -f2)
     
     print_info "Latest ${CHANNEL} release: ${RELEASE_TAG}"
     print_info "Version: ${VERSION}"
+    
+    # NOW setup config file and toolchain (they can use VERSION)
+    setup_config
+    setup_toolchain
+    
+    # Setup GPG key if on Linux
+    setup_gpg_key
 
     # Detect platform
     local target
