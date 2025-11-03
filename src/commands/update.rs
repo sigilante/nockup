@@ -118,9 +118,18 @@ async fn clone_templates(templates_dir: &PathBuf) -> Result<()> {
         }
     }
 
-    // Remove existing directory if it exists but is empty/corrupted
+    // Remove existing directory if it exists - more thorough cleanup
     if templates_dir.exists() {
-        fs::remove_dir_all(templates_dir)?;
+        fs::remove_dir_all(templates_dir)
+            .context("Failed to remove existing templates directory")?;
+        
+        // Verify it's actually gone (handle macOS timing issues)
+        if templates_dir.exists() {
+            return Err(anyhow::anyhow!(
+                "Failed to completely remove templates directory at {}",
+                templates_dir.display()
+            ));
+        }
     }
 
     // Create a temporary directory for the full clone
@@ -135,7 +144,7 @@ async fn clone_templates(templates_dir: &PathBuf) -> Result<()> {
     let mut command = Command::new("git");
     command
         .arg("clone")
-        .arg("--depth=1") // Shallow clone for faster download
+        .arg("--depth=1")
         .arg("--branch")
         .arg(TEMPLATES_BRANCH)
         .arg(&repo_url)
@@ -155,31 +164,49 @@ async fn clone_templates(templates_dir: &PathBuf) -> Result<()> {
     // Check if templates directory exists in the repo
     let repo_templates_dir = temp_dir.join("templates");
     if !repo_templates_dir.exists() {
-        // Cleanup and return error
         fs::remove_dir_all(&temp_dir).ok();
         return Err(anyhow::anyhow!(
             "No 'templates' directory found in the repository"
         ));
     }
 
-    // Move just the templates directory to our cache location
-    fs::rename(&repo_templates_dir, templates_dir)?;
+    // Use rename, but with better error handling
+    // On macOS, if rename fails, fall back to copy + remove
+    match fs::rename(&repo_templates_dir, templates_dir) {
+        Ok(_) => {},
+        Err(e) if e.raw_os_error() == Some(66) => {
+            // macOS ENOTEMPTY error - try copy instead
+            println!("{} Rename failed, copying instead...", "⚠️".yellow());
+            copy_dir_recursive(&repo_templates_dir, templates_dir)?;
+        },
+        Err(e) => return Err(e.into()),
+    }
 
     // Check if manifests directory exists in the repo
     let repo_manifests_dir = temp_dir.join("manifests");
     if !repo_manifests_dir.exists() {
-        // Cleanup and return error
         fs::remove_dir_all(&temp_dir).ok();
         return Err(anyhow::anyhow!(
             "No 'manifests' directory found in the repository"
         ));
     }
 
-    // Move just the manifests directory to our cache location
+    // Move manifests with same error handling
     let manifests_dir = templates_dir.parent().unwrap().join("manifests");
-    fs::rename(&repo_manifests_dir, manifests_dir)?;
+    if manifests_dir.exists() {
+        fs::remove_dir_all(&manifests_dir)?;
+    }
+    
+    match fs::rename(&repo_manifests_dir, &manifests_dir) {
+        Ok(_) => {},
+        Err(e) if e.raw_os_error() == Some(66) => {
+            println!("{} Rename failed for manifests, copying instead...", "⚠️".yellow());
+            copy_dir_recursive(&repo_manifests_dir, &manifests_dir)?;
+        },
+        Err(e) => return Err(e.into()),
+    }
 
-    // Update the commit.toml file.
+    // Update the commit.toml file
     let commit_file = templates_dir.join("commit.toml");
     let commit_data = format!("[commit]\nid = \"{}\"\n", commit_id);
     fs::write(&commit_file, commit_data)?;
@@ -190,6 +217,26 @@ async fn clone_templates(templates_dir: &PathBuf) -> Result<()> {
         "{} Templates and manifests downloaded successfully",
         "✓".green()
     );
+    Ok(())
+}
+
+// Helper function for recursive copy
+fn copy_dir_recursive(src: &PathBuf, dst: &PathBuf) -> Result<()> {
+    fs::create_dir_all(dst)?;
+    
+    for entry in fs::read_dir(src)? {
+        let entry = entry?;
+        let file_type = entry.file_type()?;
+        let src_path = entry.path();
+        let dst_path = dst.join(entry.file_name());
+        
+        if file_type.is_dir() {
+            copy_dir_recursive(&src_path, &dst_path)?;
+        } else {
+            fs::copy(&src_path, &dst_path)?;
+        }
+    }
+    
     Ok(())
 }
 
