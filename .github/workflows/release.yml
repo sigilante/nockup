@@ -230,7 +230,7 @@ jobs:
           DATE=$(date +%Y-%m-%d)
           
           # Calculate hashes from the packaged archive
-          ARCHIVE_PATH="dist/${BINARY}-${CHANNEL}-${VERSION}-${TARGET}.tar.gz"
+          ARCHIVE_PATH="dist/${BINARY}-${CHANNEL}-latest-${TARGET}.tar.gz"
           
           if [ ! -f "$ARCHIVE_PATH" ]; then
               echo "Error: Archive not found at $ARCHIVE_PATH" >&2
@@ -241,7 +241,7 @@ jobs:
           SHA1_HASH=$(sha1sum "$ARCHIVE_PATH" 2>/dev/null | cut -d' ' -f1 || shasum -a 1 "$ARCHIVE_PATH" | cut -d' ' -f1)
           
           # Generate URL
-          URL="https://github.com/sigilante/nockchain/releases/download/$CHANNEL-build-$COMMIT_SHA/$BINARY-$CHANNEL-$VERSION-$TARGET.tar.gz"
+          URL="https://github.com/sigilante/nockchain/releases/download/$CHANNEL-build-$COMMIT_SHA/$BINARY-$CHANNEL-latest-$TARGET.tar.gz"
           
           # Generate manifest
           cat << MANIFEST_EOF
@@ -293,11 +293,11 @@ jobs:
           name: ${{ steps.channel.outputs.channel }} Build ${{ github.sha }}
           files: |
             dist/hoon-${{ steps.channel.outputs.channel }}-${{ steps.cargo-versions.outputs.hoon_version }}-${{ matrix.target }}.tar.gz
-            ${{ matrix.os == 'ubuntu-latest' && format('dist/hoon-{0}-{1}-{2}.tar.gz.asc', steps.channel.outputs.channel, steps.cargo-versions.outputs.hoon_version, matrix.target) || '' }}
+            ${{ matrix.os == 'ubuntu-latest' && format('dist/hoon-{0}-latest-{2}.tar.gz.asc', steps.channel.outputs.channel, steps.cargo-versions.outputs.hoon_version, matrix.target) || '' }}
             dist/hoonc-${{ steps.channel.outputs.channel }}-${{ steps.cargo-versions.outputs.hoonc_version }}-${{ matrix.target }}.tar.gz
-            ${{ matrix.os == 'ubuntu-latest' && format('dist/hoonc-{0}-{1}-{2}.tar.gz.asc', steps.channel.outputs.channel, steps.cargo-versions.outputs.hoonc_version, matrix.target) || '' }}
+            ${{ matrix.os == 'ubuntu-latest' && format('dist/hoonc-{0}-latest-{2}.tar.gz.asc', steps.channel.outputs.channel, steps.cargo-versions.outputs.hoonc_version, matrix.target) || '' }}
             dist/nockup-${{ steps.channel.outputs.channel }}-${{ steps.cargo-versions.outputs.nockup_version }}-${{ matrix.target }}.tar.gz
-            ${{ matrix.os == 'ubuntu-latest' && format('dist/nockup-{0}-{1}-{2}.tar.gz.asc', steps.channel.outputs.channel, steps.cargo-versions.outputs.nockup_version, matrix.target) || '' }}
+            ${{ matrix.os == 'ubuntu-latest' && format('dist/nockup-{0}-latest-{2}.tar.gz.asc', steps.channel.outputs.channel, steps.cargo-versions.outputs.nockup_version, matrix.target) || '' }}
 
   collate-manifests:
     name: Collate Channel Manifests
