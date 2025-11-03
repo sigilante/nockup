@@ -75,58 +75,65 @@ create_temp_dir() {
 # Function to get latest release for channel
 get_latest_release() {
     local channel="$1"
-    local api_url="https://api.github.com/repos/${GITHUB_REPO}/releases"
     
-    print_step "Fetching latest ${channel} release information..."
+    print_step "Fetching latest ${channel} commit from branch..."
     
-    local temp_releases="/tmp/nockup-releases-$$.json"
+    # Determine branch name based on channel
+    local branch="master"  # or "nightly" for nightly channel
+    if [[ "$channel" == "nightly" ]]; then
+        branch="nightly"
+    fi
     
-    print_info "Downloading release list from: $api_url"
-    if ! download_file "$api_url" "$temp_releases"; then
-        print_error "Failed to fetch release information from GitHub"
+    # Get latest commit SHA from the branch
+    local commits_url="https://api.github.com/repos/${GITHUB_REPO}/commits/${branch}"
+    local temp_commit="/tmp/nockup-commit-$$.json"
+    
+    if ! download_file "$commits_url" "$temp_commit"; then
+        print_error "Failed to fetch latest commit from branch ${branch}"
         return 1
     fi
     
-    print_info "Parsing release information..."
+    local latest_commit_sha=""
+    latest_commit_sha=$(grep -o "\"sha\"[[:space:]]*:[[:space:]]*\"[^\"]*\"" "$temp_commit" | \
+                       sed 's/"sha"[[:space:]]*:[[:space:]]*"\([^"]*\)"/\1/' | head -1) || true
     
-    if [[ ! -s "$temp_releases" ]]; then
-        print_error "Downloaded release file is empty"
-        rm -f "$temp_releases"
+    rm -f "$temp_commit"
+    
+    if [[ -z "$latest_commit_sha" ]]; then
+        print_error "Could not determine latest commit SHA"
         return 1
     fi
     
-    # Extract latest tag - allow for optional whitespace after colon
-    local latest_tag=""
-    latest_tag=$(grep -o "\"tag_name\"[[:space:]]*:[[:space:]]*\"${channel}-build-[^\"]*\"" "$temp_releases" 2>/dev/null | \
-                sed 's/"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)"/\1/' | head -1) || true
+    print_info "Latest commit: ${latest_commit_sha:0:7}"
     
-    if [[ -z "$latest_tag" ]]; then
-        print_error "No ${channel} releases found"
-        print_info "Looking for tags matching: ${channel}-build-*"
-        print_info "Available tags:"
-        grep -o "\"tag_name\"[[:space:]]*:[[:space:]]*\"[^\"]*\"" "$temp_releases" 2>/dev/null | \
-            sed 's/"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)"/\1/' | head -5 >&2 || echo "  (none found)" >&2
-        rm -f "$temp_releases"
+    # Now construct the expected tag name
+    local expected_tag="${channel}-build-${latest_commit_sha}"
+    
+    print_info "Looking for release: $expected_tag"
+    
+    # Verify this release exists
+    local releases_url="https://api.github.com/repos/${GITHUB_REPO}/releases/tags/${expected_tag}"
+    local temp_release="/tmp/nockup-release-$$.json"
+    
+    if ! download_file "$releases_url" "$temp_release"; then
+        print_error "Release not found for tag: $expected_tag"
+        print_info "The build may still be in progress"
+        rm -f "$temp_release"
         return 1
     fi
     
-    print_info "Found release tag: $latest_tag"
-    
-    # Extract version - allow for optional whitespace
+    # Extract version from release name
     local version=""
-    version=$(grep -B 2 "\"tag_name\"[[:space:]]*:[[:space:]]*\"${latest_tag}\"" "$temp_releases" 2>/dev/null | \
-              grep -o "\"name\"[[:space:]]*:[[:space:]]*\"[^\"]*\"" | \
+    version=$(grep -o "\"name\"[[:space:]]*:[[:space:]]*\"[^\"]*\"" "$temp_release" | \
               sed 's/"name"[[:space:]]*:[[:space:]]*"\([^"]*\)"/\1/' | head -1) || true
     
     if [[ -z "$version" ]]; then
-        version=$(echo "$latest_tag" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+') || version="latest"
+        version=$(echo "$expected_tag" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+') || version="latest"
     fi
     
-    print_info "Version: $version"
+    rm -f "$temp_release"
     
-    rm -f "$temp_releases"
-    
-    echo "$latest_tag|$version"
+    echo "$expected_tag|$version"
 }
 
 # Function to detect platform and architecture
