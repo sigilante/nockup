@@ -289,7 +289,8 @@ fn copy_single_file(repo_dir: &Path, project_lib_dir: &Path, file_path: &str) ->
     // Check if the source file exists
     if !source_file.exists() {
         return Err(anyhow::anyhow!(
-            "File '{}' not found in repository", file_path
+            "File '{}' not found in repository",
+            file_path
         ));
     }
 

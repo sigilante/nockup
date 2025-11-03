@@ -39,7 +39,9 @@ pub fn get_config() -> Result<toml::Value> {
     let cache_dir = get_cache_dir()?;
     let config_path = cache_dir.join("config.toml");
     if !config_path.exists() {
-        return Err(anyhow::anyhow!("Config file not found. Please run 'nockup install' first."));
+        return Err(anyhow::anyhow!(
+            "Config file not found. Please run 'nockup install' first."
+        ));
     }
     let config_str = std::fs::read_to_string(&config_path).context("Failed to read config file")?;
     let config: toml::Value =
@@ -135,7 +137,7 @@ async fn clone_templates(templates_dir: &PathBuf) -> Result<()> {
     if templates_dir.exists() {
         fs::remove_dir_all(templates_dir)
             .context("Failed to remove existing templates directory")?;
-        
+
         if templates_dir.exists() {
             return Err(anyhow::anyhow!(
                 "Failed to completely remove templates directory at {}",
@@ -180,11 +182,11 @@ async fn clone_templates(templates_dir: &PathBuf) -> Result<()> {
     }
 
     match fs::rename(&repo_templates_dir, templates_dir) {
-        Ok(_) => {},
+        Ok(_) => {}
         Err(e) if e.raw_os_error() == Some(66) => {
             println!("{} Rename failed, copying instead...", "⚠️".yellow());
             copy_dir_recursive(&repo_templates_dir, templates_dir)?;
-        },
+        }
         Err(e) => return Err(e.into()),
     }
 
@@ -200,13 +202,16 @@ async fn clone_templates(templates_dir: &PathBuf) -> Result<()> {
     if manifests_dir.exists() {
         fs::remove_dir_all(&manifests_dir)?;
     }
-    
+
     match fs::rename(&repo_manifests_dir, &manifests_dir) {
-        Ok(_) => {},
+        Ok(_) => {}
         Err(e) if e.raw_os_error() == Some(66) => {
-            println!("{} Rename failed for manifests, copying instead...", "⚠️".yellow());
+            println!(
+                "{} Rename failed for manifests, copying instead...",
+                "⚠️".yellow()
+            );
             copy_dir_recursive(&repo_manifests_dir, &manifests_dir)?;
-        },
+        }
         Err(e) => return Err(e.into()),
     }
 
@@ -224,20 +229,20 @@ async fn clone_templates(templates_dir: &PathBuf) -> Result<()> {
 
 fn copy_dir_recursive(src: &PathBuf, dst: &PathBuf) -> Result<()> {
     fs::create_dir_all(dst)?;
-    
+
     for entry in fs::read_dir(src)? {
         let entry = entry?;
         let file_type = entry.file_type()?;
         let src_path = entry.path();
         let dst_path = dst.join(entry.file_name());
-        
+
         if file_type.is_dir() {
             copy_dir_recursive(&src_path, &dst_path)?;
         } else {
             fs::copy(&src_path, &dst_path)?;
         }
     }
-    
+
     Ok(())
 }
 
@@ -534,14 +539,24 @@ async fn verify_gpg_signature(
         );
 
         let import_output = Command::new("gpg")
-            .args(["--keyserver", "keyserver.ubuntu.com", "--recv-keys", "A6FFD2DB7D4C9710"])
+            .args([
+                "--keyserver",
+                "keyserver.ubuntu.com",
+                "--recv-keys",
+                "A6FFD2DB7D4C9710",
+            ])
             .output()
             .await
             .context("Failed to import public key from keyserver")?;
 
         if !import_output.status.success() {
             let alt_import = Command::new("gpg")
-                .args(["--keyserver", "keys.openpgp.org", "--recv-keys", "A6FFD2DB7D4C9710"])
+                .args([
+                    "--keyserver",
+                    "keys.openpgp.org",
+                    "--recv-keys",
+                    "A6FFD2DB7D4C9710",
+                ])
                 .output()
                 .await;
 
@@ -574,7 +589,8 @@ async fn verify_gpg_signature(
         if !retry_output.status.success() {
             let retry_stderr = String::from_utf8_lossy(&retry_output.stderr);
             return Err(anyhow::anyhow!(
-                "GPG signature verification failed after key import: {}", retry_stderr
+                "GPG signature verification failed after key import: {}",
+                retry_stderr
             ));
         }
 
@@ -583,12 +599,14 @@ async fn verify_gpg_signature(
             println!("{} GPG signature verified successfully", "✅".green());
         } else {
             return Err(anyhow::anyhow!(
-                "GPG signature verification failed: {}", retry_stderr
+                "GPG signature verification failed: {}",
+                retry_stderr
             ));
         }
     } else {
         return Err(anyhow::anyhow!(
-            "GPG signature verification failed: {}", stderr
+            "GPG signature verification failed: {}",
+            stderr
         ));
     }
 
@@ -654,7 +672,8 @@ async fn extract_binary_from_archive(
 
     if !found_binary {
         return Err(anyhow::anyhow!(
-            "Binary '{}' not found in archive", binary_name
+            "Binary '{}' not found in archive",
+            binary_name
         ));
     }
 
@@ -698,7 +717,9 @@ async fn verify_checksums(
     let computed_blake3 = blake3::hash(&bytes);
     if computed_blake3.to_string() != expected_blake3 {
         return Err(anyhow::anyhow!(
-            "Checksum verification failed: expected {}, got {}", expected_blake3, computed_blake3
+            "Checksum verification failed: expected {}, got {}",
+            expected_blake3,
+            computed_blake3
         ));
     }
 
@@ -713,7 +734,9 @@ async fn verify_checksums(
         let expected_hex = hex::encode(&expected_sha1);
         let computed_hex = hex::encode(computed_sha1.as_slice());
         return Err(anyhow::anyhow!(
-            "Checksum verification failed: expected {}, got {}", expected_hex, computed_hex
+            "Checksum verification failed: expected {}, got {}",
+            expected_hex,
+            computed_hex
         ));
     }
     Ok(())
