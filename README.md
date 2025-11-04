@@ -83,7 +83,7 @@ Prerequisites: Rust toolchain, Git
 
 ### On Replit
 
-A [Replit template is available](https://replit.com/@neal50/NockApp?v=1) which demonstrates Nockup functionality in the cloud.
+A [Replit template is available](https://replit.com/@neal50/NockApp?v=1) which demonstrates Nockup functionality in the cloud.  Due to Replit's memory limitations, its current functionality is not extensive.
 
 ## Tutorial
 
@@ -466,6 +466,6 @@ Some CLI testing has been implemented and is accessible via `cargo test`.  This 
 
 ### Replit Instance
 
-There is a Replit instance available at https://replit.com/@sigilante/Nockup-IDE which demonstrates Nockup functionality in the cloud.  Nockup should automatically track the latest release of `hoonc` and `hoon` on each `nockup install` or `nockup update`.
+There is a Replit instance available at https://replit.com/@neal50/NockApp?v=1 which demonstrates Nockup functionality in the cloud.  Nockup should automatically track the latest release of `hoonc` and `hoon` on each `nockup install` or `nockup update`.
 
-Pending a public fakenet, it's necessary to run a local fakenet Nockchain node in the Replit container to test Nockchain interactions.
+Pending a public fakenet, it's necessary to run a local fakenet Nockchain node in the Replit container to test Nockchain interactions.  There are also difficulties due to Replit's memory limitations with using the Rust `nightly` toolchain.
