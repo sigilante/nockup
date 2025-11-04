@@ -206,8 +206,9 @@ setup_toolchain() {
         fi
         
         local latest_tag=""
-        latest_tag=$(grep -o "\"tag_name\":\"${channel}-build-[^\"]*\"" "$temp_releases" 2>/dev/null | \
-                    sed 's/"tag_name":"\([^"]*\)"/\1/' | head -1) || true
+        # ✅ Fixed: Added [[:space:]]* to handle spaces in JSON
+        latest_tag=$(grep -o "\"tag_name\"[[:space:]]*:[[:space:]]*\"${channel}-build-[^\"]*\"" "$temp_releases" 2>/dev/null | \
+                    sed 's/"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)"/\1/' | head -1) || true
         
         rm -f "$temp_releases"
         
