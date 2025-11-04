@@ -233,16 +233,17 @@ setup_toolchain() {
     local success_count=0
     
     for channel in "${channels[@]}"; do
+        print_info "Processing channel: $channel"
         local output_file="${toolchain_dir}/channel-nockup-${channel}.toml"
         
         if [[ -f "$output_file" ]]; then
             print_info "Toolchain file already exists: channel-nockup-${channel}.toml"
-            ((success_count++))
+            ((success_count++)) || true
             continue
         fi
         
         if get_latest_manifest "$channel"; then
-            ((success_count++))
+            ((success_count++)) || true
         else
             if [[ "$channel" == "stable" ]]; then
                 print_info "Creating minimal channel-nockup-stable.toml fallback"
@@ -257,7 +258,7 @@ nockup = "$VERSION"
 hoon = "0.1.0"
 hoonc = "0.2.0"
 EOF
-                ((success_count++))
+                ((success_count++)) || true
             fi
         fi
     done
@@ -410,7 +411,9 @@ main() {
     
     setup_config
     setup_toolchain
+    print_info "DEBUG: After setup_toolchain"
     setup_gpg_key
+    print_info "DEBUG: After setup_gpg_key"
 
     local target
     target=$(detect_platform)
