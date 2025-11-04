@@ -81,6 +81,10 @@ Prerequisites: Rust toolchain, Git
     $ nockup update
     ```
 
+### On Replit
+
+A [Replit template is available](https://replit.com/@neal50/NockApp?v=1) which demonstrates Nockup functionality in the cloud.
+
 ## Tutorial
 
 Nockup provides a command-line interface for managing NockApp projects.  It uses binaries to process manifest files to create NockApp projects from templates then build and run them.
@@ -433,7 +437,7 @@ Code building is a general-purpose computing process, like `eval`.  You should n
 
 ### Release Roadmap
 
-* Replit instance (needs light client of Nockchain)
+* Replit instance (needs light client of Nockchain for fakenet)
 * add Apple code signing support
 * update manifest files (and install/update strings) to `zorp-corp/nockchain`
 * unify batch/continuous kernels via `exit` event:  `[%exit code=@]`
@@ -459,3 +463,9 @@ Each time [Nockchain](https://github.com/zorp-corp/nockchain) or Nockup updates:
 ### Unit Testing
 
 Some CLI testing has been implemented and is accessible via `cargo test`.  This can, of course, always be improved.
+
+### Replit Instance
+
+There is a Replit instance available at https://replit.com/@sigilante/Nockup-IDE which demonstrates Nockup functionality in the cloud.  Nockup should automatically track the latest release of `hoonc` and `hoon` on each `nockup install` or `nockup update`.
+
+Pending a public fakenet, it's necessary to run a local fakenet Nockchain node in the Replit container to test Nockchain interactions.
