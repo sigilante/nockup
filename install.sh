@@ -17,7 +17,14 @@ GITHUB_REPO="sigilante/nockchain"
 VERSION="unknown"
 RELEASE_TAG="unknown"
 CHANNEL="stable"
-CONFIG_URL="https://raw.githubusercontent.com/sigilante/nockup/refs/heads/master/default-config.toml"
+CONFIG_URL_MACOS="https://raw.githubusercontent.com/sigilante/nockup/refs/heads/master/default-config-aarch64-apple-darwin.toml"
+CONFIG_URL_LINUX="https://raw.githubusercontent.com/sigilante/nockup/refs/heads/master/default-config-x86_64-unknown-linux-gnu.toml"
+# Determine config URL based on OS
+if [[ "$(uname -s)" == "Darwin" ]]; then
+    CONFIG_URL="$CONFIG_URL_MACOS"
+else
+    CONFIG_URL="$CONFIG_URL_LINUX"
+fi
 
 # Function to print colored output (to stderr so it doesn't interfere with function returns)
 print_info() {
