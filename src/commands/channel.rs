@@ -19,7 +19,7 @@ fn set_channel(channel: &str) -> Result<()> {
     Ok(())
 }
 
-fn list_channel() -> Result<()> {
+fn show_channel() -> Result<()> {
     let config = get_config()?;
     println!("Default channel: {}", config["channel"]);
     println!("Architecture: {}", config["architecture"]);
@@ -43,6 +43,6 @@ fn get_config() -> Result<toml::Value> {
 pub async fn run(command: ChannelAction) -> Result<()> {
     match command {
         ChannelAction::Set { channel } => set_channel(&channel),
-        ChannelAction::List => list_channel(),
+        ChannelAction::Show => show_channel(),
     }
 }

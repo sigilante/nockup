@@ -2,7 +2,13 @@
 
 *Nockup* is a command-line tool to produce [NockApps](https://github.com/zorp-corp/nockchain) and manage project builds and dependencies.
 
-> 🚨 **Status**:  Pre-release development.  Nockup works but does not yet offer a stable interface and user experience.
+> 🚨 **Status**  Pre-release development.
+>
+> * Nockup has CLI functionality and basic project templating.
+>
+> * Nockchain interaction templates are in active development.
+>
+> * Nockup will be officially released as a crate within [Nockchain](https://github.com/zorp-corp/nockchain).
 
 [The NockApp platform](https://github.com/zorp-corp/nockchain) is a general-purpose framework for building apps that run using the Nock instruction set architecture.  It is particularly well-suited for use with [Nockchain](https://nockchain.org) and the Nock ZKVM.
 
@@ -11,8 +17,6 @@
 ## Installation
 
 ### From Script
-
-> 🚨 **Important**:  During pre-release development, this will fail due to hash mismatches on the a binaries.  Use the "From Source" instructions instead.
 
 Prerequisites: Rust toolchain (`rustup`, `cargo`, &c.), Git.
 
@@ -25,6 +29,14 @@ This checks for dependencies and then installs the Nockup binary and its require
 ### From Source
 
 Prerequisites: Rust toolchain, Git
+
+0. Before building, switch your `rustup` to `nightly` to satisfy `nockapp`/`nockvm` dependencies.
+
+    ```sh
+    rustup update
+    rustup install nightly
+    rustup override set nightly
+    ```
 
 1. Install Nockchain and build `hoon` and `hoonc`.
 
@@ -67,13 +79,6 @@ Prerequisites: Rust toolchain, Git
 
     ```sh
     $ nockup update
-    ```
-
-6. Before building, switch your `rustup` to `nightly` to satisfy `nockapp`/`nockvm` dependencies.
-
-    ```sh
-    rustup install nightly
-    rustup override set nightly
     ```
 
 ## Tutorial
@@ -180,6 +185,8 @@ A project is specified by its manifest file, which includes details like the pro
 
 #### Basic Templates
 
+*Basic templates demonstrate simple NockApps without Nockchain interaction.*
+
 - `basic`:  simplest NockApp template.
 - `grpc`:  gRPC listener and broadcaster.
 - `http-static`:  static HTTP file server.
@@ -187,6 +194,8 @@ A project is specified by its manifest file, which includes details like the pro
 - `repl`:  read-eval-print loop.
 
 #### Nockchain Templates
+
+*Nockchain templates demonstrate NockApps which interact with a Nockchain instance.  They use the `nockchain-wallet` crate as a library.  We recommend using a [fakenet](https://docs.nockchain.org/nockapp/what-is-nockapp/development-and-testing) to avoid needing to spend $NOCK on the livenet during development.  At the current time, this only means running a local fakenet node since wallet credentials are compatible with the livenet format, granting other caveats.*
 
 - `chain`:  Nockchain listener, built using `nockchain-wallet`.  Demonstrates poking and peeking the chain state.
 - `oracle`:  Nockchain attestation poster, built using `nockchain-wallet`.  Demonstrates signing a message using a private key.
@@ -347,14 +356,14 @@ These are simply copied over from the source directory in the repository, so car
 Nockup can use `stable` build of `hoon` and `hoonc`.  As of this release, there is not yet a `nightly` build, but we demonstrate its support here:
 
 ```sh
-$ nockup channel list
+$ nockup channel show
 Default channel: "stable"
 Architecture: "aarch64"
 
 $ nockup channel set nightly
 Set default channel to 'nightly'.
 
-$ nockup channel list
+$ nockup channel show
 Default channel: "nightly"
 Architecture: "aarch64"
 ```
@@ -385,7 +394,7 @@ Nockup supports the following `nockup` commands.
 
 ### channel
 
-- `nockup channel list`: List all available channels.
+- `nockup channel show`: Show currently active channel.
 - `nockup channel set`: Set the active channel, from `stable` and `nightly`.  (Most users will prefer `stable`.)
 
 ## Security
@@ -405,7 +414,7 @@ Nockup uses HTTPS for binary downloads (overriding HTTP in the channel manifests
 
     and compare the answers to the expected values from the appropriate toolchain file in `~/.nockup/toolchain`.
 
-2. Check that the binaries are appropriately signed.  Binaries are signed using the [`zorp-gpg-key`](./zorp-gpg-key.pub) for Linux and a digital certificate for Apple.
+2. Check that the binaries are appropriately signed.  Binaries are signed using the [`zorp-gpg-key`](./zorp-gpg-key.pub) for Linux.  (Apple binaries are not currently signed.)
 
     You can do this manually by running:
 
@@ -424,6 +433,7 @@ Code building is a general-purpose computing process, like `eval`.  You should n
 
 ### Release Roadmap
 
+* Replit instance (needs light client of Nockchain)
 * add Apple code signing support
 * update manifest files (and install/update strings) to `zorp-corp/nockchain`
 * unify batch/continuous kernels via `exit` event:  `[%exit code=@]`
@@ -434,7 +444,6 @@ Code building is a general-purpose computing process, like `eval`.  You should n
 * expand repertoire of templates
   * list and ship appropriate Hoon libraries
 * `nockup publish`/`nockup clone` (awaiting PKI)
-* Replit instance (needs light client of Nockchain)
 
 ## Contributor's Guide
 
@@ -444,7 +453,7 @@ Each time [Nockchain](https://github.com/zorp-corp/nockchain) or Nockup updates:
 
 - [x] Update checksums and code signatures (automatic).
 - [x] Update versions and commit hashes in toolchain channels (automatic).
-- [ ] Update versions and commit hashes in install scripts (manual).
+- [x] Update versions and commit hashes in install scripts (automatic).
 - [ ] Check and update downstream clients like Replit if necessary (manual per instance, but `nockup update` works).
 
 ### Unit Testing

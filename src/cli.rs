@@ -47,5 +47,5 @@ pub enum ChannelAction {
         channel: String, // e.g., "stable" or "nightly"
     },
     /// Show the current channel
-    List,
+    Show,
 }
