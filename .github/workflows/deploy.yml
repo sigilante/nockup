@@ -117,7 +117,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: manifests-x86_64-apple-darwin
-          path: toolchains/*-x86_64-apple-darwin-*.toml
+          name: manifests-aarch64-apple-darwin
+          path: toolchains/*-aarch64-apple-darwin-*.toml
           retention-days: 7
           if-no-files-found: warn
