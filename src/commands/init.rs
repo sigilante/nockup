@@ -75,6 +75,12 @@ fn load_project_config(project_name: &str) -> Result<ProjectManifest> {
     let config_content = fs::read_to_string(config_path)
         .with_context(|| format!("Failed to read {}.toml", project_name))?;
 
+    println!(
+        "{} Loaded project configuration from '{}'",
+        "✓".green(),
+        config_filename.cyan()
+    );
+    println!("Config content:\n{}", config_content);
     toml::from_str(&config_content)
         .with_context(|| format!("Failed to parse {}.toml", project_name))
 }

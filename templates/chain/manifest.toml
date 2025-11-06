@@ -1,11 +1,12 @@
 [project]
-name = "{{project_name}}"
-version = "0.1.0"
-description = "{{project_description}}"
-authors = ["{{author_name}} <{{author_email}}>"]
-license = "MIT"
-repository = "https://github.com/{{github_username}}/{{project_name}}"
-homepage = "https://github.com/{{github_username}}/{{project_name}}"
+name = "{{name}}"
+project_name = "{{project_name}}"
+version = "{{version}}"
+description = "{{description}}"
+author_name = "{{author_name}}"
+author_email = "{{author_email}}"
+github_username = "{{github_username}}"
+license = "{{license}}"
 keywords = ["nockapp", "nockchain", "hoon"]
-edition = "2021"
+nockapp_commit_hash = "{{nockapp_commit_hash}}"
 template = "chain"
