@@ -13,12 +13,11 @@ CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # Configuration
-GITHUB_REPO="sigilante/nockchain"
-RELEASE_TAG="stable-build-3080037d4dff3e8a4453069add06aee2214a9e64"
+GITHUB_REPO="nockchain/nockchain"
+RELEASE_TAG="stable-build-50c9ed33893494fdc13557fa78a9aa3e4e8b0a1f"
 VERSION="0.4.0"
 CHANNEL="stable"
-CONFIG_URL="https://raw.githubusercontent.com/sigilante/nockup/refs/heads/master/default-config.toml"
-
+CONFIG_URL="https://raw.githubusercontent.com/nockchain/nockup/refs/heads/master/default-config.toml"
 # Function to print colored output
 print_info() {
     echo -e "${BLUE}ℹ️  $1${NC}"
@@ -127,7 +126,7 @@ setup_toolchain() {
         print_info "Fetching latest ${channel} manifest..."
         
         # Get latest release for this channel
-        local api_url="https://api.github.com/repos/sigilante/nockchain/releases"
+        local api_url="https://api.github.com/repos/nockchain/nockchain/releases"
         local temp_releases="/tmp/releases_${channel}.json"
         
         if ! download_file "$api_url" "$temp_releases" 2>/dev/null; then
@@ -149,7 +148,7 @@ setup_toolchain() {
             return 1
         fi
         
-        local manifest_url="https://github.com/sigilante/nockchain/releases/download/${latest_tag}/${manifest_file}"
+        local manifest_url="https://github.com/nockchain/nockchain/releases/download/${latest_tag}/${manifest_file}"
         
         print_info "Downloading from: $manifest_url"
         if download_file "$manifest_url" "$output_file" 2>/dev/null; then

@@ -11,12 +11,12 @@ path = "src/main.rs"
 
 [dependencies]
 # NockVM dependency
-nockapp = { git = "https://github.com/zorp-corp/nockchain.git", rev = "485e914b389a1e518d4aaaa24f5f079d0ad894be" }
-nockvm = { git = "https://github.com/zorp-corp/nockchain.git", rev = "485e914b389a1e518d4aaaa24f5f079d0ad894be" }
-nockvm_macros = { git = "https://github.com/zorp-corp/nockchain.git", rev = "485e914b389a1e518d4aaaa24f5f079d0ad894be" }
-noun-serde = { git = "https://github.com/zorp-corp/nockchain.git", rev = "485e914b389a1e518d4aaaa24f5f079d0ad894be" }
-noun-serde-derive = { git = "https://github.com/zorp-corp/nockchain.git", rev = "485e914b389a1e518d4aaaa24f5f079d0ad894be" }
-nockapp-grpc = { git = "https://github.com/zorp-corp/nockchain.git", rev = "485e914b389a1e518d4aaaa24f5f079d0ad894be" }
+nockapp = { git = "https://github.com/nockchain/nockchain.git", rev = "485e914b389a1e518d4aaaa24f5f079d0ad894be" }
+nockvm = { git = "https://github.com/nockchain/nockchain.git", rev = "485e914b389a1e518d4aaaa24f5f079d0ad894be" }
+nockvm_macros = { git = "https://github.com/nockchain/nockchain.git", rev = "485e914b389a1e518d4aaaa24f5f079d0ad894be" }
+noun-serde = { git = "https://github.com/nockchain/nockchain.git", rev = "485e914b389a1e518d4aaaa24f5f079d0ad894be" }
+noun-serde-derive = { git = "https://github.com/nockchain/nockchain.git", rev = "485e914b389a1e518d4aaaa24f5f079d0ad894be" }
+nockapp-grpc = { git = "https://github.com/nockchain/nockchain.git", rev = "485e914b389a1e518d4aaaa24f5f079d0ad894be" }
 
 # Common dependencies for NockApps
 serde = { version = "1.0", features = ["derive"] }

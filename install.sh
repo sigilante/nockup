@@ -13,12 +13,12 @@ CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # Configuration
-GITHUB_REPO="sigilante/nockchain"
+GITHUB_REPO="nockchain/nockchain"
 VERSION="unknown"
 RELEASE_TAG="unknown"
 CHANNEL="stable"
-CONFIG_URL_MACOS="https://raw.githubusercontent.com/sigilante/nockup/refs/heads/master/default-config-aarch64-apple-darwin.toml"
-CONFIG_URL_LINUX="https://raw.githubusercontent.com/sigilante/nockup/refs/heads/master/default-config-x86_64-unknown-linux-gnu.toml"
+CONFIG_URL_MACOS="https://raw.githubusercontent.com/nockchain/nockup/refs/heads/master/default-config-aarch64-apple-darwin.toml"
+CONFIG_URL_LINUX="https://raw.githubusercontent.com/nockchain/nockup/refs/heads/master/default-config-x86_64-unknown-linux-gnu.toml"
 # Determine config URL based on OS
 if [[ "$(uname -s)" == "Darwin" ]]; then
     CONFIG_URL="$CONFIG_URL_MACOS"
@@ -197,7 +197,7 @@ setup_toolchain() {
         
         print_info "Fetching latest ${channel} manifest..."
         
-        local api_url="https://api.github.com/repos/sigilante/nockchain/releases"
+        local api_url="https://api.github.com/repos/nockchain/nockchain/releases"
         local temp_releases="/tmp/releases_${channel}.json"
         
         if ! download_file "$api_url" "$temp_releases"; then
@@ -217,7 +217,7 @@ setup_toolchain() {
             return 1
         fi
         
-        local manifest_url="https://github.com/sigilante/nockchain/releases/download/${latest_tag}/${manifest_file}"
+        local manifest_url="https://github.com/nockchain/nockchain/releases/download/${latest_tag}/${manifest_file}"
         
         print_info "Downloading from: $manifest_url"
         if download_file "$manifest_url" "$output_file"; then

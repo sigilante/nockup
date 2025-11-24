@@ -53,7 +53,7 @@ This project uses both Rust and Hoon:
 
 ## Dependencies
 
-- [NockApp](https://github.com/zorp-corp/nockchain) - Nock virtual machine
+- [NockApp](https://github.com/nockchain/nockchain) - Nock virtual machine
 - Standard Rust crates for serialization and error handling
 
 ## License

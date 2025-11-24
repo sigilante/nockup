@@ -1,6 +1,6 @@
 # *Nockup*: the NockApp channel installer
 
-*Nockup* is a command-line tool to produce [NockApps](https://github.com/zorp-corp/nockchain) and manage project builds and dependencies.
+*Nockup* is a command-line tool to produce [NockApps](https://github.com/nockchain/nockchain) and manage project builds and dependencies.
 
 > 🚨 **Status**  Pre-release development.
 >
@@ -8,9 +8,9 @@
 >
 > * Nockchain interaction templates are in active development.
 >
-> * Nockup will be officially released as a crate within [Nockchain](https://github.com/zorp-corp/nockchain).
+> * Nockup will be officially released as a crate within [Nockchain](https://github.com/nockchain/nockchain).
 
-[The NockApp platform](https://github.com/zorp-corp/nockchain) is a general-purpose framework for building apps that run using the Nock instruction set architecture.  It is particularly well-suited for use with [Nockchain](https://nockchain.org) and the Nock ZKVM.
+[The NockApp platform](https://github.com/nockchain/nockchain) is a general-purpose framework for building apps that run using the Nock instruction set architecture.  It is particularly well-suited for use with [Nockchain](https://nockchain.org) and the Nock ZKVM.
 
 ![](./img/hero.jpg)
 
@@ -21,7 +21,7 @@
 Prerequisites: Rust toolchain (`rustup`, `cargo`, &c.), Git.
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/sigilante/nockup/master/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/nockchain/nockchain/refs/head/master/crates/nockup/install.sh | bash
 ```
 
 This checks for dependencies and then installs the Nockup binary and its requirements, including the GPG key used to verify binaries on Linux.  (This is from the `stable` channel by default; see [Channels](#channels) for more information.)
@@ -41,7 +41,7 @@ Prerequisites: Rust toolchain, Git
 1. Install Nockchain and build `hoon` and `hoonc`.
 
     ```sh
-    $ git clone https://github.com/zorp-corp/nockchain.git
+    $ git clone https://github.com/nockchain/nockchain.git
     $ cd nockchain
     $ make install-hoonc
     $ cargo install --locked --force --path crates/hoon --bin hoon
@@ -50,8 +50,8 @@ Prerequisites: Rust toolchain, Git
 2. Install Nockup.
 
     ```sh
-    $ git clone https://github.com/sigilante/nockup.git
-    $ cd nockup/
+    $ git clone https://github.com/nockchain/nockchain.git
+    $ cd crates/nockup/
     $ cargo build --release
     ```
 
@@ -90,7 +90,8 @@ A [Replit template is available](https://replit.com/@neal50/NockApp?v=1) which d
 Nockup provides a command-line interface for managing NockApp projects.  It uses binaries to process manifest files to create NockApp projects from templates then build and run them.
 
 ```sh
-# Show basic program information.
+# Show basic program information.  (On some systems, like Docker 
+# containers, the hoon and hoonc binaries are not identified.)
 $ nockup
 nockup version 0.0.1
 hoon   version 0.1.0
@@ -153,14 +154,14 @@ $ cd ..
 $ nockup build arcadia
 🔨 Building project 'arcadia'...
     Updating crates.io index
-    Updating git repository `https://github.com/zorp-corp/nockchain.git`
+    Updating git repository `https://github.com/nockchain/nockchain.git`
      Locking 486 packages to latest compatible versions
       Adding matchit v0.8.4 (available: v0.8.6)
       Adding toml v0.8.23 (available: v0.9.5)
    Compiling proc-macro2 v1.0.101
 * * *
 I (11:53:08) "hoonc: build succeeded, sending out write effect"
-I (11:53:08) "hoonc: output written successfully to '/Users/myuser/zorp/nockup/arcadia/out.jam'"
+I (11:53:08) "hoonc: output written successfully to '/Users/myuser/nockchain/nockup/arcadia/out.jam'"
 no panic!
 ✓ Hoon compilation completed successfully!
 
@@ -201,10 +202,10 @@ A project is specified by its manifest file, which includes details like the pro
 
 *Nockchain templates demonstrate NockApps which interact with a Nockchain instance.  They use the `nockchain-wallet` crate as a library.  We recommend using a [fakenet](https://docs.nockchain.org/nockapp/what-is-nockapp/development-and-testing) to avoid needing to spend $NOCK on the livenet during development.  At the current time, this only means running a local fakenet node since wallet credentials are compatible with the livenet format, granting other caveats.*
 
-- `chain`:  Nockchain listener, built using `nockchain-wallet`.  Demonstrates poking and peeking the chain state.
+<!-- - `chain`:  Nockchain listener, built using `nockchain-wallet`.  Demonstrates poking and peeking the chain state.
 - `oracle`:  Nockchain attestation poster, built using `nockchain-wallet`.  Demonstrates signing a message using a private key.
 - `remote`:  Nockchain remote instance gRPC interaction.  Demonstrates interacting with a Nockchain public instance via remote gRPC.
-- `rollup`:  Nockchain rollup bundler for NockApps.  Demonstrates producing a consistent rollup and pushing it to the chain.
+- `rollup`:  Nockchain rollup bundler for NockApps.  Demonstrates producing a consistent rollup and pushing it to the chain. -->
 
 #### Manifests
 
@@ -357,7 +358,7 @@ These are simply copied over from the source directory in the repository, so car
 
 ### Channels
 
-Nockup can use `stable` build of `hoon` and `hoonc`.  As of this release, there is not yet a `nightly` build, but we demonstrate its support here:
+Nockup can use the `stable` build of `hoon` and `hoonc`.  (As of this release, there is not yet a `nightly` build, but we demonstrate its support here.)
 
 ```sh
 $ nockup channel show
@@ -437,23 +438,23 @@ Code building is a general-purpose computing process, like `eval`.  You should n
 
 ### Release Roadmap
 
-* Replit instance (needs light client of Nockchain for fakenet)
-* add Apple code signing support
-* update manifest files (and install/update strings) to `zorp-corp/nockchain`
-* unify batch/continuous kernels via `exit` event:  `[%exit code=@]`
+* [ ] Replit instance (needs better memory swap management)
+* [ ] add Apple code signing support
+* [x] update manifest files (and install/update strings) to `nockchain/nockchain`
+* [ ] unify batch/continuous kernels via `exit` event:  `[%exit code=@]`
 
 ### Later
 
 * `nockup test` to run unit tests
 * expand repertoire of templates
   * list and ship appropriate Hoon libraries
-* `nockup publish`/`nockup clone` (awaiting PKI)
+* `nockup publish`/`nockup clone` (awaiting PKI/namespace)
 
 ## Contributor's Guide
 
 ### Release Checklist
 
-Each time [Nockchain](https://github.com/zorp-corp/nockchain) or Nockup updates:
+Each time [Nockchain](https://github.com/nockchain/nockchain) or Nockup updates:
 
 - [x] Update checksums and code signatures (automatic).
 - [x] Update versions and commit hashes in toolchain channels (automatic).
@@ -462,7 +463,7 @@ Each time [Nockchain](https://github.com/zorp-corp/nockchain) or Nockup updates:
 
 ### Unit Testing
 
-Some CLI testing has been implemented and is accessible via `cargo test`.  This can, of course, always be improved.
+Some CLI unit tests have been implemented and are accessible via `cargo test`.  These can, of course, always be improved.
 
 ### Replit Instance
 

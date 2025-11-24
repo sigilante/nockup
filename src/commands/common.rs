@@ -305,7 +305,7 @@ async fn clone_toolchain_files(toolchain_dir: &PathBuf) -> Result<()> {
 
         println!("{} Fetching latest {} manifest...", "🔍".yellow(), channel);
 
-        let api_url = "https://api.github.com/repos/sigilante/nockchain/releases";
+        let api_url = "https://api.github.com/repos/nockchain/nockchain/releases";
         let client = reqwest::Client::new();
         let response = client
             .get(api_url)
@@ -329,7 +329,7 @@ async fn clone_toolchain_files(toolchain_dir: &PathBuf) -> Result<()> {
         let latest_tag = get_git_commit_id().await?;
 
         let manifest_url = format!(
-            "https://github.com/sigilante/nockchain/releases/download/{}-build-{}/{}",
+            "https://github.com/nockchain/nockchain/releases/download/{}-build-{}/{}",
             channel, latest_tag, manifest_file
         );
 
@@ -722,7 +722,7 @@ pub async fn write_commit_details(cache_dir: &PathBuf) -> Result<()> {
 }
 
 async fn get_git_commit_id() -> Result<String> {
-    let repo_url = format!("https://api.github.com/repos/sigilante/nockchain/commits/master");
+    let repo_url = format!("https://api.github.com/repos/nockchain/nockchain/commits/master");
     let client = reqwest::Client::new();
     let response = client
         .get(&repo_url)

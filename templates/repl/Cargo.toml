@@ -11,9 +11,9 @@ path = "src/main.rs"
 
 [dependencies]
 # NockVM dependency
-nockapp = { git = "https://github.com/zorp-corp/nockchain.git", rev = "336f744b6b83448ec2b86473a3dec29b15858999" }
-nockvm = { git = "https://github.com/zorp-corp/nockchain.git", rev = "336f744b6b83448ec2b86473a3dec29b15858999" }
-nockvm_macros = { git = "https://github.com/zorp-corp/nockchain.git", rev = "336f744b6b83448ec2b86473a3dec29b15858999" }
+nockapp = { git = "https://github.com/nockchain/nockchain.git", rev = "336f744b6b83448ec2b86473a3dec29b15858999" }
+nockvm = { git = "https://github.com/nockchain/nockchain.git", rev = "336f744b6b83448ec2b86473a3dec29b15858999" }
+nockvm_macros = { git = "https://github.com/nockchain/nockchain.git", rev = "336f744b6b83448ec2b86473a3dec29b15858999" }
 
 # Common dependencies for NockApps
 serde = { version = "1.0", features = ["derive"] }
